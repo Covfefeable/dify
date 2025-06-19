@@ -157,6 +157,24 @@ class SwitchWorkspaceApi(Resource):
             raise ValueError("Tenant not found")
 
         return {"result": "success", "new_tenant": marshal(WorkspaceService.get_tenant_info(new_tenant), tenant_fields)}
+    
+class CreateWorkspaceApi(Resource):
+    @setup_required
+    @login_required
+    @account_initialization_required
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("name", type=str, required=True, location="json")
+        args = parser.parse_args()
+
+        # Create a new tenant
+        tenant = TenantService.create_tenant(name=args["name"])
+        TenantService.create_tenant_member(tenant, current_user, role="owner")
+
+        if not tenant:
+            raise ValueError("Failed to create workspace")
+
+        return {"result": "success"}, 201
 
 
 class CustomConfigWorkspaceApi(Resource):
@@ -246,6 +264,7 @@ api.add_resource(WorkspaceListApi, "/all-workspaces")  # GET for getting all ten
 api.add_resource(TenantApi, "/workspaces/current", endpoint="workspaces_current")  # GET for getting current tenant info
 api.add_resource(TenantApi, "/info", endpoint="info")  # Deprecated
 api.add_resource(SwitchWorkspaceApi, "/workspaces/switch")  # POST for switching tenant
+api.add_resource(CreateWorkspaceApi, "/workspaces/create") # POST for creating a new tenant
 api.add_resource(CustomConfigWorkspaceApi, "/workspaces/custom-config")
 api.add_resource(WebappLogoWorkspaceApi, "/workspaces/custom-config/webapp-logo/upload")
 api.add_resource(WorkspaceInfoApi, "/workspaces/info")  # POST for changing workspace info

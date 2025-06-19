@@ -74,11 +74,9 @@ const Header = () => {
             </Link>
             <div className='font-light text-divider-deep'>/</div>
             <div className='flex items-center gap-0.5'>
-              {isCurrentWorkspaceManager && (
-                <WorkspaceProvider>
-                  <WorkplaceSelector />
-                </WorkspaceProvider>
-              )}
+              <WorkspaceProvider>
+                <WorkplaceSelector />
+              </WorkspaceProvider>
               {enableBilling ? <PlanBadge allowHover sandboxAsUpgrade plan={plan.type} onClick={handlePlanClick} /> : <LicenseNav />}
             </div>
           </div>
