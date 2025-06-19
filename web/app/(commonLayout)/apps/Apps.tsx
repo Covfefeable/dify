@@ -60,7 +60,7 @@ const getKey = (
 const Apps = () => {
   const { t } = useTranslation()
   const router = useRouter()
-  const { isCurrentWorkspaceEditor, isCurrentWorkspaceManager, isCurrentWorkspaceDatasetOperator } = useAppContext()
+  const { isCurrentWorkspaceEditor, isCurrentWorkspaceDatasetOperator } = useAppContext()
   const showTagManagementModal = useTagStore(s => s.showTagManagementModal)
   const [activeTab, setActiveTab] = useTabSearchParams({
     defaultTab: 'all',
@@ -181,14 +181,12 @@ const Apps = () => {
             options={options}
           />
           <div className='flex items-center gap-2'>
-            {isCurrentWorkspaceManager && (
-              <CheckboxWithLabel
-                className='mr-2'
-                label={t('app.showMyCreatedAppsOnly')}
-                isChecked={isCreatedByMe}
-                onChange={handleCreatedByMeChange}
-              />
-            )}
+            <CheckboxWithLabel
+              className='mr-2'
+              label={t('app.showMyCreatedAppsOnly')}
+              isChecked={isCreatedByMe}
+              onChange={handleCreatedByMeChange}
+            />
             <TagFilter type='app' value={tagFilterValue} onChange={handleTagsChange} />
             <Input
               showLeftIcon

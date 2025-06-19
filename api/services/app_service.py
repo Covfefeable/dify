@@ -50,8 +50,7 @@ class AppService:
         elif args["mode"] == "channel":
             filters.append(App.mode == AppMode.CHANNEL.value)
 
-        # 如果是管理员或所有者，则可以看到所有应用
-        if args.get("is_created_by_me", True) or not current_user.is_admin_or_owner:
+        if args.get("is_created_by_me", False):
             filters.append(App.created_by == user_id)
         if args.get("name"):
             name = args["name"][:30]
