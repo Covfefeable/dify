@@ -44,6 +44,7 @@ const WorkplaceSelector = () => {
       setIsShowCreateWorkspace(false)
       setWorkspaceName('')
       notify({ type: 'success', message: t('common.actionMsg.modifiedSuccessfully') })
+      location.assign(`${location.origin}${basePath}`)
     }
     catch {
       notify({ type: 'error', message: t('common.provider.saveFailed') })
