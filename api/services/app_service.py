@@ -17,7 +17,7 @@ from core.tools.tool_manager import ToolManager
 from core.tools.utils.configuration import ToolParameterConfigurationManager
 from events.app_event import app_was_created
 from extensions.ext_database import db
-from models.account import Account
+from models.account import Account, TenantAccountRole
 from models.model import App, AppMode, AppModelConfig, Site
 from models.tools import ApiToolProvider
 from services.enterprise.enterprise_service import EnterpriseService
@@ -50,7 +50,7 @@ class AppService:
         elif args["mode"] == "channel":
             filters.append(App.mode == AppMode.CHANNEL.value)
 
-        if args.get("is_created_by_me", False):
+        if args.get("is_created_by_me", True) or not current_user.is_admin_or_owner:
             filters.append(App.created_by == user_id)
         if args.get("name"):
             name = args["name"][:30]
