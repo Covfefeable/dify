@@ -36,6 +36,7 @@ const Header = () => {
   const isMobile = media === MediaType.mobile
   const [isShowNavMenu, { toggle, setFalse: hideNavMenu }] = useBoolean(false)
   const { enableBilling, plan } = useProviderContext()
+  const { isCurrentWorkspaceManager } = useAppContext()
   const { setShowPricingModal, setShowAccountSettingModal } = useModalContext()
   const systemFeatures = useGlobalPublicStore(s => s.systemFeatures)
   const isFreePlan = plan.type === Plan.sandbox
@@ -73,9 +74,11 @@ const Header = () => {
             </Link>
             <div className='font-light text-divider-deep'>/</div>
             <div className='flex items-center gap-0.5'>
-              <WorkspaceProvider>
-                <WorkplaceSelector />
-              </WorkspaceProvider>
+              {isCurrentWorkspaceManager && (
+                <WorkspaceProvider>
+                  <WorkplaceSelector />
+                </WorkspaceProvider>
+              )}
               {enableBilling ? <PlanBadge allowHover sandboxAsUpgrade plan={plan.type} onClick={handlePlanClick} /> : <LicenseNav />}
             </div>
           </div>

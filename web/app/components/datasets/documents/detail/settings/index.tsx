@@ -86,7 +86,7 @@ const DocumentSettings = ({ datasetId, documentId }: DocumentSettingsProps) => {
           />
         )}
       </div>
-      {isShowSetAPIKey && <AccountSetting activeTab="provider" onCancel={async () => {
+      {isShowSetAPIKey && <AccountSetting onCancel={async () => {
         hideSetAPIkey()
       }} />}
     </div>

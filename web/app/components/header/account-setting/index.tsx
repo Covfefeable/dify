@@ -38,7 +38,6 @@ const iconClassName = `
 
 type IAccountSettingProps = {
   onCancel: () => void
-  activeTab?: string
 }
 
 type GroupItem = {
@@ -51,25 +50,25 @@ type GroupItem = {
 
 export default function AccountSetting({
   onCancel,
-  activeTab = 'members',
 }: IAccountSettingProps) {
-  const [activeMenu, setActiveMenu] = useState(activeTab)
+  const { isCurrentWorkspaceDatasetOperator, isCurrentWorkspaceManager } = useAppContext()
+  const defaultActiveTab = isCurrentWorkspaceManager ? 'provider' : 'api-based-extension'
+  const [activeMenu, setActiveMenu] = useState(defaultActiveTab)
   const { t } = useTranslation()
   const { enableBilling, enableReplaceWebAppLogo } = useProviderContext()
-  const { isCurrentWorkspaceDatasetOperator } = useAppContext()
 
   const workplaceGroupItems = (() => {
     if (isCurrentWorkspaceDatasetOperator)
       return []
     return [
       {
-        key: 'provider',
+        key: isCurrentWorkspaceManager ? 'provider' : false,
         name: t('common.settings.provider'),
         icon: <RiBrain2Line className={iconClassName} />,
         activeIcon: <RiBrain2Fill className={iconClassName} />,
       },
       {
-        key: 'members',
+        key: isCurrentWorkspaceManager ? 'members' : false,
         name: t('common.settings.members'),
         icon: <RiGroup2Line className={iconClassName} />,
         activeIcon: <RiGroup2Fill className={iconClassName} />,
@@ -83,7 +82,7 @@ export default function AccountSetting({
         activeIcon: <RiMoneyDollarCircleFill className={iconClassName} />,
       },
       {
-        key: 'data-source',
+        key: isCurrentWorkspaceManager ? 'data-source' : false,
         name: t('common.settings.dataSource'),
         icon: <RiDatabase2Line className={iconClassName} />,
         activeIcon: <RiDatabase2Fill className={iconClassName} />,
