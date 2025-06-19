@@ -47,7 +47,7 @@ const InviteModal = ({
   }, [licenseLimit, emails])
 
   const { locale } = useContext(I18n)
-  const [role, setRole] = useState<string>('editor')
+  const [role, setRole] = useState<string>('normal')
 
   const handleSend = useCallback(async () => {
     if (isLimitExceeded)

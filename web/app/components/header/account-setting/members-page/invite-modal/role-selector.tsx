@@ -42,7 +42,7 @@ const RoleSelector = ({ value, onChange }: RoleSelectorProps) => {
         <PortalToFollowElemContent className='z-[1002]'>
           <div className='relative w-[336px] rounded-lg border-[0.5px] border-components-panel-border bg-components-panel-bg shadow-lg'>
             <div className='p-1'>
-              {/* <div className='cursor-pointer rounded-lg p-2 hover:bg-state-base-hover' onClick={() => {
+              <div className='cursor-pointer rounded-lg p-2 hover:bg-state-base-hover' onClick={() => {
                 onChange('normal')
                 setOpen(false)
               }}>
@@ -51,7 +51,7 @@ const RoleSelector = ({ value, onChange }: RoleSelectorProps) => {
                   <div className='text-xs leading-[18px] text-text-tertiary'>{t('common.members.normalTip')}</div>
                   {value === 'normal' && <Check className='absolute left-0 top-0.5 h-4 w-4 text-text-accent'/>}
                 </div>
-              </div> */}
+              </div>
               <div className='cursor-pointer rounded-lg p-2 hover:bg-state-base-hover' onClick={() => {
                 onChange('editor')
                 setOpen(false)
