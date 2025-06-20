@@ -5,13 +5,13 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useContext } from 'use-context-selector'
-import { RiUserAddLine } from '@remixicon/react'
+import { RiUserAddLine, RiUserForbidLine } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
 import InviteModal from './invite-modal'
 import InvitedModal from './invited-modal'
 import EditWorkspaceModal from './edit-workspace-modal'
 import Operation from './operation'
-import { fetchMembers } from '@/service/common'
+import { dissolveWorkspace, fetchMembers } from '@/service/common'
 import I18n from '@/context/i18n'
 import { useAppContext } from '@/context/app-context'
 import Avatar from '@/app/components/base/avatar'
@@ -26,6 +26,9 @@ import cn from '@/utils/classnames'
 import Tooltip from '@/app/components/base/tooltip'
 import { RiPencilLine } from '@remixicon/react'
 import { useGlobalPublicStore } from '@/context/global-public-context'
+import DissolveModal from './dissolve-modal'
+import { basePath } from '@/utils/var'
+import { ToastContext } from '@/app/components/base/toast'
 dayjs.extend(relativeTime)
 
 const MembersPage = () => {
@@ -49,13 +52,27 @@ const MembersPage = () => {
   )
   const { systemFeatures } = useGlobalPublicStore()
   const [inviteModalVisible, setInviteModalVisible] = useState(false)
+  const [dissolveModalVisible, setDissolveModalVisible] = useState(false)
   const [invitationResults, setInvitationResults] = useState<InvitationResult[]>([])
   const [invitedModalVisible, setInvitedModalVisible] = useState(false)
   const accounts = data?.accounts || []
+  const { notify } = useContext(ToastContext)
   const { plan, enableBilling } = useProviderContext()
   const isNotUnlimitedMemberPlan = enableBilling && plan.type !== Plan.team && plan.type !== Plan.enterprise
   const isMemberFull = enableBilling && isNotUnlimitedMemberPlan && accounts.length >= plan.total.teamMembers
   const [editWorkspaceModalVisible, setEditWorkspaceModalVisible] = useState(false)
+
+  const handleDissolveWorkspace = async () => {
+    try {
+      await dissolveWorkspace({ url: '/workspaces/dissolve', body: { id: currentWorkspace.id } })
+      setDissolveModalVisible(false)
+      notify({ type: 'success', message: t('common.api.actionSuccess') })
+      location.assign(`${location.origin}${basePath}`)
+    }
+    catch {
+      notify({ type: 'error', message: t('common.members.dissolveFailed') })
+    }
+  }
 
   return (
     <>
@@ -109,6 +126,12 @@ const MembersPage = () => {
             <RiUserAddLine className='mr-1 h-4 w-4' />
             {t('common.members.invite')}
           </Button>
+          {isCurrentWorkspaceOwner && (
+            <Button variant='warning' className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager} onClick={() => setDissolveModalVisible(true)}>
+              <RiUserForbidLine className='mr-1 h-4 w-4' />
+              {t('common.members.dissolve')}
+            </Button>
+          )}
         </div>
         <div className='overflow-visible lg:overflow-visible'>
           <div className='flex min-w-[480px] items-center border-b border-divider-regular py-[7px]'>
@@ -163,6 +186,15 @@ const MembersPage = () => {
           <InvitedModal
             invitationResults={invitationResults}
             onCancel={() => setInvitedModalVisible(false)}
+          />
+        )
+      }
+      {
+        dissolveModalVisible && (
+          <DissolveModal
+            workspaceName={currentWorkspace?.name}
+            onDissolve={handleDissolveWorkspace}
+            onCancel={() => setDissolveModalVisible(false)}
           />
         )
       }

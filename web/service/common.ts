@@ -155,6 +155,10 @@ export const createWorkspace: Fetcher<ICurrentWorkspace, { url: string; body: Re
   return post<ICurrentWorkspace>(url, { body })
 }
 
+export const dissolveWorkspace: Fetcher<CommonResponse, { url: string; body: Record<string, any> }> = ({ url, body }) => {
+  return post<CommonResponse>(url, { body })
+}
+
 export const updateWorkspaceInfo: Fetcher<ICurrentWorkspace, { url: string; body: Record<string, any> }> = ({ url, body }) => {
   return post<ICurrentWorkspace>(url, { body })
 }

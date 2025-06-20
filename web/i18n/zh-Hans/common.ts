@@ -237,6 +237,10 @@ const translation = {
   members: {
     team: '团队',
     invite: '添加',
+    dissolve: '解散',
+    dissolveConfirm: '确认解散？',
+    dissolveTip: '解散团队后，所有该工作空间的成员将被移除，且无法再访问该工作空间的应用和数据。',
+    dissolveFailed: '解散失败',
     name: '姓名',
     lastActive: '上次活动时间',
     role: '角色',

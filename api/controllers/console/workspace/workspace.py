@@ -171,10 +171,35 @@ class CreateWorkspaceApi(Resource):
         tenant = TenantService.create_tenant(name=args["name"])
         TenantService.create_tenant_member(tenant, current_user, role="owner")
 
+        # Switch to the new tenant
+        TenantService.switch_tenant(current_user, tenant.id)
+
         if not tenant:
             raise ValueError("Failed to create workspace")
 
         return {"result": "success"}, 201
+
+class DissolveWorkspaceApi(Resource):
+    @setup_required
+    @login_required
+    @account_initialization_required
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("id", type=str, required=True, location="json")
+        args = parser.parse_args()
+
+        tenant = TenantService.get_current_tenant_by_account(current_user)
+        if tenant is None or tenant.id != args["id"]:
+            raise Unauthorized("You are not allowed to dissolve this workspace")
+        # Check if the user only has one workspace
+        user_tenants = TenantService.get_join_tenants(current_user)
+        if len(user_tenants) == 1:
+            raise Unauthorized("Cannot dissolve the only workspace you belong to")
+
+        # Dissolve the tenant
+        TenantService.dissolve_tenant(tenant, current_user)
+
+        return {"result": "success"}, 200
 
 
 class CustomConfigWorkspaceApi(Resource):
@@ -265,6 +290,7 @@ api.add_resource(TenantApi, "/workspaces/current", endpoint="workspaces_current"
 api.add_resource(TenantApi, "/info", endpoint="info")  # Deprecated
 api.add_resource(SwitchWorkspaceApi, "/workspaces/switch")  # POST for switching tenant
 api.add_resource(CreateWorkspaceApi, "/workspaces/create") # POST for creating a new tenant
+api.add_resource(DissolveWorkspaceApi, "/workspaces/dissolve")  # POST for dissolving a tenant
 api.add_resource(CustomConfigWorkspaceApi, "/workspaces/custom-config")
 api.add_resource(WebappLogoWorkspaceApi, "/workspaces/custom-config/webapp-logo/upload")
 api.add_resource(WorkspaceInfoApi, "/workspaces/info")  # POST for changing workspace info

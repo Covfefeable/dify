@@ -43,7 +43,7 @@ const WorkplaceSelector = () => {
       await createWorkspace({ url: '/workspaces/create', body: { name: workspaceName } })
       setIsShowCreateWorkspace(false)
       setWorkspaceName('')
-      notify({ type: 'success', message: t('common.actionMsg.modifiedSuccessfully') })
+      notify({ type: 'success', message: t('common.api.actionSuccess') })
       location.assign(`${location.origin}${basePath}`)
     }
     catch {
