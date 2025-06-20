@@ -26,8 +26,17 @@
    cp .env.example .env 
 
    # add the following lines to the `.env` file
-   # ALLOW_CREATE_WORKSPACE=true
-   # DATASET_OPERATOR_ENABLED=true
+   # Allow users to create workspaces
+   ALLOW_CREATE_WORKSPACE=true
+   # Enable dataset operator role
+   DATASET_OPERATOR_ENABLED=true
+   # Create workspace when user is invited
+   INIT_WORKSPACE_WHEN_INVITE=false
+   # Branding configuration
+   BRANDING_ENABLED=true
+   APPLICATION_TITLE=Dify
+   LOGIN_PAGE_LOGO=
+   WORKSPACE_LOGO=
    ```
 3. Generate a `SECRET_KEY` in the `.env` file.
 
