@@ -24,6 +24,10 @@
 
    ```cli
    cp .env.example .env 
+
+   # add the following lines to the `.env` file
+   # ALLOW_CREATE_WORKSPACE=true
+   # DATASET_OPERATOR_ENABLED=true
    ```
 3. Generate a `SECRET_KEY` in the `.env` file.
 

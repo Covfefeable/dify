@@ -145,6 +145,7 @@ class SystemFeatureModel(BaseModel):
     is_allow_register: bool = False
     is_allow_create_workspace: bool = False
     is_email_setup: bool = False
+    init_workspace_when_invite: bool = False
     license: LicenseModel = LicenseModel()
     branding: BrandingModel = BrandingModel()
     webapp_auth: WebAppAuthModel = WebAppAuthModel()
@@ -200,6 +201,7 @@ class FeatureService:
         system_features.enable_social_oauth_login = dify_config.ENABLE_SOCIAL_OAUTH_LOGIN
         system_features.is_allow_register = dify_config.ALLOW_REGISTER
         system_features.is_allow_create_workspace = dify_config.ALLOW_CREATE_WORKSPACE
+        system_features.init_workspace_when_invite = dify_config.INIT_WORKSPACE_WHEN_INVITE
         system_features.is_email_setup = dify_config.MAIL_TYPE is not None and dify_config.MAIL_TYPE != ""
 
     @classmethod

@@ -860,6 +860,10 @@ class LoginConfig(BaseSettings):
         description="whether to enable create workspace",
         default=False,
     )
+    INIT_WORKSPACE_WHEN_INVITE: bool = Field(
+        description="whether to initialize workspace when invite a new member",
+        default=False,
+    )
 
 
 class AccountConfig(BaseSettings):

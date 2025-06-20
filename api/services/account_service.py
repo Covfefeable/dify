@@ -972,8 +972,14 @@ class RegisterService:
             TenantService.check_member_permission(tenant, inviter, None, "add")
             name = email.split("@")[0]
 
+            create_workspace_required = FeatureService.get_system_features().init_workspace_when_invite
             account = cls.register(
-                email=email, name=name, language=language, status=AccountStatus.PENDING, is_setup=True
+                email=email,
+                name=name,
+                language=language,
+                status=AccountStatus.PENDING,
+                is_setup=True,
+                create_workspace_required=create_workspace_required
             )
             # Create new tenant member for invited tenant
             TenantService.create_tenant_member(tenant, account, role)
