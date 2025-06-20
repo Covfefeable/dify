@@ -185,7 +185,6 @@ class FeatureService:
         cls._fulfill_system_params_from_env(system_features)
 
         if dify_config.ENTERPRISE_ENABLED:
-            system_features.branding.enabled = True
             system_features.webapp_auth.enabled = True
             cls._fulfill_params_from_enterprise(system_features)
 
@@ -203,6 +202,11 @@ class FeatureService:
         system_features.is_allow_create_workspace = dify_config.ALLOW_CREATE_WORKSPACE
         system_features.init_workspace_when_invite = dify_config.INIT_WORKSPACE_WHEN_INVITE
         system_features.is_email_setup = dify_config.MAIL_TYPE is not None and dify_config.MAIL_TYPE != ""
+
+        system_features.branding.enabled = dify_config.BRANDING_ENABLED
+        system_features.branding.application_title = dify_config.APPLICATION_TITLE
+        system_features.branding.login_page_logo = dify_config.LOGIN_PAGE_LOGO
+        system_features.branding.workspace_logo = dify_config.WORKSPACE_LOGO
 
     @classmethod
     def _fulfill_params_from_env(cls, features: FeatureModel):

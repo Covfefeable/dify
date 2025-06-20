@@ -864,6 +864,22 @@ class LoginConfig(BaseSettings):
         description="whether to initialize workspace when invite a new member",
         default=False,
     )
+    BRANDING_ENABLED: bool = Field(
+        description="Whether to enable custom branding features",
+        default=True,
+    )
+    APPLICATION_TITLE: str = Field(
+        description="Custom application title for branding",
+        default="Dify",
+    )
+    LOGIN_PAGE_LOGO: Optional[str] = Field(
+        description="URL or path to the logo displayed on the login page",
+        default=None,
+    )
+    WORKSPACE_LOGO: Optional[str] = Field(
+        description="URL or path to the logo displayed in the workspace",
+        default=None,
+    )
 
 
 class AccountConfig(BaseSettings):
