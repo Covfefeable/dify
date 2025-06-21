@@ -33,9 +33,9 @@ const translation = {
     userAction: '用户表示',
   },
   notSetAPIKey: {
-    title: 'LLM 提供者的密钥未设置',
+    title: 'LLM 提供商的密钥未设置',
     trailFinished: '试用已结束',
-    description: '在调试之前需要设置 LLM 提供者的密钥。',
+    description: '在调试之前需要设置 LLM 提供商的密钥。',
     settingBtn: '去设置',
   },
   trailUseGPT4Info: {

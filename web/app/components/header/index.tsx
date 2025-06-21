@@ -31,7 +31,6 @@ const Header = () => {
   const media = useBreakpoints()
   const isMobile = media === MediaType.mobile
   const { enableBilling, plan } = useProviderContext()
-  const { isCurrentWorkspaceManager } = useAppContext()
   const { setShowPricingModal, setShowAccountSettingModal } = useModalContext()
   const systemFeatures = useGlobalPublicStore(s => s.systemFeatures)
   const isFreePlan = plan.type === Plan.sandbox

@@ -37,15 +37,15 @@ const DissolveModal = ({
           {t('common.members.dissolveTip')}
         </div>
 
-        <Input placeholder='输入工作区名称以确认解散' className='mb-2' value={confirmWorkspaceName} onChange={e => setConfirmWorkspaceName(e.target.value)} />
+        <Input placeholder={t('common.members.inputWorkspaceNameToDissolve')} className='mb-2' value={confirmWorkspaceName} onChange={e => setConfirmWorkspaceName(e.target.value)} />
         <Divider className='m-0' />
 
-        <div className='flex w-full items-center justify-center gap-2 p-3'>
-          <Button className='w-full' onClick={onCancel}>
+        <div className='flex items-start justify-end gap-2 self-stretch'>
+          <Button onClick={onCancel}>
             {t('app.iconPicker.cancel')}
           </Button>
 
-          <Button variant="warning" className='w-full' onClick={() => { onDissolve() }} disabled={confirmWorkspaceName !== workspaceName}>
+          <Button variant="warning" onClick={() => { onDissolve() }} disabled={confirmWorkspaceName !== workspaceName}>
             {t('common.members.dissolve')}
           </Button>
         </div>

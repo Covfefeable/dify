@@ -94,7 +94,7 @@ const WorkplaceSelector = () => {
                       <span className='system-xs-medium-uppercase flex-1 text-text-tertiary'>{t('common.userProfile.workspace')}</span>
                       {isCurrentWorkspaceManager && (
                         <a
-                          className='system-xs-medium cursor-pointer hover:text-text-primary'
+                          className='system-xs-medium cursor-pointer text-blue-600'
                           onClick={() => setIsShowCreateWorkspace(true)}
                         >
                           {t('common.userProfile.createWorkspace')}
@@ -127,15 +127,15 @@ const WorkplaceSelector = () => {
         isShow={isShowCreateWorkspace}
         onClose={() => setIsShowCreateWorkspace(false)}
       >
-        <Input value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} placeholder={t('common.userProfile.workspace')} className='my-5 px-3 py-2.5'/>
+        <Input value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} placeholder={t('common.account.workspaceName')} className='my-5 px-3 py-2.5'/>
         <Divider className='m-0' />
 
-        <div className='flex w-full items-center justify-center gap-2 p-3'>
-          <Button className='w-full' onClick={() => setIsShowCreateWorkspace(false)}>
+        <div className='flex items-start justify-end gap-2 self-stretch'>
+          <Button onClick={() => setIsShowCreateWorkspace(false)}>
             {t('app.iconPicker.cancel')}
           </Button>
 
-          <Button variant="primary" className='w-full' disabled={false} loading={false} onClick={handleCreateWorkspace}>
+          <Button variant="primary" disabled={false} loading={false} onClick={handleCreateWorkspace}>
             {t('app.iconPicker.ok')}
           </Button>
         </div>
