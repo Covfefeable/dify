@@ -37,10 +37,10 @@ const DissolveModal = ({
           {t('common.members.dissolveTip')}
         </div>
 
-        <Input placeholder={t('common.members.inputWorkspaceNameToDissolve')} className='mb-2' value={confirmWorkspaceName} onChange={e => setConfirmWorkspaceName(e.target.value)} />
+        <Input placeholder={t('common.members.inputWorkspaceNameToDissolve')} className='mb-4' value={confirmWorkspaceName} onChange={e => setConfirmWorkspaceName(e.target.value)} />
         <Divider className='m-0' />
 
-        <div className='flex items-start justify-end gap-2 self-stretch'>
+        <div className='mt-4 flex items-start justify-end gap-2 self-stretch'>
           <Button onClick={onCancel}>
             {t('app.iconPicker.cancel')}
           </Button>

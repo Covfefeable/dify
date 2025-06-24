@@ -130,7 +130,7 @@ const WorkplaceSelector = () => {
         <Input value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} placeholder={t('common.account.workspaceName')} className='my-5 px-3 py-2.5'/>
         <Divider className='m-0' />
 
-        <div className='flex items-start justify-end gap-2 self-stretch'>
+        <div className='mt-4 flex items-start justify-end gap-2 self-stretch'>
           <Button onClick={() => setIsShowCreateWorkspace(false)}>
             {t('app.iconPicker.cancel')}
           </Button>
