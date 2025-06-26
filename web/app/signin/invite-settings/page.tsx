@@ -2,7 +2,6 @@
 import { useTranslation } from 'react-i18next'
 import { useDocLink } from '@/context/i18n'
 import { useCallback, useState } from 'react'
-import Link from 'next/link'
 import { useContext } from 'use-context-selector'
 import { useRouter, useSearchParams } from 'next/navigation'
 import useSWR from 'swr'
@@ -143,7 +142,7 @@ export default function InviteSettingsPage() {
         </Button>
       </div>
     </form>
-    <div className="system-xs-regular mt-2 block w-full">
+    {/* <div className="system-xs-regular mt-2 block w-full">
       {t('login.license.tip')}
       &nbsp;
       <Link
@@ -151,6 +150,6 @@ export default function InviteSettingsPage() {
         target='_blank' rel='noopener noreferrer'
         href={docLink('/policies/open-source')}
       >{t('login.license.link')}</Link>
-    </div>
+    </div> */}
   </div>
 }
