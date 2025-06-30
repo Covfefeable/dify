@@ -127,7 +127,11 @@ const CustomWebAppBrand = () => {
       <div className={cn('flex h-14 items-center justify-between rounded-xl bg-background-section-burn px-4', webappBrandRemoved && 'opacity-30')}>
         <div>
           <div className='system-md-medium text-text-primary'>{t('custom.webapp.changeLogo')}</div>
-          <div className='system-xs-regular text-text-tertiary'>{t('custom.webapp.changeLogoTip')}</div>
+          {systemFeatures.branding.workspace_logo ? (
+            <div className='system-xs-regular text-[#D92D20]'>{t('custom.webapp.changeLogoDisabledTip')}</div>
+          ) : (
+            <div className='system-xs-regular text-text-tertiary'>{t('custom.webapp.changeLogoTip')}</div>
+          )}
         </div>
         <div className='flex items-center'>
           {(!uploadDisabled && webappLogo && !webappBrandRemoved) && (
@@ -160,7 +164,7 @@ const CustomWebAppBrand = () => {
                   type='file'
                   accept={ALLOW_FILE_EXTENSIONS.map(ext => `.${ext}`).join(',')}
                   onChange={handleChange}
-                  disabled={uploadDisabled}
+                  disabled={uploadDisabled || !!systemFeatures.branding.workspace_logo}
                 />
               </Button>
             )
