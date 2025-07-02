@@ -25,7 +25,6 @@
    ```cli
    cp .env.example .env 
 
-   # add the following lines to the `.env` file
    # Allow users to create workspaces
    ALLOW_CREATE_WORKSPACE=true
    # Enable dataset operator role
@@ -34,9 +33,12 @@
    INIT_WORKSPACE_WHEN_INVITE=false
    # Branding configuration
    BRANDING_ENABLED=true
-   APPLICATION_TITLE=Dify
+   APPLICATION_TITLE=
+   CAN_REPLACE_LOGO=false
    LOGIN_PAGE_LOGO=
    WORKSPACE_LOGO=
+   # Enable model load balancing
+   MODEL_LB_ENABLED=true
    ```
 3. Generate a `SECRET_KEY` in the `.env` file.
 
