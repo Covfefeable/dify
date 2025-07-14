@@ -876,6 +876,10 @@ class LoginConfig(BaseSettings):
         description="URL or path to the logo displayed on the login page",
         default=None,
     )
+    LOGIN_PAGE_TITLE: Optional[str] = Field(
+        description="Custom title for the login page",
+        default=None,
+    )
     WORKSPACE_LOGO: Optional[str] = Field(
         description="URL or path to the logo displayed in the workspace",
         default=None,

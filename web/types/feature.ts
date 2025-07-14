@@ -45,6 +45,7 @@ export type SystemFeatures = {
   branding: {
     enabled: boolean
     login_page_logo: string
+    login_page_title: string
     workspace_logo: string
     favicon: string
     application_title: string
@@ -83,6 +84,7 @@ export const defaultSystemFeatures: SystemFeatures = {
   branding: {
     enabled: false,
     login_page_logo: '',
+    login_page_title: '',
     workspace_logo: '',
     favicon: '',
     application_title: 'test title',

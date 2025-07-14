@@ -36,6 +36,7 @@
    APPLICATION_TITLE=Dify
    CAN_REPLACE_LOGO=false
    LOGIN_PAGE_LOGO=
+   LOGIN_PAGE_TITLE=
    WORKSPACE_LOGO=
    # Enable model load balancing
    MODEL_LB_ENABLED=true

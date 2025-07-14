@@ -72,6 +72,7 @@ class BrandingModel(BaseModel):
     enabled: bool = False
     application_title: str = ""
     login_page_logo: str = ""
+    login_page_title: str = ""
     workspace_logo: str = ""
     favicon: str = ""
 
@@ -206,6 +207,7 @@ class FeatureService:
         system_features.branding.enabled = dify_config.BRANDING_ENABLED
         system_features.branding.application_title = dify_config.APPLICATION_TITLE
         system_features.branding.login_page_logo = dify_config.LOGIN_PAGE_LOGO
+        system_features.branding.login_page_title = dify_config.LOGIN_PAGE_TITLE
         system_features.branding.workspace_logo = dify_config.WORKSPACE_LOGO
 
     @classmethod
@@ -292,6 +294,7 @@ class FeatureService:
         if "Branding" in enterprise_info:
             features.branding.application_title = enterprise_info["Branding"].get("applicationTitle", "")
             features.branding.login_page_logo = enterprise_info["Branding"].get("loginPageLogo", "")
+            features.branding.login_page_title = enterprise_info["Branding"].get("loginPageTitle", "")
             features.branding.workspace_logo = enterprise_info["Branding"].get("workspaceLogo", "")
             features.branding.favicon = enterprise_info["Branding"].get("favicon", "")
 
