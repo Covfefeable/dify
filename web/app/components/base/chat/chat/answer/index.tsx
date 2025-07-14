@@ -154,7 +154,7 @@ const Answer: FC<AnswerProps> = ({
                   data={workflowProcess}
                   item={item}
                   hideProcessDetail={hideProcessDetail}
-                  readonly={!appData.site.show_workflow_steps}
+                  hideDetail={!appData.site.show_workflow_steps}
                 />
               )
             }
