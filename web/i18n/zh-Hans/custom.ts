@@ -11,7 +11,7 @@ const translation = {
     removeBrand: '移除 Powered by 图标',
     changeLogo: '更改 Powered by Brand 图片',
     changeLogoTip: 'SVG 或 PNG 格式，最小尺寸为 40x40px',
-    changeLogoDisabledTip: '已从环境变量配置自定义图标，无法更改',
+    changeLogoDisabledTip: '已初始化自定义图标，无法更改',
   },
   app: {
     title: '定制应用品牌',
