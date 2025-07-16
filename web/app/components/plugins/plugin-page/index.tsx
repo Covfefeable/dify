@@ -59,6 +59,7 @@ const PluginPage = ({
   const { locale } = useContext(I18n)
   const searchParams = useSearchParams()
   const { replace } = useRouter()
+  const systemFeatures = useGlobalPublicStore(s => s.systemFeatures)
   useDocumentTitle(t('plugin.metadata.title'))
 
   // just support install one package now
@@ -184,7 +185,7 @@ const PluginPage = ({
           </div>
           <div className='flex shrink-0 items-center gap-1'>
             {
-              isExploringMarketplace && (
+              isExploringMarketplace && !systemFeatures.branding.enabled && (
                 <>
                   <Link
                     href='https://github.com/langgenius/dify-plugins/issues/new?template=plugin_request.yaml'
