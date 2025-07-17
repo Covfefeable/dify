@@ -10,7 +10,9 @@ import { useTranslation } from 'react-i18next'
 import InviteModal from './invite-modal'
 import InvitedModal from './invited-modal'
 import EditWorkspaceModal from './edit-workspace-modal'
+import TransferOwnershipModal from './transfer-ownership-modal'
 import Operation from './operation'
+import TransferOwnership from './operation/transfer-ownership'
 import { dissolveWorkspace, fetchMembers } from '@/service/common'
 import I18n from '@/context/i18n'
 import { useAppContext } from '@/context/app-context'
@@ -57,7 +59,7 @@ const MembersPage = () => {
   const [invitedModalVisible, setInvitedModalVisible] = useState(false)
   const accounts = data?.accounts || []
   const { notify } = useContext(ToastContext)
-  const { plan, enableBilling } = useProviderContext()
+  const { plan, enableBilling, isAllowTransferWorkspace } = useProviderContext()
   const isNotUnlimitedMemberPlan = enableBilling && plan.type !== Plan.team && plan.type !== Plan.enterprise
   const isMemberFull = enableBilling && isNotUnlimitedMemberPlan && accounts.length >= plan.total.teamMembers
   const [editWorkspaceModalVisible, setEditWorkspaceModalVisible] = useState(false)
@@ -73,6 +75,7 @@ const MembersPage = () => {
       notify({ type: 'error', message: t('common.members.dissolveFailed') })
     }
   }
+  const [showTransferOwnershipModal, setShowTransferOwnershipModal] = useState(false)
 
   return (
     <>
@@ -155,11 +158,18 @@ const MembersPage = () => {
                   </div>
                   <div className='system-sm-regular flex w-[104px] shrink-0 items-center py-2 text-text-secondary'>{dayjs(Number((account.last_active_at || account.created_at)) * 1000).locale(locale === 'zh-Hans' ? 'zh-cn' : 'en').fromNow()}</div>
                   <div className='flex w-[96px] shrink-0 items-center'>
-                    {
-                      isCurrentWorkspaceOwner && account.role !== 'owner'
-                        ? <Operation member={account} operatorRole={currentWorkspace.role} onOperate={mutate} />
-                        : <div className='system-sm-regular px-3 text-text-secondary'>{RoleMap[account.role] || RoleMap.normal}</div>
-                    }
+                    {isCurrentWorkspaceOwner && account.role === 'owner' && isAllowTransferWorkspace && (
+                      <TransferOwnership onOperate={() => setShowTransferOwnershipModal(true)}></TransferOwnership>
+                    )}
+                    {isCurrentWorkspaceOwner && account.role === 'owner' && !isAllowTransferWorkspace && (
+                      <div className='system-sm-regular px-3 text-text-secondary'>{RoleMap[account.role] || RoleMap.normal}</div>
+                    )}
+                    {isCurrentWorkspaceOwner && account.role !== 'owner' && (
+                      <Operation member={account} operatorRole={currentWorkspace.role} onOperate={mutate} />
+                    )}
+                    {!isCurrentWorkspaceOwner && (
+                      <div className='system-sm-regular px-3 text-text-secondary'>{RoleMap[account.role] || RoleMap.normal}</div>
+                    )}
                   </div>
                 </div>
               ))
@@ -204,6 +214,12 @@ const MembersPage = () => {
           />
         )
       }
+      {showTransferOwnershipModal && (
+        <TransferOwnershipModal
+          show={showTransferOwnershipModal}
+          onClose={() => setShowTransferOwnershipModal(false)}
+        />
+      )}
     </>
   )
 }
