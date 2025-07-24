@@ -1,9 +1,6 @@
 'use client'
 import { useState } from 'react'
 import useSWR from 'swr'
-import dayjs from 'dayjs'
-import 'dayjs/locale/zh-cn'
-import relativeTime from 'dayjs/plugin/relativeTime'
 import { useContext } from 'use-context-selector'
 import { RiUserAddLine, RiUserForbidLine } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
@@ -31,7 +28,7 @@ import { useGlobalPublicStore } from '@/context/global-public-context'
 import DissolveModal from './dissolve-modal'
 import { basePath } from '@/utils/var'
 import { ToastContext } from '@/app/components/base/toast'
-dayjs.extend(relativeTime)
+import { useFormatTimeFromNow } from '@/hooks/use-format-time-from-now'
 
 const MembersPage = () => {
   const { t } = useTranslation()
@@ -53,6 +50,7 @@ const MembersPage = () => {
     fetchMembers,
   )
   const { systemFeatures } = useGlobalPublicStore()
+  const { formatTimeFromNow } = useFormatTimeFromNow()
   const [inviteModalVisible, setInviteModalVisible] = useState(false)
   const [dissolveModalVisible, setDissolveModalVisible] = useState(false)
   const [invitationResults, setInvitationResults] = useState<InvitationResult[]>([])
@@ -156,7 +154,7 @@ const MembersPage = () => {
                       <div className='system-xs-regular text-text-tertiary'>{account.email}</div>
                     </div>
                   </div>
-                  <div className='system-sm-regular flex w-[104px] shrink-0 items-center py-2 text-text-secondary'>{dayjs(Number((account.last_active_at || account.created_at)) * 1000).locale(locale === 'zh-Hans' ? 'zh-cn' : 'en').fromNow()}</div>
+                  <div className='system-sm-regular flex w-[104px] shrink-0 items-center py-2 text-text-secondary'>{formatTimeFromNow(Number((account.last_active_at || account.created_at)) * 1000)}</div>
                   <div className='flex w-[96px] shrink-0 items-center'>
                     {isCurrentWorkspaceOwner && account.role === 'owner' && isAllowTransferWorkspace && (
                       <TransferOwnership onOperate={() => setShowTransferOwnershipModal(true)}></TransferOwnership>
