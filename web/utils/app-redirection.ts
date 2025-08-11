@@ -3,6 +3,21 @@ import type { AppMode } from '@/types/app'
 import { basePath } from './var'
 import Toast from '@/app/components/base/toast'
 
+export const getRedirectionPath = (
+  isCurrentWorkspaceEditor: boolean,
+  app: { id: string, mode: AppMode },
+) => {
+  if (!isCurrentWorkspaceEditor) {
+    return `/app/${app.id}/overview`
+  }
+  else {
+    if (app.mode === 'workflow' || app.mode === 'advanced-chat')
+      return `/app/${app.id}/workflow`
+    else
+      return `/app/${app.id}/configuration`
+  }
+}
+
 export const getRedirection = async (
   isCurrentWorkspaceEditor: boolean,
   app: { id: string, mode: AppMode },
