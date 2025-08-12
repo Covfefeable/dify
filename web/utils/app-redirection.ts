@@ -3,12 +3,17 @@ import type { AppMode } from '@/types/app'
 import { basePath } from './var'
 import Toast from '@/app/components/base/toast'
 
-export const getRedirectionPath = (
+export const getRedirectionPath = async (
   isCurrentWorkspaceEditor: boolean,
   app: { id: string, mode: AppMode },
 ) => {
   if (!isCurrentWorkspaceEditor) {
-    return `/app/${app.id}/overview`
+    // return `/app/${app.id}/overview`
+    const { installed_apps }: any = await fetchInstalledAppList(app.id) || {}
+    if (installed_apps?.length > 0)
+      return `${basePath}/explore/installed/${installed_apps[0].id}`
+    else
+      throw new Error('No app found in Explore')
   }
   else {
     if (app.mode === 'workflow' || app.mode === 'advanced-chat')
