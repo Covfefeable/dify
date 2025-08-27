@@ -1,4 +1,4 @@
-from typing import Annotated, Literal, Optional
+from typing import Literal, Optional
 
 from pydantic import (
     AliasChoices,
@@ -1000,6 +1000,18 @@ class WorkflowLogConfig(BaseSettings):
     )
 
 
+class SwaggerUIConfig(BaseSettings):
+    SWAGGER_UI_ENABLED: bool = Field(
+        description="Whether to enable Swagger UI in api module",
+        default=True,
+    )
+
+    SWAGGER_UI_PATH: str = Field(
+        description="Swagger UI page path in api module",
+        default="/swagger-ui.html",
+    )
+
+
 class FeatureConfig(
     # place the configs in alphabet order
     AppExecutionConfig,
@@ -1031,6 +1043,7 @@ class FeatureConfig(
     WorkspaceConfig,
     LoginConfig,
     AccountConfig,
+    SwaggerUIConfig,
     # hosted services config
     HostedServiceConfig,
     CeleryBeatConfig,
