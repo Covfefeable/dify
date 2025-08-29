@@ -20,14 +20,14 @@ type WorkflowProcessProps = {
   expand?: boolean
   hideInfo?: boolean
   hideProcessDetail?: boolean
-  hideDetail?: boolean
+  readonly?: boolean
 }
 const WorkflowProcessItem = ({
   data,
   expand = false,
   hideInfo = false,
   hideProcessDetail = false,
-  hideDetail = false,
+  readonly = false,
 }: WorkflowProcessProps) => {
   const { t } = useTranslation()
   const [collapse, setCollapse] = useState(!expand)
@@ -39,6 +39,8 @@ const WorkflowProcessItem = ({
     setCollapse(!expand)
   }, [expand])
 
+  if (readonly) return null
+
   return (
     <div
       className={cn(
@@ -48,12 +50,11 @@ const WorkflowProcessItem = ({
         succeeded && !collapse && 'bg-state-success-hover',
         failed && !collapse && 'bg-state-destructive-hover',
         collapse && 'bg-workflow-process-bg',
-        hideDetail && 'hidden',
       )}
     >
       <div
-        className={cn('flex cursor-pointer items-center', !collapse && 'px-1.5', hideDetail && 'cursor-default')}
-        onClick={() => !hideDetail && setCollapse(!collapse)}
+        className={cn('flex cursor-pointer items-center', !collapse && 'px-1.5', readonly && 'cursor-default')}
+        onClick={() => !readonly && setCollapse(!collapse)}
       >
         {
           running && (
@@ -73,10 +74,10 @@ const WorkflowProcessItem = ({
         <div className={cn('system-xs-medium text-text-secondary', !collapse && 'grow')}>
           {t('workflow.common.workflowProcess')}
         </div>
-        {!hideDetail && <RiArrowRightSLine className={cn('ml-1 h-4 w-4 text-text-tertiary', !collapse && 'rotate-90')} />}
+        <RiArrowRightSLine className={cn('ml-1 h-4 w-4 text-text-tertiary', !collapse && 'rotate-90')} />
       </div>
       {
-        !collapse && !hideDetail && (
+        !collapse && (
           <div className='mt-1.5'>
             {
               <TracingPanel
