@@ -13,6 +13,7 @@ import { getLanguage } from '@/i18n-config/language'
 import { useAppContext } from '@/context/app-context'
 import { useCreateMCP } from '@/service/use-tools'
 import type { ToolWithProvider } from '@/app/components/workflow/types'
+import { useGlobalPublicStore } from '@/context/global-public-context'
 
 type Props = {
   handleCreate: (provider: ToolWithProvider) => void
@@ -23,6 +24,7 @@ const NewMCPCard = ({ handleCreate }: Props) => {
   const { locale } = useContext(I18n)
   const language = getLanguage(locale)
   const { isCurrentWorkspaceManager } = useAppContext()
+  const systemFeatures = useGlobalPublicStore(s => s.systemFeatures)
 
   const { mutateAsync: createMCP } = useCreateMCP()
 
@@ -53,13 +55,15 @@ const NewMCPCard = ({ handleCreate }: Props) => {
               <div className='system-md-semibold ml-3 text-text-secondary group-hover:text-text-accent'>{t('tools.mcp.create.cardTitle')}</div>
             </div>
           </div>
-          <div className='rounded-b-xl border-t-[0.5px] border-divider-subtle px-4 py-3 text-text-tertiary hover:text-text-accent'>
-            <a href={linkUrl} target='_blank' rel='noopener noreferrer' className='flex items-center space-x-1'>
-              <RiBookOpenLine className='h-3 w-3 shrink-0' />
-              <div className='system-xs-regular grow truncate' title={t('tools.mcp.create.cardLink') || ''}>{t('tools.mcp.create.cardLink')}</div>
-              <RiArrowRightUpLine className='h-3 w-3 shrink-0' />
-            </a>
-          </div>
+          {!systemFeatures.branding.enabled && (
+            <div className='rounded-b-xl border-t-[0.5px] border-divider-subtle px-4 py-3 text-text-tertiary hover:text-text-accent'>
+              <a href={linkUrl} target='_blank' rel='noopener noreferrer' className='flex items-center space-x-1'>
+                <RiBookOpenLine className='h-3 w-3 shrink-0' />
+                <div className='system-xs-regular grow truncate' title={t('tools.mcp.create.cardLink') || ''}>{t('tools.mcp.create.cardLink')}</div>
+                <RiArrowRightUpLine className='h-3 w-3 shrink-0' />
+              </a>
+            </div>
+          )}
         </div>
       )}
       {showModal && (

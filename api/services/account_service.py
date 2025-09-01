@@ -1132,8 +1132,13 @@ class TenantService:
     def dissolve_tenant(tenant: Tenant, operator: Account) -> None:
         """Dissolve tenant"""
         TenantService.check_member_permission(tenant, operator, None, "remove")
+        # Re-query the tenant to ensure we have the correct session instance
+        tenant_to_delete = db.session.query(Tenant).filter_by(id=tenant.id).first()
+        if not tenant_to_delete:
+            raise TenantNotFoundError("Tenant not found.")
+
         db.session.query(TenantAccountJoin).filter_by(tenant_id=tenant.id).delete()
-        db.session.delete(tenant)
+        db.session.delete(tenant_to_delete)
         db.session.commit()
 
     @staticmethod
