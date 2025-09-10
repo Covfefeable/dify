@@ -13,6 +13,7 @@ import Confirm from '@/app/components/base/confirm'
 import Divider from '@/app/components/base/divider'
 import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
 import { useGetInstalledApps, useUninstallApp, useUpdateAppPinStatus } from '@/service/use-explore'
+import { useAppContext } from '@/context/app-context'
 
 const SelectedDiscoveryIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="current" xmlns="http://www.w3.org/2000/svg">
@@ -49,6 +50,7 @@ const SideBar: FC<IExploreSideBarProps> = ({
   const segments = useSelectedLayoutSegments()
   const lastSegment = segments.slice(-1)[0]
   const isDiscoverySelected = lastSegment === 'apps'
+  const { isCurrentWorkspaceEditor } = useAppContext()
   const { installedApps, setInstalledApps, setIsFetchingInstalledApps } = useContext(ExploreContext)
   const { isFetching: isFetchingInstalledApps, data: ret, refetch: fetchInstalledAppList } = useGetInstalledApps()
   const { mutateAsync: uninstallApp } = useUninstallApp()
@@ -96,19 +98,21 @@ const SideBar: FC<IExploreSideBarProps> = ({
   const pinnedAppsCount = installedApps.filter(({ is_pinned }) => is_pinned).length
   return (
     <div className='w-fit shrink-0 cursor-pointer border-r border-divider-burn px-4 pt-6 sm:w-[216px]'>
-      <div className={cn(isDiscoverySelected ? 'text-text-accent' : 'text-text-tertiary')}>
-        <Link
-          href='/explore/apps'
-          className={cn(isDiscoverySelected ? ' bg-components-main-nav-nav-button-bg-active' : 'font-medium hover:bg-state-base-hover',
-            'flex h-9 items-center gap-2 rounded-lg px-3 mobile:w-fit mobile:justify-center mobile:px-2 pc:w-full pc:justify-start')}
-          style={isDiscoverySelected ? { boxShadow: '0px 1px 2px rgba(16, 24, 40, 0.05)' } : {}}
-        >
-          {isDiscoverySelected ? <SelectedDiscoveryIcon /> : <DiscoveryIcon />}
-          {!isMobile && <div className='text-sm'>{t('explore.sidebar.discovery')}</div>}
-        </Link>
-      </div>
+      {isCurrentWorkspaceEditor && (
+        <div className={cn(isDiscoverySelected ? 'text-text-accent' : 'text-text-tertiary')}>
+          <Link
+            href='/explore/apps'
+            className={cn(isDiscoverySelected ? ' bg-components-main-nav-nav-button-bg-active' : 'font-medium hover:bg-state-base-hover',
+              'flex h-9 items-center gap-2 rounded-lg px-3 mobile:w-fit mobile:justify-center mobile:px-2 pc:w-full pc:justify-start')}
+            style={isDiscoverySelected ? { boxShadow: '0px 1px 2px rgba(16, 24, 40, 0.05)' } : {}}
+          >
+            {isDiscoverySelected ? <SelectedDiscoveryIcon /> : <DiscoveryIcon />}
+            {!isMobile && <div className='text-sm'>{t('explore.sidebar.discovery')}</div>}
+          </Link>
+        </div>
+      )}
       {installedApps.length > 0 && (
-        <div className='mt-10'>
+        <div className={cn(isCurrentWorkspaceEditor ? 'mt-10' : '')}>
           <p className='break-all pl-2 text-xs font-medium uppercase text-text-tertiary mobile:px-0'>{t('explore.sidebar.workspace')}</p>
           <div className='mt-3 space-y-1 overflow-y-auto overflow-x-hidden'
             style={{
