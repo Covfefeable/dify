@@ -983,6 +983,10 @@ class LoginConfig(BaseSettings):
         description="URL or path to the logo displayed in the workspace",
         default=None,
     )
+    FAVICON: Optional[str] = Field(
+        description="URL or path to the favicon displayed in the browser tab",
+        default=None,
+    )
 
 
 class AccountConfig(BaseSettings):

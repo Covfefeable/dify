@@ -217,6 +217,7 @@ class FeatureService:
         system_features.branding.login_page_logo = dify_config.LOGIN_PAGE_LOGO
         system_features.branding.login_page_title = dify_config.LOGIN_PAGE_TITLE
         system_features.branding.workspace_logo = dify_config.WORKSPACE_LOGO
+        system_features.branding.favicon = dify_config.FAVICON
 
     @classmethod
     def _fulfill_params_from_env(cls, features: FeatureModel):

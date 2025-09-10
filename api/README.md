@@ -38,6 +38,7 @@
    LOGIN_PAGE_LOGO=
    LOGIN_PAGE_TITLE=
    WORKSPACE_LOGO=
+   FAVICON=
    # Enable model load balancing
    MODEL_LB_ENABLED=true
    ```
