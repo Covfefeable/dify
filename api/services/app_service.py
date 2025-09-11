@@ -427,3 +427,71 @@ class AppService:
         if not site:
             raise ValueError(f"App with code {app_code} not found")
         return str(site.app_id)
+        
+    def copy_app_to_tenant(
+        self,
+        app_model: App,
+        target_tenant_id: str,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        icon_type: Optional[str] = None,
+        icon: Optional[str] = None,
+        icon_background: Optional[str] = None,
+        account: Optional[Account] = None
+    ) -> App:
+        """
+        Copy app to another tenant
+        :param app_model: App instance
+        :param target_tenant_id: target tenant id
+        :param name: new app name
+        :param description: new app description
+        :param icon_type: new app icon type
+        :param icon: new app icon
+        :param icon_background: new app icon background
+        :param account: Account instance
+        :return: App instance
+        """
+        from services.app_dsl_service import AppDslService
+        
+        # Use AppDslService to export the app's DSL
+        session = db.session
+        app_dsl_service = AppDslService(session=session)
+        
+        # Export the app's DSL
+        dsl_content = app_dsl_service.export_dsl(app_model=app_model)
+        
+        # Set new app properties
+        new_name = name if name else f"{app_model.name} (Copy)"
+        new_description = description if description else app_model.description
+        new_icon_type = icon_type if icon_type else app_model.icon_type
+        new_icon = icon if icon else app_model.icon
+        new_icon_background = icon_background if icon_background else app_model.icon_background
+        
+        # Save the current tenant_id
+        original_tenant_id = account.current_tenant_id
+        
+        try:
+            # Temporarily set the account's tenant_id to the target tenant_id
+            account.set_tenant_id(target_tenant_id)
+            
+            # Import the app to the target tenant
+            import_result = app_dsl_service.import_app(
+                account=account,
+                import_mode="yaml-content",
+                yaml_content=dsl_content,
+                name=new_name,
+                description=new_description,
+                icon_type=new_icon_type,
+                icon=new_icon,
+                icon_background=new_icon_background
+            )
+            
+            if import_result.status in ["completed", "completed-with-warnings"]:
+                # Get the newly created app
+                new_app = db.session.query(App).filter(App.id == import_result.app_id).first()
+                return new_app
+            else:
+                raise ValueError(f"Failed to import app: {import_result.error}")
+        finally:
+            # Restore the original tenant_id
+            account.set_tenant_id(original_tenant_id)

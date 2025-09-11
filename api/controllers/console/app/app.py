@@ -379,9 +379,61 @@ class AppTraceApi(Resource):
         return {"result": "success"}
 
 
+class AppCopyToTenantApi(Resource):
+    @setup_required
+    @login_required
+    @account_initialization_required
+    @get_app_model
+    @marshal_with(app_detail_fields_with_site)
+    def post(self, app_model):
+        """Copy app to another tenant"""
+        # The role of the current user in the ta table must be admin, owner, or editor
+        if not current_user.is_editor:
+            raise Forbidden()
+
+        parser = reqparse.RequestParser()
+        parser.add_argument("name", type=str, location="json")
+        parser.add_argument("description", type=_validate_description_length, location="json")
+        parser.add_argument("icon_type", type=str, location="json")
+        parser.add_argument("icon", type=str, location="json")
+        parser.add_argument("icon_background", type=str, location="json")
+        parser.add_argument("target_tenant_id", type=str, required=True, location="json")
+        args = parser.parse_args()
+        
+        # Check if user has access to the target tenant
+        from models.account import TenantAccountJoin
+        target_tenant_id = args["target_tenant_id"]
+        tenant_account = db.session.query(TenantAccountJoin).filter(
+            TenantAccountJoin.tenant_id == target_tenant_id,
+            TenantAccountJoin.account_id == current_user.id
+        ).first()
+        
+        if not tenant_account:
+            raise Forbidden("You don't have access to the target tenant")
+            
+        # Check if user has editor role in the target tenant
+        if not tenant_account.role or tenant_account.role == 'normal':
+            raise Forbidden("You need editor role or above in the target tenant")
+
+        app_service = AppService()
+        app = app_service.copy_app_to_tenant(
+            app_model=app_model,
+            target_tenant_id=args["target_tenant_id"],
+            name=args.get("name"),
+            description=args.get("description"),
+            icon_type=args.get("icon_type"),
+            icon=args.get("icon"),
+            icon_background=args.get("icon_background"),
+            account=current_user
+        )
+
+        return app, 201
+
+
 api.add_resource(AppListApi, "/apps")
 api.add_resource(AppApi, "/apps/<uuid:app_id>")
 api.add_resource(AppCopyApi, "/apps/<uuid:app_id>/copy")
+api.add_resource(AppCopyToTenantApi, "/apps/<uuid:app_id>/copy-to-tenant")
 api.add_resource(AppExportApi, "/apps/<uuid:app_id>/export")
 api.add_resource(AppNameApi, "/apps/<uuid:app_id>/name")
 api.add_resource(AppIconApi, "/apps/<uuid:app_id>/icon")
