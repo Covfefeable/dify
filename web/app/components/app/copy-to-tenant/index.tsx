@@ -12,6 +12,7 @@ import { useWorkspacesContext } from '@/context/workspace-context'
 import { SimpleSelect } from '../../base/select'
 import Divider from '../../base/divider'
 import type { Option } from '../../base/prompt-editor/types'
+import { useAppContext } from '@/context/app-context'
 
 export type CopyToTenantModalProps = {
   appName: string;
@@ -28,14 +29,15 @@ const CopyToTenantModal = ({
 }: CopyToTenantModalProps) => {
   const { t } = useTranslation()
   const { workspaces } = useWorkspacesContext()
+  const { currentWorkspace } = useAppContext()
   const [name, setName] = useState(appName)
   const [targetTenantId, setTargetTenantId] = useState('')
 
   const submit = () => {
-    if (!name.trim()) {
+    if (!name.trim() || !targetTenantId) {
       Toast.notify({
         type: 'error',
-        message: t('explore.appCustomize.nameRequired'),
+        message: t('app.copyToTenant.fieldRequired'),
       })
       return
     }
@@ -77,7 +79,7 @@ const CopyToTenantModal = ({
             <SimpleSelect
               className="w-full"
               placeholder={t('app.copyToTenant.targetWorkspacePlaceholder')}
-              items={workspaces.map(item => ({
+              items={workspaces.filter(item => item.id !== currentWorkspace?.id).map(item => ({
                 name: item.name,
                 value: item.id,
               }))}

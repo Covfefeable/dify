@@ -24,6 +24,7 @@ const translation = {
     targetWorkspacePlaceholder: '请选择目标空间',
     done: '复制成功',
     failed: '复制失败',
+    fieldRequired: '名称和空间为必填字段',
   },
   exportFailed: '导出 DSL 失败',
   importDSL: '导入 DSL 文件',
