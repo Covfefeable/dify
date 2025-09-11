@@ -10,7 +10,6 @@ import Toast from '@/app/components/base/toast'
 import { noop } from 'lodash-es'
 import { useWorkspacesContext } from '@/context/workspace-context'
 import { SimpleSelect } from '../../base/select'
-import Divider from '../../base/divider'
 import type { Option } from '../../base/prompt-editor/types'
 import { useAppContext } from '@/context/app-context'
 
@@ -91,8 +90,7 @@ const CopyToTenantModal = ({
             />
           </div>
         </div>
-        <Divider className='m-0' />
-        <div className="mb-6 flex flex-row-reverse">
+        <div className="flex flex-row-reverse">
           <Button
             className="ml-2 w-24"
             variant="primary"
