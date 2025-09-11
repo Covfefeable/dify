@@ -4,11 +4,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useContext } from 'use-context-selector'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
+import { WorkspaceProvider } from '@/context/workspace-context'
 import { RiBuildingLine, RiGlobalLine, RiLockLine, RiMoreFill, RiVerifiedBadgeLine } from '@remixicon/react'
 import cn from '@/utils/classnames'
 import type { App } from '@/types/app'
 import Toast, { ToastContext } from '@/app/components/base/toast'
-import { copyApp, deleteApp, exportAppConfig, updateAppInfo } from '@/service/apps'
+import { copyApp, copyAppToTenant, deleteApp, exportAppConfig, updateAppInfo } from '@/service/apps'
 import type { DuplicateAppModalProps } from '@/app/components/app/duplicate-modal'
 import AppIcon from '@/app/components/base/app-icon'
 import { useAppContext } from '@/context/app-context'
@@ -32,6 +33,8 @@ import { useGlobalPublicStore } from '@/context/global-public-context'
 import { formatTime } from '@/utils/time'
 import { useGetUserCanAccessApp } from '@/service/access-control'
 import dynamic from 'next/dynamic'
+import type { CopyToTenantModalProps } from '../app/copy-to-tenant'
+import CopyToTenantModal from '../app/copy-to-tenant'
 
 const EditAppModal = dynamic(() => import('@/app/components/explore/create-app-modal'), {
   ssr: false,
@@ -67,6 +70,7 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
 
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDuplicateModal, setShowDuplicateModal] = useState(false)
+  const [showCopyToTenantModal, setShowCopyToTenantModal] = useState(false)
   const [showSwitchModal, setShowSwitchModal] = useState<boolean>(false)
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
   const [showAccessControl, setShowAccessControl] = useState(false)
@@ -151,6 +155,26 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
     }
   }
 
+  const onCopyToTenant: CopyToTenantModalProps['onConfirm'] = async ({ name, targetTenantId }) => {
+    try {
+      await copyAppToTenant({
+        appID: app.id,
+        name,
+        target_tenant_id: targetTenantId,
+      })
+      setShowCopyToTenantModal(false)
+      notify({
+        type: 'success',
+        message: t('app.copyToTenant.done'),
+      })
+      if (onRefresh)
+        onRefresh()
+    }
+    catch {
+      notify({ type: 'error', message: t('app.copyToTenant.failed') })
+    }
+  }
+
   const onExport = async (include = false) => {
     try {
       const { data } = await exportAppConfig({
@@ -222,6 +246,12 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
       e.preventDefault()
       exportCheck()
     }
+    const onClickCopyToTenant = async (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation()
+      props.onClick?.()
+      e.preventDefault()
+      setShowCopyToTenantModal(true)
+    }
     const onClickSwitch = async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation()
       props.onClick?.()
@@ -266,6 +296,9 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
         </button>
         <button className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickExport}>
           <span className='system-sm-regular text-text-secondary'>{t('app.export')}</span>
+        </button>
+        <button className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickCopyToTenant}>
+          <span className='system-sm-regular text-text-secondary'>{t('app.copyToTenant.title')}</span>
         </button>
         {(app.mode === 'completion' || app.mode === 'chat') && (
           <>
@@ -460,6 +493,16 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
           onConfirm={onCopy}
           onHide={() => setShowDuplicateModal(false)}
         />
+      )}
+      {showCopyToTenantModal && (
+        <WorkspaceProvider>
+          <CopyToTenantModal
+            show={showCopyToTenantModal}
+            appName={app.name}
+            onHide={() => setShowCopyToTenantModal(false)}
+            onConfirm={onCopyToTenant}
+          />
+        </WorkspaceProvider>
       )}
       {showSwitchModal && (
         <SwitchAppModal

@@ -35,6 +35,10 @@ export const copyApp: Fetcher<AppDetailResponse, { appID: string; name: string; 
   return post<AppDetailResponse>(`apps/${appID}/copy`, { body: { name, icon_type, icon, icon_background, mode, description } })
 }
 
+export const copyAppToTenant: Fetcher<AppDetailResponse, { appID: string; name: string; target_tenant_id: string }> = ({ appID, name, target_tenant_id }) => {
+  return post<AppDetailResponse>(`apps/${appID}/copy-to-tenant`, { body: { name, target_tenant_id } })
+}
+
 export const exportAppConfig: Fetcher<{ data: string }, { appID: string; include?: boolean; workflowID?: string }> = ({ appID, include = false, workflowID }) => {
   const params = new URLSearchParams({
     include_secret: include.toString(),
