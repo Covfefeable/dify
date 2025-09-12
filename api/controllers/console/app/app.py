@@ -543,7 +543,26 @@ class AppTraceApi(Resource):
         return {"result": "success"}
 
 
+@console_ns.route("/apps/<uuid:app_id>/copy-to-tenant")
 class AppCopyToTenantApi(Resource):
+    @api.doc("copy_app_to_tenant")
+    @api.doc(description="Copy app to another tenant")
+    @api.doc(params={"app_id": "Application ID"})
+    @api.expect(
+        api.model(
+            "AppCopyToTenantRequest",
+            {
+                "name": fields.String(description="New app name"),
+                "description": fields.String(description="New app description"),
+                "icon_type": fields.String(description="Icon type"),
+                "icon": fields.String(description="Icon"),
+                "icon_background": fields.String(description="Icon background"),
+                "target_tenant_id": fields.String(required=True, description="Target tenant ID"),
+            },
+        )
+    )
+    @api.response(201, "App copied successfully")
+    @api.response(403, "Insufficient permissions")
     @setup_required
     @login_required
     @account_initialization_required
