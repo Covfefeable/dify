@@ -1046,6 +1046,8 @@ class TenantService:
             db.session.add(ta)
 
         db.session.commit()
+        if dify_config.BILLING_ENABLED:
+            BillingService.clean_billing_info_cache(tenant.id)
         return ta
 
     @staticmethod
@@ -1203,6 +1205,9 @@ class TenantService:
 
         db.session.delete(ta)
         db.session.commit()
+
+        if dify_config.BILLING_ENABLED:
+            BillingService.clean_billing_info_cache(tenant.id)
 
     @staticmethod
     def update_member_role(tenant: Tenant, member: Account, new_role: str, operator: Account):
