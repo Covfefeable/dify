@@ -171,6 +171,7 @@ class SwitchWorkspaceApi(Resource):
 
         return {"result": "success", "new_tenant": marshal(WorkspaceService.get_tenant_info(new_tenant), tenant_fields)}
     
+
 class CreateWorkspaceApi(Resource):
     @setup_required
     @login_required
@@ -191,6 +192,7 @@ class CreateWorkspaceApi(Resource):
             raise ValueError("Failed to create workspace")
 
         return {"result": "success"}, 201
+
 
 class DissolveWorkspaceApi(Resource):
     @setup_required
@@ -311,7 +313,7 @@ api.add_resource(WorkspaceListApi, "/all-workspaces")  # GET for getting all ten
 api.add_resource(TenantApi, "/workspaces/current", endpoint="workspaces_current")  # GET for getting current tenant info
 api.add_resource(TenantApi, "/info", endpoint="info")  # Deprecated
 api.add_resource(SwitchWorkspaceApi, "/workspaces/switch")  # POST for switching tenant
-api.add_resource(CreateWorkspaceApi, "/workspaces/create") # POST for creating a new tenant
+api.add_resource(CreateWorkspaceApi, "/workspaces/create")  # POST for creating a new tenant
 api.add_resource(DissolveWorkspaceApi, "/workspaces/dissolve")  # POST for dissolving a tenant
 api.add_resource(CustomConfigWorkspaceApi, "/workspaces/custom-config")
 api.add_resource(WebappLogoWorkspaceApi, "/workspaces/custom-config/webapp-logo/upload")

@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import TypedDict, cast
+from typing import Optional, TypedDict, cast
 
 from flask_sqlalchemy.pagination import Pagination
 
@@ -468,11 +468,11 @@ class AppService:
         dsl_content = app_dsl_service.export_dsl(app_model=app_model)
         
         # Set new app properties
-        new_name = name if name else f"{app_model.name} (Copy)"
-        new_description = description if description else app_model.description
-        new_icon_type = icon_type if icon_type else app_model.icon_type
-        new_icon = icon if icon else app_model.icon
-        new_icon_background = icon_background if icon_background else app_model.icon_background
+        new_name = name or f"{app_model.name} (Copy)"
+        new_description = description or app_model.description
+        new_icon_type = icon_type or app_model.icon_type
+        new_icon = icon or app_model.icon
+        new_icon_background = icon_background or app_model.icon_background
         
         # Save the current tenant_id
         original_tenant_id = account.current_tenant_id
