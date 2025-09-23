@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import (
     AliasChoices,
