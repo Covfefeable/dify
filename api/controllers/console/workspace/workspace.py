@@ -14,7 +14,7 @@ from controllers.common.errors import (
     TooManyFilesError,
     UnsupportedFileTypeError,
 )
-from controllers.console import api
+from controllers.console import console_ns
 from controllers.console.admin import admin_required
 from controllers.console.error import AccountNotLinkTenantError
 from controllers.console.wraps import (
@@ -65,6 +65,7 @@ tenants_fields = {
 workspace_fields = {"id": fields.String, "name": fields.String, "status": fields.String, "created_at": TimestampField}
 
 
+@console_ns.route("/workspaces")
 class TenantListApi(Resource):
     @setup_required
     @login_required
@@ -93,6 +94,7 @@ class TenantListApi(Resource):
         return {"workspaces": marshal(tenant_dicts, tenants_fields)}, 200
 
 
+@console_ns.route("/all-workspaces")
 class WorkspaceListApi(Resource):
     @setup_required
     @admin_required
@@ -118,6 +120,8 @@ class WorkspaceListApi(Resource):
         }, 200
 
 
+@console_ns.route("/workspaces/current")
+@console_ns.route("/info")  # Deprecated
 class TenantApi(Resource):
     @setup_required
     @login_required
@@ -143,11 +147,10 @@ class TenantApi(Resource):
             else:
                 raise Unauthorized("workspace is archived")
 
-        if not tenant:
-            raise ValueError("No tenant available")
         return WorkspaceService.get_tenant_info(tenant), 200
 
 
+@console_ns.route("/workspaces/switch")
 class SwitchWorkspaceApi(Resource):
     @setup_required
     @login_required
@@ -170,8 +173,9 @@ class SwitchWorkspaceApi(Resource):
             raise ValueError("Tenant not found")
 
         return {"result": "success", "new_tenant": marshal(WorkspaceService.get_tenant_info(new_tenant), tenant_fields)}
-    
 
+
+@console_ns.route("/workspaces/create")
 class CreateWorkspaceApi(Resource):
     @setup_required
     @login_required
@@ -194,6 +198,7 @@ class CreateWorkspaceApi(Resource):
         return {"result": "success"}, 201
 
 
+@console_ns.route("/workspaces/dissolve")
 class DissolveWorkspaceApi(Resource):
     @setup_required
     @login_required
@@ -217,6 +222,7 @@ class DissolveWorkspaceApi(Resource):
         return {"result": "success"}, 200
 
 
+@console_ns.route("/workspaces/custom-config")
 class CustomConfigWorkspaceApi(Resource):
     @setup_required
     @login_required
@@ -247,6 +253,7 @@ class CustomConfigWorkspaceApi(Resource):
         return {"result": "success", "tenant": marshal(WorkspaceService.get_tenant_info(tenant), tenant_fields)}
 
 
+@console_ns.route("/workspaces/custom-config/webapp-logo/upload")
 class WebappLogoWorkspaceApi(Resource):
     @setup_required
     @login_required
@@ -287,6 +294,7 @@ class WebappLogoWorkspaceApi(Resource):
         return {"id": upload_file.id}, 201
 
 
+@console_ns.route("/workspaces/info")
 class WorkspaceInfoApi(Resource):
     @setup_required
     @login_required
@@ -306,15 +314,3 @@ class WorkspaceInfoApi(Resource):
         db.session.commit()
 
         return {"result": "success", "tenant": marshal(WorkspaceService.get_tenant_info(tenant), tenant_fields)}
-
-
-api.add_resource(TenantListApi, "/workspaces")  # GET for getting all tenants
-api.add_resource(WorkspaceListApi, "/all-workspaces")  # GET for getting all tenants
-api.add_resource(TenantApi, "/workspaces/current", endpoint="workspaces_current")  # GET for getting current tenant info
-api.add_resource(TenantApi, "/info", endpoint="info")  # Deprecated
-api.add_resource(SwitchWorkspaceApi, "/workspaces/switch")  # POST for switching tenant
-api.add_resource(CreateWorkspaceApi, "/workspaces/create")  # POST for creating a new tenant
-api.add_resource(DissolveWorkspaceApi, "/workspaces/dissolve")  # POST for dissolving a tenant
-api.add_resource(CustomConfigWorkspaceApi, "/workspaces/custom-config")
-api.add_resource(WebappLogoWorkspaceApi, "/workspaces/custom-config/webapp-logo/upload")
-api.add_resource(WorkspaceInfoApi, "/workspaces/info")  # POST for changing workspace info
