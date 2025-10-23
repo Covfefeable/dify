@@ -34,7 +34,7 @@ type AccountFormValues = z.infer<typeof accountFormSchema>
 
 const InstallForm = () => {
   useDocumentTitle('')
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const docLink = useDocLink()
   const router = useRouter()
   const [showPassword, setShowPassword] = React.useState(false)
@@ -57,6 +57,7 @@ const InstallForm = () => {
     await setup({
       body: {
         ...data,
+        language: i18n.language,
       },
     })
 
