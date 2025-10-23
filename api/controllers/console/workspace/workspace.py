@@ -178,6 +178,7 @@ class CreateWorkspaceApi(Resource):
     @login_required
     @account_initialization_required
     def post(self):
+        current_user, _ = current_account_with_tenant()
         parser = reqparse.RequestParser()
         parser.add_argument("name", type=str, required=True, location="json")
         args = parser.parse_args()
@@ -201,6 +202,7 @@ class DissolveWorkspaceApi(Resource):
     @login_required
     @account_initialization_required
     def post(self):
+        current_user, _ = current_account_with_tenant()
         parser = reqparse.RequestParser()
         parser.add_argument("id", type=str, required=True, location="json")
         args = parser.parse_args()
