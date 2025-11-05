@@ -73,6 +73,8 @@ const PluginPage = ({
     }
   }, [searchParams])
 
+  const [uniqueIdentifier, setUniqueIdentifier] = useState<string | null>(null)
+
   const [dependencies, setDependencies] = useState<Dependency[]>([])
   const bundleInfo = useMemo(() => {
     const info = searchParams.get(BUNDLE_INFO_KEY)
@@ -100,6 +102,7 @@ const PluginPage = ({
 
   useEffect(() => {
     (async () => {
+      setUniqueIdentifier(null)
       await sleep(100)
       if (packageId) {
         const { data } = await fetchManifestFromMarketPlace(encodeURIComponent(packageId))
@@ -109,6 +112,7 @@ const PluginPage = ({
           version: version.version,
           icon: `${MARKETPLACE_API_PREFIX}/plugins/${plugin.org}/${plugin.name}/icon`,
         })
+        setUniqueIdentifier(packageId)
         showInstallFromMarketplace()
         return
       }
@@ -284,10 +288,10 @@ const PluginPage = ({
       )}
 
       {
-        isShowInstallFromMarketplace && (
+        isShowInstallFromMarketplace && uniqueIdentifier && (
           <InstallFromMarketplace
             manifest={manifest! as PluginManifestInMarket}
-            uniqueIdentifier={packageId}
+            uniqueIdentifier={uniqueIdentifier}
             isBundle={!!bundleInfo}
             dependencies={dependencies}
             onClose={hideInstallFromMarketplace}
