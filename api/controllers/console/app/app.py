@@ -1,5 +1,6 @@
 import uuid
 
+from flask_login import current_user
 from flask_restx import Resource, fields, inputs, marshal, marshal_with, reqparse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -557,7 +558,7 @@ class AppCopyToTenantApi(Resource):
 
         parser = reqparse.RequestParser()
         parser.add_argument("name", type=str, location="json")
-        parser.add_argument("description", type=_validate_description_length, location="json")
+        parser.add_argument("description", type=validate_description_length, location="json")
         parser.add_argument("icon_type", type=str, location="json")
         parser.add_argument("icon", type=str, location="json")
         parser.add_argument("icon_background", type=str, location="json")
