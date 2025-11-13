@@ -240,7 +240,6 @@ const GenerationItem: FC<IGenerationItemProps> = ({
                         expand={workflowProcessData.expand}
                         hideProcessDetail={hideProcessDetail}
                         hideInfo={hideProcessDetail}
-                        hideDetail={!siteInfo.show_workflow_steps}
                       />
                     )}
                     {showResultTabs && (

@@ -1,11 +1,11 @@
 import { fetchInstalledAppList } from '@/service/explore'
-import type { AppMode } from '@/types/app'
+import { AppModeEnum } from '@/types/app'
 import { basePath } from './var'
 import Toast from '@/app/components/base/toast'
 
 export const getRedirectionPath = async (
   isCurrentWorkspaceEditor: boolean,
-  app: { id: string, mode: AppMode },
+  app: { id: string, mode: AppModeEnum },
 ) => {
   if (!isCurrentWorkspaceEditor) {
     // return `/app/${app.id}/overview`
@@ -16,7 +16,7 @@ export const getRedirectionPath = async (
       throw new Error('No app found in Explore')
   }
   else {
-    if (app.mode === 'workflow' || app.mode === 'advanced-chat')
+    if (app.mode === AppModeEnum.WORKFLOW || app.mode === AppModeEnum.ADVANCED_CHAT)
       return `/app/${app.id}/workflow`
     else
       return `/app/${app.id}/configuration`
@@ -25,7 +25,7 @@ export const getRedirectionPath = async (
 
 export const getRedirection = async (
   isCurrentWorkspaceEditor: boolean,
-  app: { id: string, mode: AppMode },
+  app: { id: string, mode: AppModeEnum },
   redirectionFunc: (href: string) => void,
 ) => {
   if (!isCurrentWorkspaceEditor) {

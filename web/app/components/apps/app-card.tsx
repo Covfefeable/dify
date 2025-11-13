@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { WorkspaceProvider } from '@/context/workspace-context'
 import { RiBuildingLine, RiGlobalLine, RiLockLine, RiMoreFill, RiVerifiedBadgeLine } from '@remixicon/react'
 import cn from '@/utils/classnames'
-import type { App } from '@/types/app'
+import { type App, AppModeEnum } from '@/types/app'
 import Toast, { ToastContext } from '@/app/components/base/toast'
 import { copyApp, copyAppToTenant, deleteApp, exportAppConfig, updateAppInfo } from '@/service/apps'
 import type { DuplicateAppModalProps } from '@/app/components/app/duplicate-modal'
@@ -195,7 +195,7 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
   }
 
   const exportCheck = async () => {
-    if (app.mode !== 'workflow' && app.mode !== 'advanced-chat') {
+    if (app.mode !== AppModeEnum.WORKFLOW && app.mode !== AppModeEnum.ADVANCED_CHAT) {
       onExport()
       return
     }
@@ -302,7 +302,7 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
         <button className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickCopyToTenant}>
           <span className='system-sm-regular text-text-secondary'>{t('app.copyToTenant.title')}</span>
         </button>
-        {(app.mode === 'completion' || app.mode === 'chat') && (
+        {(app.mode === AppModeEnum.COMPLETION || app.mode === AppModeEnum.CHAT) && (
           <>
             <Divider className="my-1" />
             <button
@@ -458,7 +458,7 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
                     )
                   }
                   popupClassName={
-                    (app.mode === 'completion' || app.mode === 'chat')
+                    (app.mode === AppModeEnum.COMPLETION || app.mode === AppModeEnum.CHAT)
                       ? '!w-[256px] translate-x-[-224px]'
                       : '!w-[216px] translate-x-[-128px]'
                   }
