@@ -55,7 +55,8 @@ const translation = {
     },
     field: 'Kebun',
     queryTitle: 'Kueri konten',
-    execution: 'EKSEKUSI',
+    execution: 'Jalankan',
+    executions: '{{num}} kali dijalankan',
     copy: 'Menyalin',
     title: 'Penyelesaian AI',
     downloadTemplate: 'Unduh templat di sini',
@@ -67,7 +68,7 @@ const translation = {
     queryPlaceholder: 'Tulis konten kueri Anda...',
     resultTitle: 'Penyelesaian AI',
     browse: 'ramban',
-    stopRun: 'Berhenti Lari',
+    stopRun: 'Hentikan eksekusi',
   },
   login: {
     backToHome: 'Kembali ke Beranda',
