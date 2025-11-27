@@ -25,6 +25,7 @@ from fields.app_fields import (
     model_config_partial_fields,
     site_fields,
     tag_fields,
+    app_detail_fields_with_site,
 )
 from fields.workflow_fields import workflow_partial_fields as _workflow_partial_fields_dict
 from libs.helper import AppIconUrlField, TimestampField
@@ -667,11 +668,11 @@ class AppTraceApi(Resource):
 
 @console_ns.route("/apps/<uuid:app_id>/copy-to-tenant")
 class AppCopyToTenantApi(Resource):
-    @api.doc("copy_app_to_tenant")
-    @api.doc(description="Copy app to another tenant")
-    @api.doc(params={"app_id": "Application ID"})
-    @api.expect(
-        api.model(
+    @console_ns.doc("copy_app_to_tenant")
+    @console_ns.doc(description="Copy app to another tenant")
+    @console_ns.doc(params={"app_id": "Application ID"})
+    @console_ns.expect(
+        console_ns.model(
             "AppCopyToTenantRequest",
             {
                 "name": fields.String(description="New app name"),
@@ -683,8 +684,8 @@ class AppCopyToTenantApi(Resource):
             },
         )
     )
-    @api.response(201, "App copied successfully")
-    @api.response(403, "Insufficient permissions")
+    @console_ns.response(201, "App copied successfully")
+    @console_ns.response(403, "Insufficient permissions")
     @setup_required
     @login_required
     @account_initialization_required
@@ -735,13 +736,4 @@ class AppCopyToTenantApi(Resource):
         return app, 201
 
 
-api.add_resource(AppListApi, "/apps")
-api.add_resource(AppApi, "/apps/<uuid:app_id>")
-api.add_resource(AppCopyApi, "/apps/<uuid:app_id>/copy")
-api.add_resource(AppCopyToTenantApi, "/apps/<uuid:app_id>/copy-to-tenant")
-api.add_resource(AppExportApi, "/apps/<uuid:app_id>/export")
-api.add_resource(AppNameApi, "/apps/<uuid:app_id>/name")
-api.add_resource(AppIconApi, "/apps/<uuid:app_id>/icon")
-api.add_resource(AppSiteStatus, "/apps/<uuid:app_id>/site-enable")
-api.add_resource(AppApiStatus, "/apps/<uuid:app_id>/api-enable")
-api.add_resource(AppTraceApi, "/apps/<uuid:app_id>/trace")
+ 
