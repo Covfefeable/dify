@@ -659,9 +659,10 @@ class AppCopyToTenantApi(Resource):
     @get_app_model
     @marshal_with(app_detail_fields_with_site)
     def post(self, app_model):
+        current_user, current_tenant_id = current_account_with_tenant()
         """Copy app to another tenant"""
         # The role of the current user in the ta table must be admin, owner, or editor
-        if not current_user.is_editor:
+        if not current_user.has_edit_permission:
             raise Forbidden()
 
         parser = reqparse.RequestParser()
