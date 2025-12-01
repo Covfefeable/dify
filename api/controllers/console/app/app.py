@@ -22,12 +22,12 @@ from core.ops.ops_trace_manager import OpsTraceManager
 from core.workflow.enums import NodeType
 from extensions.ext_database import db
 from fields.app_fields import (
+    app_detail_fields_with_site,
     deleted_tool_fields,
     model_config_fields,
     model_config_partial_fields,
     site_fields,
     tag_fields,
-    app_detail_fields_with_site,
 )
 from fields.workflow_fields import workflow_partial_fields as _workflow_partial_fields_dict
 from libs.helper import AppIconUrlField, TimestampField
