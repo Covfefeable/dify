@@ -84,6 +84,10 @@ export const copyApp = ({
   return post<AppDetailResponse>(`apps/${appID}/copy`, { body: { name, icon_type, icon, icon_background, mode, description } })
 }
 
+export const copyAppToTenant = ({ appID, name, target_tenant_id }: { appID: string; name: string; target_tenant_id: string }): Promise<AppDetailResponse> => {
+  return post<AppDetailResponse>(`apps/${appID}/copy-to-tenant`, { body: { name, target_tenant_id } })
+}
+
 export const exportAppConfig = ({ appID, include = false, workflowID }: { appID: string; include?: boolean; workflowID?: string }): Promise<{ data: string }> => {
   const params = new URLSearchParams({
     include_secret: include.toString(),
