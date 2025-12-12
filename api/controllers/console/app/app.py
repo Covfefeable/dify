@@ -2,11 +2,12 @@ import uuid
 from typing import Literal
 
 from flask import request
-from flask_restx import Resource, fields, marshal, marshal_with
+from flask_restx import Resource, fields, marshal, marshal_with, reqparse
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Forbidden
+from libs.validators import validate_description_length
 
 from controllers.console import console_ns
 from controllers.console.app.wraps import get_app_model
