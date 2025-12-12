@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from werkzeug.exceptions import BadRequest, Forbidden
-from libs.validators import validate_description_length
 
 from controllers.console import console_ns
 from controllers.console.app.wraps import get_app_model
@@ -33,6 +32,7 @@ from fields.app_fields import (
 from fields.workflow_fields import workflow_partial_fields as _workflow_partial_fields_dict
 from libs.helper import AppIconUrlField, TimestampField
 from libs.login import current_account_with_tenant, login_required
+from libs.validators import validate_description_length
 from models import App, Workflow
 from services.app_dsl_service import AppDslService, ImportMode
 from services.app_service import AppService
