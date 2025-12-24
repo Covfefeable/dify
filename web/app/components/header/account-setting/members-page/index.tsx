@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import useSWR from 'swr'
 import { useContext } from 'use-context-selector'
 import { RiUserAddLine, RiUserForbidLine } from '@remixicon/react'
 import { useTranslation } from 'react-i18next'
@@ -10,7 +9,7 @@ import EditWorkspaceModal from './edit-workspace-modal'
 import TransferOwnershipModal from './transfer-ownership-modal'
 import Operation from './operation'
 import TransferOwnership from './operation/transfer-ownership'
-import { dissolveWorkspace, fetchMembers } from '@/service/common'
+import { dissolveWorkspace } from '@/service/common'
 import I18n from '@/context/i18n'
 import { useAppContext } from '@/context/app-context'
 import Avatar from '@/app/components/base/avatar'
@@ -29,6 +28,7 @@ import DissolveModal from './dissolve-modal'
 import { basePath } from '@/utils/var'
 import { ToastContext } from '@/app/components/base/toast'
 import { useFormatTimeFromNow } from '@/hooks/use-format-time-from-now'
+import { useMembers } from '@/service/use-common'
 
 const MembersPage = () => {
   const { t } = useTranslation()
@@ -42,13 +42,7 @@ const MembersPage = () => {
   const { locale } = useContext(I18n)
 
   const { userProfile, currentWorkspace, isCurrentWorkspaceOwner, isCurrentWorkspaceManager } = useAppContext()
-  const { data, mutate } = useSWR(
-    {
-      url: '/workspaces/current/members',
-      params: {},
-    },
-    fetchMembers,
-  )
+  const { data, refetch } = useMembers()
   const { systemFeatures } = useGlobalPublicStore()
   const { formatTimeFromNow } = useFormatTimeFromNow()
   const [inviteModalVisible, setInviteModalVisible] = useState(false)
@@ -163,7 +157,7 @@ const MembersPage = () => {
                       <div className='system-sm-regular px-3 text-text-secondary'>{RoleMap[account.role] || RoleMap.normal}</div>
                     )}
                     {isCurrentWorkspaceOwner && account.role !== 'owner' && (
-                      <Operation member={account} operatorRole={currentWorkspace.role} onOperate={mutate} />
+                      <Operation member={account} operatorRole={currentWorkspace.role} onOperate={refetch} />
                     )}
                     {!isCurrentWorkspaceOwner && (
                       <div className='system-sm-regular px-3 text-text-secondary'>{RoleMap[account.role] || RoleMap.normal}</div>
@@ -183,7 +177,7 @@ const MembersPage = () => {
             onSend={(invitationResults) => {
               setInvitedModalVisible(true)
               setInvitationResults(invitationResults)
-              mutate()
+              refetch()
             }}
           />
         )

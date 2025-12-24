@@ -4,7 +4,6 @@ import { useDocLink } from '@/context/i18n'
 import { useCallback, useState } from 'react'
 import { useContext } from 'use-context-selector'
 import { useRouter, useSearchParams } from 'next/navigation'
-import useSWR from 'swr'
 import { RiAccountCircleLine } from '@remixicon/react'
 import Input from '@/app/components/base/input'
 import { SimpleSelect } from '@/app/components/base/select'
@@ -12,12 +11,13 @@ import Button from '@/app/components/base/button'
 import { timezones } from '@/utils/timezone'
 import { LanguagesSupported, languages } from '@/i18n-config/language'
 import I18n from '@/context/i18n'
-import { activateMember, invitationCheck } from '@/service/common'
+import { activateMember } from '@/service/common'
 import Loading from '@/app/components/base/loading'
 import Toast from '@/app/components/base/toast'
 import { noop } from 'lodash-es'
 import { useGlobalPublicStore } from '@/context/global-public-context'
 import { resolvePostLoginRedirect } from '../utils/post-login-redirect'
+import { useInvitationCheck } from '@/service/use-common'
 
 export default function InviteSettingsPage() {
   const { t } = useTranslation()
@@ -37,9 +37,7 @@ export default function InviteSettingsPage() {
       token,
     },
   }
-  const { data: checkRes, mutate: recheck } = useSWR(checkParams, invitationCheck, {
-    revalidateOnFocus: false,
-  })
+  const { data: checkRes, refetch: recheck } = useInvitationCheck(checkParams.params, !!token)
 
   const handleActivate = useCallback(async () => {
     try {
