@@ -1,19 +1,19 @@
 'use client'
-import { useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useContext } from 'use-context-selector'
+import type { ToolWithProvider } from '@/app/components/workflow/types'
 import {
   RiAddCircleFill,
   RiArrowRightUpLine,
   RiBookOpenLine,
 } from '@remixicon/react'
-import MCPModal from './modal'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useContext } from 'use-context-selector'
+import { useAppContext } from '@/context/app-context'
+import { useGlobalPublicStore } from '@/context/global-public-context'
 import I18n from '@/context/i18n'
 import { getLanguage } from '@/i18n-config/language'
-import { useAppContext } from '@/context/app-context'
 import { useCreateMCP } from '@/service/use-tools'
-import type { ToolWithProvider } from '@/app/components/workflow/types'
-import { useGlobalPublicStore } from '@/context/global-public-context'
+import MCPModal from './modal'
 
 type Props = {
   handleCreate: (provider: ToolWithProvider) => void
@@ -46,13 +46,13 @@ const NewMCPCard = ({ handleCreate }: Props) => {
   return (
     <>
       {isCurrentWorkspaceManager && (
-        <div className='col-span-1 flex min-h-[108px] cursor-pointer flex-col rounded-xl bg-background-default-dimmed transition-all duration-200 ease-in-out'>
-          <div className='group grow rounded-t-xl' onClick={() => setShowModal(true)}>
-            <div className='flex shrink-0 items-center p-4 pb-3'>
-              <div className='flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-divider-deep group-hover:border-solid group-hover:border-state-accent-hover-alt group-hover:bg-state-accent-hover'>
-                <RiAddCircleFill className='h-4 w-4 text-text-quaternary group-hover:text-text-accent'/>
+        <div className="col-span-1 flex min-h-[108px] cursor-pointer flex-col rounded-xl bg-background-default-dimmed transition-all duration-200 ease-in-out">
+          <div className="group grow rounded-t-xl" onClick={() => setShowModal(true)}>
+            <div className="flex shrink-0 items-center p-4 pb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-divider-deep group-hover:border-solid group-hover:border-state-accent-hover-alt group-hover:bg-state-accent-hover">
+                <RiAddCircleFill className="h-4 w-4 text-text-quaternary group-hover:text-text-accent" />
               </div>
-              <div className='system-md-semibold ml-3 text-text-secondary group-hover:text-text-accent'>{t('tools.mcp.create.cardTitle')}</div>
+              <div className="system-md-semibold ml-3 text-text-secondary group-hover:text-text-accent">{t('tools.mcp.create.cardTitle')}</div>
             </div>
           </div>
           {!systemFeatures.branding.enabled && (
