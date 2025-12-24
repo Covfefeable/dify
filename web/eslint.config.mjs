@@ -11,6 +11,7 @@ export default antfu(
         'react/no-context-provider': 'off',
         'react/no-forward-ref': 'off',
         'react/no-use-context': 'off',
+        'react/prefer-namespace-import': 'error',
       },
     },
     nextjs: true,
@@ -18,6 +19,7 @@ export default antfu(
     typescript: {
       overrides: {
         'ts/consistent-type-definitions': ['error', 'type'],
+        'ts/no-explicit-any': 'warn',
       },
     },
     test: {
@@ -39,7 +41,6 @@ export default antfu(
       'next/inline-script-id': 'warn',
       'no-console': 'warn',
       'no-irregular-whitespace': 'warn',
-      'no-unused-vars': 'warn',
       'node/prefer-global/buffer': 'warn',
       'node/prefer-global/process': 'warn',
       'react/no-create-ref': 'warn',
@@ -54,7 +55,6 @@ export default antfu(
       'test/no-identical-title': 'warn',
       'test/prefer-hooks-in-order': 'warn',
       'ts/no-empty-object-type': 'warn',
-      'ts/no-require-imports': 'warn',
       'unicorn/prefer-number-properties': 'warn',
       'unused-imports/no-unused-vars': 'warn',
     },
