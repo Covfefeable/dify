@@ -6,6 +6,7 @@ import { AppTypeIcon } from '../../app/type-selector'
 import AppIcon from '../../base/app-icon'
 
 const parser = (apps: App[]): AppSearchResult[] => {
+  // @ts-expect-error ignore
   return apps.map(app => ({
     id: app.id,
     title: app.name,
