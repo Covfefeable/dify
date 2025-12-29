@@ -1,7 +1,6 @@
 'use client'
 import type { Option } from '../../base/prompt-editor/types'
 import { RiCloseLine } from '@remixicon/react'
-import { noop } from 'lodash-es'
 import * as React from 'react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -52,7 +51,7 @@ const CopyToTenantModal = ({
     <>
       <Modal
         isShow={show}
-        onClose={noop}
+        onClose={() => {}}
         className={cn('relative !max-w-[480px]', 'px-8')}
       >
         <div

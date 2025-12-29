@@ -11,6 +11,7 @@ const translation = {
     removeBrand: 'Remove Powered by Dify',
     changeLogo: 'Change Powered by Brand Image',
     changeLogoTip: 'SVG or PNG format with a minimum size of 40x40px',
+    changeLogoDisabledTip: 'Customized icon has been initialized and cannot be changed',
   },
   app: {
     title: 'Customize app header brand',

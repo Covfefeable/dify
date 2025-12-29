@@ -286,6 +286,11 @@ const translation = {
   members: {
     team: 'Team',
     invite: 'Add',
+    dissolve: 'Dissolve',
+    dissolveConfirm: 'Confirm dissolve?',
+    inputWorkspaceNameToDissolve: 'Enter the workspace name to confirm dissolve',
+    dissolveTip: 'After dissolving the workspace, all members will be removed and will no longer be able to access the apps and data within the workspace.',
+    dissolveFailed: 'Dissolve failed',
     name: 'NAME',
     lastActive: 'LAST ACTIVE',
     role: 'ROLES',
