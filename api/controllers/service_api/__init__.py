@@ -33,6 +33,7 @@ from .dataset import (
     hit_testing,
     metadata,
     segment,
+    upload_file,
 )
 from .workspace import models
 
@@ -53,6 +54,7 @@ __all__ = [
     "models",
     "segment",
     "site",
+    "upload_file",
     "workflow",
 ]
 
