@@ -28,11 +28,11 @@ const WorkplaceSelector = () => {
       if (currentWorkspace?.id === tenant_id)
         return
       await switchWorkspace({ url: '/workspaces/switch', body: { tenant_id } })
-      notify({ type: 'success', message: t('common.actionMsg.modifiedSuccessfully') })
+      notify({ type: 'success', message: t('actionMsg.modifiedSuccessfully', { ns: 'common' }) })
       location.assign(`${location.origin}${basePath}`)
     }
     catch {
-      notify({ type: 'error', message: t('common.provider.saveFailed') })
+      notify({ type: 'error', message: t('provider.saveFailed', { ns: 'common' }) })
     }
   }
 
@@ -43,11 +43,11 @@ const WorkplaceSelector = () => {
       await createWorkspace({ url: '/workspaces/create', body: { name: workspaceName } })
       setIsShowCreateWorkspace(false)
       setWorkspaceName('')
-      notify({ type: 'success', message: t('common.api.actionSuccess') })
+      notify({ type: 'success', message: t('api.actionSuccess', { ns: 'common' }) })
       location.assign(`${location.origin}${basePath}`)
     }
     catch {
-      notify({ type: 'error', message: t('common.provider.saveFailed') })
+      notify({ type: 'error', message: t('provider.saveFailed', { ns: 'common' }) })
     }
   }
 
@@ -91,13 +91,13 @@ const WorkplaceSelector = () => {
                 >
                   <div className="flex w-full flex-col items-start self-stretch rounded-xl border-[0.5px] border-components-panel-border p-1 pb-2 shadow-lg ">
                     <div className='flex items-start justify-between self-stretch px-3 pb-0.5 pt-1'>
-                      <span className='system-xs-medium-uppercase flex-1 text-text-tertiary'>{t('common.userProfile.workspace')}</span>
+                      <span className='system-xs-medium-uppercase flex-1 text-text-tertiary'>{t('userProfile.workspace', { ns: 'common' })}</span>
                       {isCurrentWorkspaceManager && (
                         <a
                           className='system-xs-medium cursor-pointer text-blue-600'
                           onClick={() => setIsShowCreateWorkspace(true)}
                         >
-                          {t('common.userProfile.createWorkspace')}
+                          {t('userProfile.createWorkspace', { ns: 'common' })}
                         </a>
                       )}
 
@@ -121,22 +121,22 @@ const WorkplaceSelector = () => {
         }
       </Menu>
       <Modal
-        title={t('common.userProfile.createWorkspace')}
+        title={t('userProfile.createWorkspace', { ns: 'common' })}
         closable
         className="!w-[362px] !p-5"
         isShow={isShowCreateWorkspace}
         onClose={() => setIsShowCreateWorkspace(false)}
       >
-        <Input value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} placeholder={t('common.account.workspaceName')} className='my-5 px-3 py-2.5'/>
+        <Input value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} placeholder={t('account.workspaceName', { ns: 'common' })} className='my-5 px-3 py-2.5'/>
         <Divider className='m-0' />
 
         <div className='mt-4 flex items-start justify-end gap-2 self-stretch'>
           <Button onClick={() => setIsShowCreateWorkspace(false)}>
-            {t('app.iconPicker.cancel')}
+            {t('iconPicker.cancel', { ns: 'app' })}
           </Button>
 
           <Button variant="primary" disabled={false} loading={false} onClick={handleCreateWorkspace}>
-            {t('app.iconPicker.ok')}
+            {t('iconPicker.ok', { ns: 'app' })}
           </Button>
         </div>
       </Modal>
