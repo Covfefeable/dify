@@ -7,10 +7,9 @@ import {
 } from '@remixicon/react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useContext } from 'use-context-selector'
 import { useAppContext } from '@/context/app-context'
 import { useGlobalPublicStore } from '@/context/global-public-context'
-import I18n from '@/context/i18n'
+import { useLocale } from '@/context/i18n'
 import { getLanguage } from '@/i18n-config/language'
 import { useCreateMCP } from '@/service/use-tools'
 import MCPModal from './modal'
@@ -21,7 +20,7 @@ type Props = {
 
 const NewMCPCard = ({ handleCreate }: Props) => {
   const { t } = useTranslation()
-  const { locale } = useContext(I18n)
+  const locale = useLocale()
   const language = getLanguage(locale)
   const { isCurrentWorkspaceManager } = useAppContext()
   const systemFeatures = useGlobalPublicStore(s => s.systemFeatures)

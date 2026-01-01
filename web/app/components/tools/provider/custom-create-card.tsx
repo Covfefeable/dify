@@ -7,12 +7,11 @@ import {
 } from '@remixicon/react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useContext } from 'use-context-selector'
 import Toast from '@/app/components/base/toast'
 import EditCustomToolModal from '@/app/components/tools/edit-custom-collection-modal'
 import { useAppContext } from '@/context/app-context'
 import { useGlobalPublicStore } from '@/context/global-public-context'
-import I18n, { useDocLink } from '@/context/i18n'
+import { useDocLink, useLocale } from '@/context/i18n'
 import { getLanguage } from '@/i18n-config/language'
 import { createCustomCollection } from '@/service/tools'
 
@@ -22,7 +21,7 @@ type Props = {
 
 const Contribute = ({ onRefreshData }: Props) => {
   const { t } = useTranslation()
-  const { locale } = useContext(I18n)
+  const locale = useLocale()
   const language = getLanguage(locale)
   const { isCurrentWorkspaceManager } = useAppContext()
   const systemFeatures = useGlobalPublicStore(s => s.systemFeatures)
