@@ -27,7 +27,7 @@ const DissolveModal = ({
   return (
     <div className={cn(s.wrap)}>
       <Modal
-        title={t('common.members.dissolveConfirm')}
+        title={t('members.dissolveConfirm', { ns: 'common' })}
         closable
         className="!w-[362px] !p-5"
         isShow
@@ -35,19 +35,19 @@ const DissolveModal = ({
       >
 
         <div className="my-4 text-sm text-text-secondary">
-          {t('common.members.dissolveTip')}
+          {t('members.dissolveTip', { ns: 'common' })}
         </div>
 
-        <Input placeholder={t('common.members.inputWorkspaceNameToDissolve')} className="mb-4" value={confirmWorkspaceName} onChange={e => setConfirmWorkspaceName(e.target.value)} />
+        <Input placeholder={t('members.inputWorkspaceNameToDissolve', { ns: 'common' })} className="mb-4" value={confirmWorkspaceName} onChange={e => setConfirmWorkspaceName(e.target.value)} />
         <Divider className="m-0" />
 
         <div className="mt-4 flex items-start justify-end gap-2 self-stretch">
           <Button onClick={onCancel}>
-            {t('app.iconPicker.cancel')}
+            {t('iconPicker.cancel', { ns: 'app' })}
           </Button>
 
           <Button variant="warning" onClick={() => { onDissolve() }} disabled={confirmWorkspaceName !== workspaceName}>
-            {t('common.members.dissolve')}
+            {t('members.dissolve', { ns: 'common' })}
           </Button>
         </div>
       </Modal>

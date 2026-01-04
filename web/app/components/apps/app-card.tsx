@@ -1,10 +1,10 @@
 'use client'
 
+import type { CopyToTenantModalProps } from '../app/copy-to-tenant'
 import type { DuplicateAppModalProps } from '@/app/components/app/duplicate-modal'
 import type { HtmlContentProps } from '@/app/components/base/popover'
 import type { Tag } from '@/app/components/base/tag-management/constant'
 import type { CreateAppModalProps } from '@/app/components/explore/create-app-modal'
-import type { CopyToTenantModalProps } from '../app/copy-to-tenant'
 import type { EnvironmentVariable } from '@/app/components/workflow/types'
 import type { App } from '@/types/app'
 import { RiBuildingLine, RiGlobalLine, RiLockLine, RiMoreFill, RiVerifiedBadgeLine } from '@remixicon/react'
@@ -18,7 +18,6 @@ import { AppTypeIcon } from '@/app/components/app/type-selector'
 import AppIcon from '@/app/components/base/app-icon'
 import Divider from '@/app/components/base/divider'
 import CustomPopover from '@/app/components/base/popover'
-import CopyToTenantModal from '../app/copy-to-tenant'
 import TagSelector from '@/app/components/base/tag-management/selector'
 import Toast, { ToastContext } from '@/app/components/base/toast'
 import Tooltip from '@/app/components/base/tooltip'
@@ -26,6 +25,7 @@ import { NEED_REFRESH_APP_LIST_KEY } from '@/config'
 import { useAppContext } from '@/context/app-context'
 import { useGlobalPublicStore } from '@/context/global-public-context'
 import { useProviderContext } from '@/context/provider-context'
+import { WorkspaceProvider } from '@/context/workspace-context'
 import { useAsyncWindowOpen } from '@/hooks/use-async-window-open'
 import { AccessMode } from '@/models/access-control'
 import { useGetUserCanAccessApp } from '@/service/access-control'
@@ -37,7 +37,7 @@ import { getRedirection } from '@/utils/app-redirection'
 import { cn } from '@/utils/classnames'
 import { formatTime } from '@/utils/time'
 import { basePath } from '@/utils/var'
-import { WorkspaceProvider } from '@/context/workspace-context'
+import CopyToTenantModal from '../app/copy-to-tenant'
 
 const EditAppModal = dynamic(() => import('@/app/components/explore/create-app-modal'), {
   ssr: false,
@@ -169,13 +169,13 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
       setShowCopyToTenantModal(false)
       notify({
         type: 'success',
-        message: t('app.copyToTenant.done'),
+        message: t('copyToTenant.done', { ns: 'app' }),
       })
       if (onRefresh)
         onRefresh()
     }
     catch {
-      notify({ type: 'error', message: t('app.copyToTenant.failed') })
+      notify({ type: 'error', message: t('copyToTenant.failed', { ns: 'app' }) })
     }
   }
 
@@ -308,8 +308,8 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
         <button type="button" className="mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover" onClick={onClickExport}>
           <span className="system-sm-regular text-text-secondary">{t('export', { ns: 'app' })}</span>
         </button>
-        <button className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickCopyToTenant}>
-          <span className='system-sm-regular text-text-secondary'>{t('app.copyToTenant.title')}</span>
+        <button className="mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover" onClick={onClickCopyToTenant}>
+          <span className="system-sm-regular text-text-secondary">{t('copyToTenant.title', { ns: 'app' })}</span>
         </button>
         {(app.mode === AppModeEnum.COMPLETION || app.mode === AppModeEnum.CHAT) && (
           <>

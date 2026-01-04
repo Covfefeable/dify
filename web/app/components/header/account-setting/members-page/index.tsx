@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Avatar from '@/app/components/base/avatar'
 import Button from '@/app/components/base/button'
+import Toast from '@/app/components/base/toast'
 import Tooltip from '@/app/components/base/tooltip'
 import { NUM_INFINITE } from '@/app/components/billing/config'
 import { Plan } from '@/app/components/billing/type'
@@ -15,18 +16,17 @@ import { useLocale } from '@/context/i18n'
 import { useProviderContext } from '@/context/provider-context'
 import { useFormatTimeFromNow } from '@/hooks/use-format-time-from-now'
 import { LanguagesSupported } from '@/i18n-config/language'
-import { useMembers } from '@/service/use-common'
 import { dissolveWorkspace } from '@/service/common'
+import { useMembers } from '@/service/use-common'
 import { cn } from '@/utils/classnames'
+import { basePath } from '@/utils/var'
+import DissolveModal from './dissolve-modal'
 import EditWorkspaceModal from './edit-workspace-modal'
 import InviteModal from './invite-modal'
 import InvitedModal from './invited-modal'
 import Operation from './operation'
 import TransferOwnership from './operation/transfer-ownership'
 import TransferOwnershipModal from './transfer-ownership-modal'
-import { ToastContext } from '@/app/components/base/toast'
-import { basePath } from '@/utils/var'
-import DissolveModal from './dissolve-modal'
 
 const MembersPage = () => {
   const { t } = useTranslation()
@@ -48,7 +48,6 @@ const MembersPage = () => {
   const [invitationResults, setInvitationResults] = useState<InvitationResult[]>([])
   const [invitedModalVisible, setInvitedModalVisible] = useState(false)
   const accounts = data?.accounts || []
-  const { notify } = useContext(ToastContext)
   const { plan, enableBilling, isAllowTransferWorkspace } = useProviderContext()
   const isNotUnlimitedMemberPlan = enableBilling && plan.type !== Plan.team && plan.type !== Plan.enterprise
   const isMemberFull = enableBilling && isNotUnlimitedMemberPlan && accounts.length >= plan.total.teamMembers
@@ -58,11 +57,11 @@ const MembersPage = () => {
     try {
       await dissolveWorkspace({ url: '/workspaces/dissolve', body: { id: currentWorkspace.id } })
       setDissolveModalVisible(false)
-      notify({ type: 'success', message: t('common.api.actionSuccess') })
+      Toast.notify({ type: 'success', message: t('api.actionSuccess', { ns: 'common' }) })
       location.assign(`${location.origin}${basePath}`)
     }
     catch {
-      notify({ type: 'error', message: t('common.members.dissolveFailed') })
+      Toast.notify({ type: 'error', message: t('members.dissolveFailed', { ns: 'common' }) })
     }
   }
   const [showTransferOwnershipModal, setShowTransferOwnershipModal] = useState(false)
@@ -127,9 +126,9 @@ const MembersPage = () => {
             {t('members.invite', { ns: 'common' })}
           </Button>
           {isCurrentWorkspaceOwner && (
-            <Button variant='warning' className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager} onClick={() => setDissolveModalVisible(true)}>
-              <RiUserForbidLine className='mr-1 h-4 w-4' />
-              {t('common.members.dissolve')}
+            <Button variant="warning" className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager} onClick={() => setDissolveModalVisible(true)}>
+              <RiUserForbidLine className="mr-1 h-4 w-4" />
+              {t('members.dissolve', { ns: 'common' })}
             </Button>
           )}
         </div>

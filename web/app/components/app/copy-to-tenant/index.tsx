@@ -36,7 +36,7 @@ const CopyToTenantModal = ({
     if (!name.trim() || !targetTenantId) {
       Toast.notify({
         type: 'error',
-        message: t('app.copyToTenant.fieldRequired'),
+        message: t('copyToTenant.fieldRequired', { ns: 'app' }),
       })
       return
     }
@@ -61,23 +61,23 @@ const CopyToTenantModal = ({
           <RiCloseLine className="h-4 w-4 text-text-tertiary" />
         </div>
         <div className="relative mb-9 mt-3 text-xl font-semibold leading-[30px] text-text-primary">
-          {t('app.copyToTenant.title')}
+          {t('copyToTenant.title', { ns: 'app' })}
         </div>
         <div className="system-sm-regular mb-9 space-y-6 text-text-secondary">
           <div className="space-y-2">
-            <div className="text-sm font-medium text-text-primary">{t('app.copyToTenant.name')}</div>
+            <div className="text-sm font-medium text-text-primary">{t('copyToTenant.name', { ns: 'app' })}</div>
             <Input
               value={name}
               onChange={e => setName(e.target.value)}
               className="h-10 w-full"
-              placeholder={t('app.copyToTenant.namePlaceholder')}
+              placeholder={t('copyToTenant.namePlaceholder', { ns: 'app' })}
             />
           </div>
           <div className="space-y-2">
-            <div className="text-sm font-medium text-text-primary">{t('app.copyToTenant.targetWorkspace')}</div>
+            <div className="text-sm font-medium text-text-primary">{t('copyToTenant.targetWorkspace', { ns: 'app' })}</div>
             <SimpleSelect
               className="w-full"
-              placeholder={t('app.copyToTenant.targetWorkspacePlaceholder')}
+              placeholder={t('copyToTenant.targetWorkspacePlaceholder', { ns: 'app' })}
               items={workspaces.filter(item => item.id !== currentWorkspace?.id).map(item => ({
                 name: item.name,
                 value: item.id,
@@ -95,10 +95,10 @@ const CopyToTenantModal = ({
             variant="primary"
             onClick={submit}
           >
-            {t('app.duplicate')}
+            {t('duplicate', { ns: 'app' })}
           </Button>
           <Button className="w-24" onClick={onHide}>
-            {t('common.operation.cancel')}
+            {t('operation.cancel', { ns: 'common' })}
           </Button>
         </div>
       </Modal>
