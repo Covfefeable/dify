@@ -26,7 +26,6 @@ from core.ops.ops_trace_manager import OpsTraceManager
 from core.workflow.enums import NodeType
 from extensions.ext_database import db
 from libs.login import current_account_with_tenant, login_required
-from libs.validators import validate_description_length
 from models import App, Workflow
 from models.model import IconType
 from services.app_dsl_service import AppDslService, ImportMode
