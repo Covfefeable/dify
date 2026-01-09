@@ -28,7 +28,8 @@ const NormalForm = () => {
   const message = decodeURIComponent(searchParams.get('message') || '')
   const invite_token = decodeURIComponent(searchParams.get('invite_token') || '')
   const [isInitCheckLoading, setInitCheckLoading] = useState(true)
-  const isLoading = isCheckLoading || loginData?.logged_in || isInitCheckLoading
+  const [isRedirecting, setIsRedirecting] = useState(false)
+  const isLoading = isCheckLoading || isInitCheckLoading || isRedirecting
   const { systemFeatures } = useGlobalPublicStore()
   const [authType, updateAuthType] = useState<'code' | 'password'>('password')
   const [showORLine, setShowORLine] = useState(false)
@@ -40,6 +41,7 @@ const NormalForm = () => {
   const init = useCallback(async () => {
     try {
       if (isLoggedIn) {
+        setIsRedirecting(true)
         const redirectUrl = resolvePostLoginRedirect(searchParams)
         router.replace(redirectUrl || '/apps')
         return
@@ -140,14 +142,27 @@ const NormalForm = () => {
     <>
       <div className="mx-auto mt-8 w-full">
         {isInviteLink
-          ? <div className="mx-auto w-full">
-            <h2 className="title-4xl-semi-bold text-text-primary">{t('join', { ns: 'login' })}{workspaceName}</h2>
-            {!systemFeatures.branding.enabled && <p className='body-md-regular mt-2 text-text-tertiary'>{t('joinTipStart', { ns: 'login' })}{workspaceName}{t('joinTipEnd', { ns: 'login' })}</p>}
-          </div>
-          : <div className="mx-auto w-full">
-            <h2 className="title-4xl-semi-bold text-text-primary">{systemFeatures.branding.login_page_title || t('pageTitle', { ns: 'login' })}</h2>
-            {!systemFeatures.branding.enabled && <p className='body-md-regular mt-2 text-text-tertiary'>{t('welcome', { ns: 'login' })}</p>}
-          </div>}
+          ? (
+              <div className="mx-auto w-full">
+                <h2 className="title-4xl-semi-bold text-text-primary">
+                  {t('join', { ns: 'login' })}
+                  {workspaceName}
+                </h2>
+                {!systemFeatures.branding.enabled && (
+                  <p className="body-md-regular mt-2 text-text-tertiary">
+                    {t('joinTipStart', { ns: 'login' })}
+                    {workspaceName}
+                    {t('joinTipEnd', { ns: 'login' })}
+                  </p>
+                )}
+              </div>
+            )
+          : (
+              <div className="mx-auto w-full">
+                <h2 className="title-4xl-semi-bold text-text-primary">{systemFeatures.branding.login_page_title || t('pageTitle', { ns: 'login' })}</h2>
+                {!systemFeatures.branding.enabled && <p className="body-md-regular mt-2 text-text-tertiary">{t('welcome', { ns: 'login' })}</p>}
+              </div>
+            )}
         <div className="relative">
           <div className="mt-6 flex flex-col gap-3">
             {systemFeatures.enable_social_oauth_login && <SocialAuth />}
