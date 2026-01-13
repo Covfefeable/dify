@@ -91,6 +91,18 @@ def build_message_infinite_scroll_pagination_model(api_or_ns: Namespace):
     return api_or_ns.model("MessageInfiniteScrollPagination", message_infinite_scroll_pagination_fields)
 
 
+class MessageDetailQuery(BaseModel):
+    conversation_id: UUID
+
+
+class MessageUpdatePayload(BaseModel):
+    conversation_id: UUID
+    answer: str = Field(description="Updated answer content")
+
+
+register_schema_models(service_api_ns, MessageDetailQuery, MessageUpdatePayload)
+
+
 @service_api_ns.route("/messages")
 class MessageListApi(Resource):
     @service_api_ns.expect(service_api_ns.models[MessageListQuery.__name__])
@@ -126,6 +138,82 @@ class MessageListApi(Resource):
             raise NotFound("Conversation Not Exists.")
         except FirstMessageNotExistsError:
             raise NotFound("First Message Not Exists.")
+
+
+@service_api_ns.route("/messages/<uuid:message_id>")
+class MessageDetailApi(Resource):
+    @service_api_ns.expect(service_api_ns.models[MessageUpdatePayload.__name__])
+    @service_api_ns.doc("update_message")
+    @service_api_ns.doc(description="Update the answer of a specific message in a conversation")
+    @service_api_ns.doc(params={"message_id": "Message ID", "conversation_id": "Conversation ID"})
+    @service_api_ns.doc(
+        responses={
+            200: "Message updated successfully",
+            400: "Bad request - invalid parameters",
+            401: "Unauthorized - invalid API token",
+            404: "Conversation or message not found",
+        }
+    )
+    @validate_app_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True))
+    @service_api_ns.marshal_with(build_message_model(service_api_ns))
+    def put(self, app_model: App, end_user: EndUser, message_id):
+        app_mode = AppMode.value_of(app_model.mode)
+        if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
+            raise NotChatAppError()
+
+        message_id = str(message_id)
+        payload = MessageUpdatePayload.model_validate(service_api_ns.payload or {})
+        conversation_id = str(payload.conversation_id)
+
+        try:
+            return MessageService.update_answer(
+                app_model=app_model,
+                user=end_user,
+                conversation_id=conversation_id,
+                message_id=message_id,
+                answer=payload.answer,
+            )
+        except services.errors.conversation.ConversationNotExistsError:
+            raise NotFound("Conversation Not Exists.")
+        except MessageNotExistsError:
+            raise NotFound("Message Not Exists.")
+
+    @service_api_ns.doc("delete_message")
+    @service_api_ns.doc(description="Delete a specific message in a conversation")
+    @service_api_ns.doc(params={"message_id": "Message ID", "conversation_id": "Conversation ID"})
+    @service_api_ns.doc(
+        responses={
+            204: "Message deleted successfully",
+            400: "Bad request - invalid parameters",
+            401: "Unauthorized - invalid API token",
+            404: "Conversation or message not found",
+        }
+    )
+    @validate_app_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True))
+    def delete(self, app_model: App, end_user: EndUser, message_id):
+        app_mode = AppMode.value_of(app_model.mode)
+        if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
+            raise NotChatAppError()
+
+        message_id = str(message_id)
+        json_payload = service_api_ns.payload or {}
+        conversation_id = json_payload.get("conversation_id")
+        if not conversation_id:
+            raise BadRequest("conversation_id is required")
+
+        try:
+            MessageService.delete_message(
+                app_model=app_model,
+                user=end_user,
+                conversation_id=str(conversation_id),
+                message_id=message_id,
+            )
+        except services.errors.conversation.ConversationNotExistsError:
+            raise NotFound("Conversation Not Exists.")
+        except MessageNotExistsError:
+            raise NotFound("Message Not Exists.")
+
+        return {"result": "success"}, 204
 
 
 @service_api_ns.route("/messages/<uuid:message_id>/feedbacks")

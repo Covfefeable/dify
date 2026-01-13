@@ -216,6 +216,86 @@ class MessageService:
         return message
 
     @classmethod
+    def get_message_in_conversation(
+        cls, *, app_model: App, user: Union[Account, EndUser] | None, conversation_id: str, message_id: str
+    ) -> Message:
+        if not user:
+            raise ValueError("user cannot be None")
+
+        conversation = ConversationService.get_conversation(
+            app_model=app_model, user=user, conversation_id=conversation_id
+        )
+
+        message = (
+            db.session.query(Message)
+            .where(
+                Message.id == message_id,
+                Message.conversation_id == conversation.id,
+                Message.app_id == app_model.id,
+                Message.from_source == ("api" if isinstance(user, EndUser) else "console"),
+                Message.from_end_user_id == (user.id if isinstance(user, EndUser) else None),
+                Message.from_account_id == (user.id if isinstance(user, Account) else None),
+            )
+            .first()
+        )
+
+        if not message:
+            raise MessageNotExistsError()
+
+        return message
+
+    @classmethod
+    def update_answer(
+        cls,
+        *,
+        app_model: App,
+        user: Union[Account, EndUser] | None,
+        conversation_id: str,
+        message_id: str,
+        answer: str,
+    ) -> Message:
+        message = cls.get_message_in_conversation(
+            app_model=app_model, user=user, conversation_id=conversation_id, message_id=message_id
+        )
+        message.answer = answer
+        db.session.commit()
+        return message
+
+    @classmethod
+    def delete_message(
+        cls,
+        *,
+        app_model: App,
+        user: Union[Account, EndUser] | None,
+        conversation_id: str,
+        message_id: str,
+    ) -> None:
+        message = cls.get_message_in_conversation(
+            app_model=app_model, user=user, conversation_id=conversation_id, message_id=message_id
+        )
+
+        db.session.query(Message).where(
+            Message.conversation_id == conversation_id, Message.parent_message_id == message_id
+        ).update({Message.parent_message_id: None}, synchronize_session=False)
+
+        db.session.query(AppAnnotationHitHistory).where(AppAnnotationHitHistory.message_id == message_id).delete(
+            synchronize_session=False
+        )
+        db.session.query(MessageAgentThought).where(MessageAgentThought.message_id == message_id).delete(
+            synchronize_session=False
+        )
+        db.session.query(MessageFile).where(MessageFile.message_id == message_id).delete(synchronize_session=False)
+        db.session.query(MessageAnnotation).where(MessageAnnotation.message_id == message_id).delete(
+            synchronize_session=False
+        )
+        db.session.query(MessageFeedback).where(MessageFeedback.message_id == message_id).delete(
+            synchronize_session=False
+        )
+
+        db.session.delete(message)
+        db.session.commit()
+
+    @classmethod
     def get_suggested_questions_after_answer(
         cls, app_model: App, user: Union[Account, EndUser] | None, message_id: str, invoke_from: InvokeFrom
     ) -> list[str]:
