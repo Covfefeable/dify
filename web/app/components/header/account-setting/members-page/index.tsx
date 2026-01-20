@@ -1,6 +1,6 @@
 'use client'
 import type { InvitationResult } from '@/models/common'
-import { RiPencilLine, RiUserAddLine, RiUserForbidLine } from '@remixicon/react'
+import { RiPencilLine, RiUserForbidLine } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Avatar from '@/app/components/base/avatar'
@@ -22,6 +22,7 @@ import { cn } from '@/utils/classnames'
 import { basePath } from '@/utils/var'
 import DissolveModal from './dissolve-modal'
 import EditWorkspaceModal from './edit-workspace-modal'
+import InviteButton from './invite-button'
 import InviteModal from './invite-modal'
 import InvitedModal from './invited-modal'
 import Operation from './operation'
@@ -41,7 +42,7 @@ const MembersPage = () => {
 
   const { userProfile, currentWorkspace, isCurrentWorkspaceOwner, isCurrentWorkspaceManager } = useAppContext()
   const { data, refetch } = useMembers()
-  const { systemFeatures } = useGlobalPublicStore()
+  const systemFeatures = useGlobalPublicStore(s => s.systemFeatures)
   const { formatTimeFromNow } = useFormatTimeFromNow()
   const [inviteModalVisible, setInviteModalVisible] = useState(false)
   const [dissolveModalVisible, setDissolveModalVisible] = useState(false)
@@ -121,10 +122,7 @@ const MembersPage = () => {
           {isMemberFull && (
             <UpgradeBtn className="mr-2" loc="member-invite" />
           )}
-          <Button variant="primary" className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager || isMemberFull} onClick={() => setInviteModalVisible(true)}>
-            <RiUserAddLine className="mr-1 h-4 w-4" />
-            {t('members.invite', { ns: 'common' })}
-          </Button>
+          <InviteButton disabled={!isCurrentWorkspaceManager || isMemberFull} onClick={() => setInviteModalVisible(true)} />
           {isCurrentWorkspaceOwner && (
             <Button variant="warning" className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager} onClick={() => setDissolveModalVisible(true)}>
               <RiUserForbidLine className="mr-1 h-4 w-4" />
