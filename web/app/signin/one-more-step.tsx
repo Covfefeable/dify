@@ -1,15 +1,12 @@
 'use client'
 import type { Reducer } from 'react'
-import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import * as React from 'react'
 import { useReducer } from 'react'
 import { useTranslation } from 'react-i18next'
 import Button from '@/app/components/base/button'
 import { SimpleSelect } from '@/app/components/base/select'
 import Toast from '@/app/components/base/toast'
 import Tooltip from '@/app/components/base/tooltip'
-import { useDocLink } from '@/context/i18n'
 import { languages, LanguagesSupported } from '@/i18n-config/language'
 import { useOneMoreStep } from '@/service/use-common'
 import { timezones } from '@/utils/timezone'
@@ -48,7 +45,6 @@ const reducer: Reducer<IState, IAction> = (state: IState, action: IAction) => {
 
 const OneMoreStep = () => {
   const { t } = useTranslation()
-  const docLink = useDocLink()
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -152,16 +148,6 @@ const OneMoreStep = () => {
               {t('go', { ns: 'login' })}
             </Button>
           </div>
-          {/* <div className="system-xs-regular mt-2 block w-full text-text-tertiary">
-            {t('license.tip', { ns: 'login' })}
-            &nbsp;
-            <Link
-              className="system-xs-medium text-text-accent-secondary"
-              target="_blank"
-              rel="noopener noreferrer"
-              href={docLink('/policies/agreement/README')}
-            >{t('license.link', { ns: 'login' })}</Link>
-          </div> */}
         </div>
       </div>
     </>

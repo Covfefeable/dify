@@ -211,15 +211,6 @@ const InstallForm = () => {
                 </formContext.Provider>
                 <div className="mt-2 block w-full text-xs text-text-secondary">
                   {t('license.tip', { ns: 'login' })}
-              &nbsp;
-                  {/* <Link
-                    className="text-text-accent"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href={docLink('/policies/open-source')}
-                  >
-                    {t('license.link', { ns: 'login' })}
-                  </Link> */}
                 </div>
               </div>
             </div>
