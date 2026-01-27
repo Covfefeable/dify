@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from configs import dify_config
 from enums.cloud_plan import CloudPlan
+from enums.hosted_provider import HostedTrialProvider
 from services.billing_service import BillingService
 from services.enterprise.enterprise_service import EnterpriseService
 
@@ -172,6 +173,7 @@ class SystemFeatureModel(BaseModel):
     plugin_installation_permission: PluginInstallationPermissionModel = PluginInstallationPermissionModel()
     enable_change_email: bool = True
     plugin_manager: PluginManagerModel = PluginManagerModel()
+    trial_models: list[str] = []
     enable_trial_app: bool = False
     enable_explore_banner: bool = False
 
@@ -229,6 +231,7 @@ class FeatureService:
         system_features.is_allow_create_workspace = dify_config.ALLOW_CREATE_WORKSPACE
         system_features.init_workspace_when_invite = dify_config.INIT_WORKSPACE_WHEN_INVITE
         system_features.is_email_setup = dify_config.MAIL_TYPE is not None and dify_config.MAIL_TYPE != ""
+        system_features.trial_models = cls._fulfill_trial_models_from_env()
         system_features.enable_trial_app = dify_config.ENABLE_TRIAL_APP
         system_features.enable_explore_banner = dify_config.ENABLE_EXPLORE_BANNER
 
@@ -238,6 +241,17 @@ class FeatureService:
         system_features.branding.login_page_title = dify_config.LOGIN_PAGE_TITLE
         system_features.branding.workspace_logo = dify_config.WORKSPACE_LOGO
         system_features.branding.favicon = dify_config.FAVICON
+
+    @classmethod
+    def _fulfill_trial_models_from_env(cls) -> list[str]:
+        return [
+            provider.value
+            for provider in HostedTrialProvider
+            if (
+                getattr(dify_config, f"HOSTED_{provider.config_key}_PAID_ENABLED", False)
+                and getattr(dify_config, f"HOSTED_{provider.config_key}_TRIAL_ENABLED", False)
+            )
+        ]
 
     @classmethod
     def _fulfill_params_from_env(cls, features: FeatureModel):
