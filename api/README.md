@@ -27,6 +27,8 @@ The scripts resolve paths relative to their location, so you can run them from a
 
    # Allow users to create workspaces
    ALLOW_CREATE_WORKSPACE=true
+   ALLOW_MEMBER_INVITE=true
+   ALLOW_OWNER_TRANSFER=true
    # Enable dataset operator role
    DATASET_OPERATOR_ENABLED=true
    # Create workspace when user is invited
