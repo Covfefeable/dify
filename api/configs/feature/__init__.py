@@ -1070,6 +1070,16 @@ class WorkspaceConfig(BaseSettings):
         default=72,
     )
 
+    ALLOW_MEMBER_INVITE: bool = Field(
+        description="whether to allow member invite",
+        default=True,
+    )
+
+    ALLOW_OWNER_TRANSFER: bool = Field(
+        description="whether to allow owner transfer",
+        default=True,
+    )
+
 
 class IndexingConfig(BaseSettings):
     """

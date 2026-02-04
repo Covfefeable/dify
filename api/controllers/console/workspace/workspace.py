@@ -1,12 +1,13 @@
 import logging
 
 from flask import request
-from flask_restx import Resource, fields, marshal, marshal_with, reqparse
+from flask_restx import Resource, fields, marshal, marshal_with
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from werkzeug.exceptions import Unauthorized
 
 import services
+from configs import dify_config
 from controllers.common.errors import (
     FilenameNotExistsError,
     FileTooLargeError,
@@ -20,7 +21,6 @@ from controllers.console.error import AccountNotLinkTenantError
 from controllers.console.wraps import (
     account_initialization_required,
     cloud_edition_billing_resource_check,
-    only_edition_enterprise,
     setup_required,
 )
 from enums.cloud_plan import CloudPlan
@@ -56,6 +56,14 @@ class WorkspaceInfoPayload(BaseModel):
     name: str
 
 
+class CreateWorkspacePayload(BaseModel):
+    name: str
+
+
+class DissolveWorkspacePayload(BaseModel):
+    id: str
+
+
 def reg(cls: type[BaseModel]):
     console_ns.schema_model(cls.__name__, cls.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0))
 
@@ -64,6 +72,8 @@ reg(WorkspaceListQuery)
 reg(SwitchWorkspacePayload)
 reg(WorkspaceCustomConfigPayload)
 reg(WorkspaceInfoPayload)
+reg(CreateWorkspacePayload)
+reg(DissolveWorkspacePayload)
 
 provider_fields = {
     "provider_name": fields.String,
@@ -207,17 +217,16 @@ class SwitchWorkspaceApi(Resource):
 
 @console_ns.route("/workspaces/create")
 class CreateWorkspaceApi(Resource):
+    @console_ns.expect(console_ns.models[CreateWorkspacePayload.__name__])
     @setup_required
     @login_required
     @account_initialization_required
     def post(self):
         current_user, _ = current_account_with_tenant()
-        parser = reqparse.RequestParser()
-        parser.add_argument("name", type=str, required=True, location="json")
-        args = parser.parse_args()
+        args = CreateWorkspacePayload.model_validate(console_ns.payload)
 
         # Create a new tenant
-        tenant = TenantService.create_tenant(name=args["name"])
+        tenant = TenantService.create_tenant(name=args.name)
         TenantService.create_tenant_member(tenant, current_user, role="owner")
 
         # Switch to the new tenant
@@ -231,17 +240,16 @@ class CreateWorkspaceApi(Resource):
 
 @console_ns.route("/workspaces/dissolve")
 class DissolveWorkspaceApi(Resource):
+    @console_ns.expect(console_ns.models[DissolveWorkspacePayload.__name__])
     @setup_required
     @login_required
     @account_initialization_required
     def post(self):
         current_user, _ = current_account_with_tenant()
-        parser = reqparse.RequestParser()
-        parser.add_argument("id", type=str, required=True, location="json")
-        args = parser.parse_args()
+        args = DissolveWorkspacePayload.model_validate(console_ns.payload)
 
         tenant = TenantService.get_current_tenant_by_account(current_user)
-        if tenant is None or tenant.id != args["id"]:
+        if tenant is None or tenant.id != args.id:
             raise Unauthorized("You are not allowed to dissolve this workspace")
         # Check if the user only has one workspace
         user_tenants = TenantService.get_join_tenants(current_user)
@@ -348,7 +356,6 @@ class WorkspacePermissionApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    @only_edition_enterprise
     def get(self):
         """
         Get workspace permission settings.
@@ -359,11 +366,18 @@ class WorkspacePermissionApi(Resource):
         if not current_tenant_id:
             raise ValueError("No current tenant")
 
-        # Get workspace permissions from enterprise service
-        permission = EnterpriseService.WorkspacePermissionService.get_permission(current_tenant_id)
+        if dify_config.ENTERPRISE_ENABLED:
+            # Get workspace permissions from enterprise service
+            permission = EnterpriseService.WorkspacePermissionService.get_permission(current_tenant_id)
+
+            return {
+                "workspace_id": permission.workspace_id,
+                "allow_member_invite": permission.allow_member_invite,
+                "allow_owner_transfer": permission.allow_owner_transfer,
+            }, 200
 
         return {
-            "workspace_id": permission.workspace_id,
-            "allow_member_invite": permission.allow_member_invite,
-            "allow_owner_transfer": permission.allow_owner_transfer,
+            "workspace_id": current_tenant_id,
+            "allow_member_invite": dify_config.ALLOW_MEMBER_INVITE,
+            "allow_owner_transfer": dify_config.ALLOW_OWNER_TRANSFER,
         }, 200

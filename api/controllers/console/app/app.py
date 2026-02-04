@@ -122,11 +122,6 @@ class AppCopyToTenantPayload(BaseModel):
     icon_background: str | None = Field(default=None, description="Icon background color")
     target_tenant_id: str = Field(..., description="Target tenant ID")
 
-    @field_validator("name", "description", mode="before")
-    @classmethod
-    def validate_xss_safe(cls, value: str | None, info) -> str | None:
-        return _validate_xss_safe(value, info.field_name)
-
 
 class AppExportQuery(BaseModel):
     include_secret: bool = Field(default=False, description="Include secrets in export")
