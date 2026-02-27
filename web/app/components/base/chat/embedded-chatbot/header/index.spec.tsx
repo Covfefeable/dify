@@ -83,6 +83,7 @@ describe('EmbeddedChatbot Header', () => {
     },
     branding: {
       enabled: true,
+      login_page_title: '',
       workspace_logo: '',
       login_page_logo: '',
       favicon: '',
