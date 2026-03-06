@@ -35,7 +35,7 @@ import { NEED_REFRESH_APP_LIST_KEY } from '@/config'
 import { useAppContext } from '@/context/app-context'
 import { useGlobalPublicStore } from '@/context/global-public-context'
 import { useProviderContext } from '@/context/provider-context'
-import { WorkspaceProvider } from '@/context/workspace-context'
+import { WorkspaceProvider } from '@/context/workspace-context-provider'
 import { useAsyncWindowOpen } from '@/hooks/use-async-window-open'
 import { AccessMode } from '@/models/access-control'
 import { useGetUserCanAccessApp } from '@/service/access-control'
@@ -322,7 +322,7 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
           <span className="text-text-secondary system-sm-regular">{t('export', { ns: 'app' })}</span>
         </button>
         <button className="mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover" onClick={onClickCopyToTenant}>
-          <span className="system-sm-regular text-text-secondary">{t('copyToTenant.title', { ns: 'app' })}</span>
+          <span className="text-text-secondary system-sm-regular">{t('copyToTenant.title', { ns: 'app' })}</span>
         </button>
         {(app.mode === AppModeEnum.COMPLETION || app.mode === AppModeEnum.CHAT) && (
           <>
