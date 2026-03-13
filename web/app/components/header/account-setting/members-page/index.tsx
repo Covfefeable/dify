@@ -3,9 +3,9 @@ import type { InvitationResult } from '@/models/common'
 import { RiUserForbidLine } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import Avatar from '@/app/components/base/avatar'
 import Button from '@/app/components/base/button'
 import Toast from '@/app/components/base/toast'
+import { Avatar } from '@/app/components/base/avatar'
 import Tooltip from '@/app/components/base/tooltip'
 import { NUM_INFINITE } from '@/app/components/billing/config'
 import { Plan } from '@/app/components/billing/type'
@@ -144,7 +144,7 @@ const MembersPage = () => {
               accounts.map(account => (
                 <div key={account.id} className="flex border-b border-divider-subtle">
                   <div className="flex grow items-center px-3 py-2">
-                    <Avatar avatar={account.avatar_url} size={24} className="mr-2" name={account.name} />
+                    <Avatar avatar={account.avatar_url} size="sm" className="mr-2" name={account.name} />
                     <div className="">
                       <div className="text-text-secondary system-sm-medium">
                         {account.name}
