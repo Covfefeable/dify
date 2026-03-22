@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import Button from '@/app/components/base/button'
 import Toast from '@/app/components/base/toast'
 import { Avatar } from '@/app/components/base/avatar'
-import Tooltip from '@/app/components/base/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/app/components/base/ui/tooltip'
 import { NUM_INFINITE } from '@/app/components/billing/config'
 import { Plan } from '@/app/components/billing/type'
 import UpgradeBtn from '@/app/components/billing/upgrade-btn'
@@ -79,20 +79,25 @@ const MembersPage = () => {
               <span>{currentWorkspace?.name}</span>
               {isCurrentWorkspaceOwner && (
                 <span>
-                  <Tooltip
-                    popupContent={t('account.editWorkspaceInfo', { ns: 'common' })}
-                  >
-                    <div
-                      className="cursor-pointer rounded-md p-1 hover:bg-black/5"
-                      onClick={() => {
-                        setEditWorkspaceModalVisible(true)
-                      }}
-                    >
-                      <div
-                        data-testid="edit-workspace-pencil"
-                        className="i-ri-pencil-line h-4 w-4 text-text-tertiary"
-                      />
-                    </div>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={(
+                        <div
+                          className="cursor-pointer rounded-md p-1 hover:bg-black/5"
+                          onClick={() => {
+                            setEditWorkspaceModalVisible(true)
+                          }}
+                        >
+                          <div
+                            data-testid="edit-workspace-pencil"
+                            className="i-ri-pencil-line h-4 w-4 text-text-tertiary"
+                          />
+                        </div>
+                      )}
+                    />
+                    <TooltipContent>
+                      {t('account.editWorkspaceInfo', { ns: 'common' })}
+                    </TooltipContent>
                   </Tooltip>
                 </span>
               )}

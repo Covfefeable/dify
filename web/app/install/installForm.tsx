@@ -1,9 +1,8 @@
 'use client'
 import type { InitValidateStatusResponse, SetupStatusResponse } from '@/models/common'
 import { useStore } from '@tanstack/react-form'
-
-import { useRouter } from 'next/navigation'
 import * as React from 'react'
+
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import * as z from 'zod'
@@ -12,8 +11,9 @@ import { formContext, useAppForm } from '@/app/components/base/form'
 import { zodSubmitValidator } from '@/app/components/base/form/utils/zod-submit-validator'
 import Input from '@/app/components/base/input'
 import { validPassword } from '@/config'
-
 import useDocumentTitle from '@/hooks/use-document-title'
+
+import { useRouter } from '@/next/navigation'
 import { fetchInitValidateStatus, fetchSetupStatus, login, setup } from '@/service/common'
 import { cn } from '@/utils/classnames'
 import { encryptPassword as encodePassword } from '@/utils/encryption'
