@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import Button from '@/app/components/base/button'
 import Input from '@/app/components/base/input'
 import Modal from '@/app/components/base/modal'
-import Toast from '@/app/components/base/toast'
+import { toast } from '@/app/components/base/ui/toast'
 import { useAppContext } from '@/context/app-context'
 import { useWorkspacesContext } from '@/context/workspace-context'
 import { cn } from '@/utils/classnames'
@@ -34,10 +34,7 @@ const CopyToTenantModal = ({
 
   const submit = () => {
     if (!name.trim() || !targetTenantId) {
-      Toast.notify({
-        type: 'error',
-        message: t('copyToTenant.fieldRequired', { ns: 'app' }),
-      })
+      toast.error(t('copyToTenant.fieldRequired', { ns: 'app' }))
       return
     }
     onConfirm({

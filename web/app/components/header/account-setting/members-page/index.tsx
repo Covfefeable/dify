@@ -4,7 +4,7 @@ import { RiUserForbidLine } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Button from '@/app/components/base/button'
-import Toast from '@/app/components/base/toast'
+import { toast } from '@/app/components/base/ui/toast'
 import { Avatar } from '@/app/components/base/avatar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/app/components/base/ui/tooltip'
 import { NUM_INFINITE } from '@/app/components/billing/config'
@@ -58,11 +58,11 @@ const MembersPage = () => {
     try {
       await dissolveWorkspace({ url: '/workspaces/dissolve', body: { id: currentWorkspace.id } })
       setDissolveModalVisible(false)
-      Toast.notify({ type: 'success', message: t('api.actionSuccess', { ns: 'common' }) })
+      toast.success(t('api.actionSuccess', { ns: 'common' }))
       location.assign(`${location.origin}${basePath}`)
     }
     catch {
-      Toast.notify({ type: 'error', message: t('members.dissolveFailed', { ns: 'common' }) })
+      toast.error(t('members.dissolveFailed', { ns: 'common' }))
     }
   }
   const [showTransferOwnershipModal, setShowTransferOwnershipModal] = useState(false)

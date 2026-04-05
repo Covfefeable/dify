@@ -1,7 +1,7 @@
 import { fetchInstalledAppList } from '@/service/explore'
 import { AppModeEnum } from '@/types/app'
 import { basePath } from './var'
-import Toast from '@/app/components/base/toast'
+import { toast } from '@/app/components/base/ui/toast'
 
 export const getRedirectionPath = async (
   isCurrentWorkspaceEditor: boolean,
@@ -38,7 +38,7 @@ export const getRedirection = async (
         throw new Error('No app found in Explore')
     }
     catch (e: any) {
-      Toast.notify({ type: 'error', message: `${e.message || e}` })
+      toast.error(`${e.message || e}`)
     }
   }
   else {
