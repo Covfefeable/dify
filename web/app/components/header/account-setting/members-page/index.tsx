@@ -3,7 +3,7 @@ import type { InvitationResult } from '@/models/common'
 import { RiUserForbidLine } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import Button from '@/app/components/base/button'
+import { Button } from '@/app/components/base/ui/button'
 import { toast } from '@/app/components/base/ui/toast'
 import { Avatar } from '@/app/components/base/ui/avatar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/app/components/base/ui/tooltip'
@@ -132,7 +132,7 @@ const MembersPage = () => {
           )}
           <InviteButton disabled={!isCurrentWorkspaceManager || isMemberFull} onClick={() => setInviteModalVisible(true)} />
           {isCurrentWorkspaceOwner && (
-            <Button variant="warning" className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager} onClick={() => setDissolveModalVisible(true)}>
+            <Button variant="ghost-accent" className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager} onClick={() => setDissolveModalVisible(true)}>
               <RiUserForbidLine className="mr-1 h-4 w-4" />
               {t('members.dissolve', { ns: 'common' })}
             </Button>
