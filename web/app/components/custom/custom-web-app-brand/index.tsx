@@ -1,15 +1,17 @@
 import { useTranslation } from 'react-i18next'
-import Button from '@/app/components/base/button'
 import Divider from '@/app/components/base/divider'
 import Switch from '@/app/components/base/switch'
+import { Button } from '@/app/components/base/ui/button'
 import { cn } from '@/utils/classnames'
 import ChatPreviewCard from './components/chat-preview-card'
 import WorkflowPreviewCard from './components/workflow-preview-card'
 import useWebAppBrand from './hooks/use-web-app-brand'
+import { useGlobalPublicStore } from '@/context/global-public-context'
 
 const ALLOW_FILE_EXTENSIONS = ['svg', 'png']
 
 const CustomWebAppBrand = () => {
+  const { systemFeatures } = useGlobalPublicStore()
   const { t } = useTranslation()
   const {
     fileId,
@@ -31,7 +33,7 @@ const CustomWebAppBrand = () => {
 
   return (
     <div className="py-4">
-      <div className="mb-2 flex items-center justify-between rounded-xl bg-background-section-burn p-4 text-text-primary system-md-medium">
+      <div className="mb-2 flex items-center justify-between rounded-xl bg-background-section-burn p-4 system-md-medium text-text-primary">
         {t('webapp.removeBrand', { ns: 'custom' })}
         <Switch
           size="lg"
@@ -68,7 +70,7 @@ const CustomWebAppBrand = () => {
                 className="relative mr-2"
                 disabled={uploadDisabled}
               >
-                <span className="i-ri-image-add-line mr-1 h-4 w-4" />
+                <span className="mr-1 i-ri-image-add-line h-4 w-4" />
                 {
                   (webappLogo || fileId)
                     ? t('change', { ns: 'custom' })
@@ -91,7 +93,7 @@ const CustomWebAppBrand = () => {
                 className="relative mr-2"
                 disabled={true}
               >
-                <span className="i-ri-loader-2-line mr-1 h-4 w-4 animate-spin" />
+                <span className="mr-1 i-ri-loader-2-line h-4 w-4 animate-spin" />
                 {t('uploading', { ns: 'custom' })}
               </Button>
             )
@@ -122,8 +124,8 @@ const CustomWebAppBrand = () => {
       {uploadProgress === -1 && (
         <div className="mt-2 text-xs text-[#D92D20]">{t('uploadedFail', { ns: 'custom' })}</div>
       )}
-      <div className="mb-2 mt-5 flex items-center gap-2">
-        <div className="shrink-0 text-text-tertiary system-xs-medium-uppercase">{t('overview.appInfo.preview', { ns: 'appOverview' })}</div>
+      <div className="mt-5 mb-2 flex items-center gap-2">
+        <div className="shrink-0 system-xs-medium-uppercase text-text-tertiary">{t('overview.appInfo.preview', { ns: 'appOverview' })}</div>
         <Divider bgStyle="gradient" className="grow" />
       </div>
       <div className="relative mb-2 flex items-center gap-3">
