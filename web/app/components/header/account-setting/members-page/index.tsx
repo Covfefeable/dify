@@ -3,10 +3,10 @@ import type { InvitationResult } from '@/models/common'
 import { RiUserForbidLine } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/app/components/base/ui/button'
-import { toast } from '@/app/components/base/ui/toast'
-import { Avatar } from '@/app/components/base/ui/avatar'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/app/components/base/ui/tooltip'
+import { Button } from '@langgenius/dify-ui/button'
+import { toast } from '@langgenius/dify-ui/toast'
+import { Avatar } from '@langgenius/dify-ui/avatar'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@langgenius/dify-ui/tooltip'
 import { NUM_INFINITE } from '@/app/components/billing/config'
 import { Plan } from '@/app/components/billing/type'
 import UpgradeBtn from '@/app/components/billing/upgrade-btn'
@@ -18,7 +18,7 @@ import { useFormatTimeFromNow } from '@/hooks/use-format-time-from-now'
 import { LanguagesSupported } from '@/i18n-config/language'
 import { dissolveWorkspace } from '@/service/common'
 import { useMembers } from '@/service/use-common'
-import { cn } from '@/utils/classnames'
+import { cn } from '@langgenius/dify-ui/cn'
 import { basePath } from '@/utils/var'
 import DissolveModal from './dissolve-modal'
 import EditWorkspaceModal from './edit-workspace-modal'
@@ -70,12 +70,12 @@ const MembersPage = () => {
   return (
     <>
       <div className="flex flex-col">
-        <div className="mb-4 flex items-center gap-3 rounded-xl border-l-[0.5px] border-t-[0.5px] border-divider-subtle bg-linear-to-r from-background-gradient-bg-fill-chat-bg-2 to-background-gradient-bg-fill-chat-bg-1 p-3 pr-5">
+        <div className="mb-4 flex items-center gap-3 rounded-xl border-t-[0.5px] border-l-[0.5px] border-divider-subtle bg-linear-to-r from-background-gradient-bg-fill-chat-bg-2 to-background-gradient-bg-fill-chat-bg-1 p-3 pr-5">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-components-icon-bg-blue-solid text-[20px]">
-            <span className="bg-linear-to-r from-components-avatar-shape-fill-stop-0 to-components-avatar-shape-fill-stop-100 bg-clip-text font-semibold uppercase text-shadow-shadow-1 opacity-90">{currentWorkspace?.name[0]?.toLocaleUpperCase()}</span>
+            <span className="bg-linear-to-r from-components-avatar-shape-fill-stop-0 to-components-avatar-shape-fill-stop-100 bg-clip-text font-semibold text-shadow-shadow-1 uppercase opacity-90">{currentWorkspace?.name[0]?.toLocaleUpperCase()}</span>
           </div>
           <div className="grow">
-            <div className="flex items-center gap-1 text-text-secondary system-md-semibold">
+            <div className="flex items-center gap-1 system-md-semibold text-text-secondary">
               <span>{currentWorkspace?.name}</span>
               {isCurrentWorkspaceOwner && (
                 <span>
@@ -102,7 +102,7 @@ const MembersPage = () => {
                 </span>
               )}
             </div>
-            <div className="mt-1 text-text-tertiary system-xs-medium">
+            <div className="mt-1 system-xs-medium text-text-tertiary">
               {enableBilling && isNotUnlimitedMemberPlan
                 ? (
                     <div className="flex space-x-1">
@@ -132,7 +132,7 @@ const MembersPage = () => {
           )}
           <InviteButton disabled={!isCurrentWorkspaceManager || isMemberFull} onClick={() => setInviteModalVisible(true)} />
           {isCurrentWorkspaceOwner && (
-            <Button variant="ghost-accent" className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager} onClick={() => setDissolveModalVisible(true)}>
+            <Button variant="primary" tone='destructive' className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager} onClick={() => setDissolveModalVisible(true)}>
               <RiUserForbidLine className="mr-1 h-4 w-4" />
               {t('members.dissolve', { ns: 'common' })}
             </Button>
@@ -140,9 +140,9 @@ const MembersPage = () => {
         </div>
         <div className="overflow-visible lg:overflow-visible">
           <div className="flex min-w-[480px] items-center border-b border-divider-regular py-[7px]">
-            <div className="grow px-3 text-text-tertiary system-xs-medium-uppercase">{t('members.name', { ns: 'common' })}</div>
-            <div className="w-[104px] shrink-0 text-text-tertiary system-xs-medium-uppercase">{t('members.lastActive', { ns: 'common' })}</div>
-            <div className="w-[96px] shrink-0 px-3 text-text-tertiary system-xs-medium-uppercase">{t('members.role', { ns: 'common' })}</div>
+            <div className="grow px-3 system-xs-medium-uppercase text-text-tertiary">{t('members.name', { ns: 'common' })}</div>
+            <div className="w-[104px] shrink-0 system-xs-medium-uppercase text-text-tertiary">{t('members.lastActive', { ns: 'common' })}</div>
+            <div className="w-[96px] shrink-0 px-3 system-xs-medium-uppercase text-text-tertiary">{t('members.role', { ns: 'common' })}</div>
           </div>
           <div className="relative min-w-[480px]">
             {
@@ -151,27 +151,27 @@ const MembersPage = () => {
                   <div className="flex grow items-center px-3 py-2">
                     <Avatar avatar={account.avatar_url} size="sm" className="mr-2" name={account.name} />
                     <div className="">
-                      <div className="text-text-secondary system-sm-medium">
+                      <div className="system-sm-medium text-text-secondary">
                         {account.name}
-                        {account.status === 'pending' && <span className="ml-1 text-text-warning system-xs-medium">{t('members.pending', { ns: 'common' })}</span>}
-                        {userProfile.email === account.email && <span className="text-text-tertiary system-xs-regular">{t('members.you', { ns: 'common' })}</span>}
+                        {account.status === 'pending' && <span className="ml-1 system-xs-medium text-text-warning">{t('members.pending', { ns: 'common' })}</span>}
+                        {userProfile.email === account.email && <span className="system-xs-regular text-text-tertiary">{t('members.you', { ns: 'common' })}</span>}
                       </div>
-                      <div className="text-text-tertiary system-xs-regular">{account.email}</div>
+                      <div className="system-xs-regular text-text-tertiary">{account.email}</div>
                     </div>
                   </div>
-                  <div className="flex w-[104px] shrink-0 items-center py-2 text-text-secondary system-sm-regular">{formatTimeFromNow(Number((account.last_active_at || account.created_at)) * 1000)}</div>
+                  <div className="flex w-[104px] shrink-0 items-center py-2 system-sm-regular text-text-secondary">{formatTimeFromNow(Number((account.last_active_at || account.created_at)) * 1000)}</div>
                   <div className="flex w-[96px] shrink-0 items-center">
                     {isCurrentWorkspaceOwner && account.role === 'owner' && isAllowTransferWorkspace && (
                       <TransferOwnership onOperate={() => setShowTransferOwnershipModal(true)}></TransferOwnership>
                     )}
                     {isCurrentWorkspaceOwner && account.role === 'owner' && !isAllowTransferWorkspace && (
-                      <div className="px-3 text-text-secondary system-sm-regular">{RoleMap[account.role] || RoleMap.normal}</div>
+                      <div className="px-3 system-sm-regular text-text-secondary">{RoleMap[account.role] || RoleMap.normal}</div>
                     )}
                     {isCurrentWorkspaceOwner && account.role !== 'owner' && (
                       <Operation member={account} operatorRole={currentWorkspace.role} onOperate={refetch} />
                     )}
                     {!isCurrentWorkspaceOwner && (
-                      <div className="px-3 text-text-secondary system-sm-regular">{RoleMap[account.role] || RoleMap.normal}</div>
+                      <div className="px-3 system-sm-regular text-text-secondary">{RoleMap[account.role] || RoleMap.normal}</div>
                     )}
                   </div>
                 </div>

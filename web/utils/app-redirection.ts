@@ -1,7 +1,7 @@
 import { fetchInstalledAppList } from '@/service/explore'
 import { AppModeEnum } from '@/types/app'
 import { basePath } from './var'
-import { toast } from '@/app/components/base/ui/toast'
+import { toast } from '@langgenius/dify-ui/toast'
 
 export const getRedirectionPath = async (
   isCurrentWorkspaceEditor: boolean,

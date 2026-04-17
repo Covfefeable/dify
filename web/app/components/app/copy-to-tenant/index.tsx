@@ -1,17 +1,17 @@
 'use client'
 import type { Option } from '../../base/prompt-editor/types'
 import { RiCloseLine } from '@remixicon/react'
-import * as React from 'react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import Button from '@/app/components/base/button'
+import { Button } from '@langgenius/dify-ui/button'
 import Input from '@/app/components/base/input'
 import Modal from '@/app/components/base/modal'
-import { toast } from '@/app/components/base/ui/toast'
+import { toast } from '@langgenius/dify-ui/toast'
 import { useAppContext } from '@/context/app-context'
 import { useWorkspacesContext } from '@/context/workspace-context'
-import { cn } from '@/utils/classnames'
+import { cn } from '@langgenius/dify-ui/cn'
 import { SimpleSelect } from '../../base/select'
+
 
 export type CopyToTenantModalProps = {
   appName: string
