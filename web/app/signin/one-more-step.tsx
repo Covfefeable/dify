@@ -1,12 +1,13 @@
 'use client'
 import type { Reducer } from 'react'
+import type { LanguagesSupported } from '@/i18n-config/language'
 import { Button } from '@langgenius/dify-ui/button'
+import { Select, SelectContent, SelectItem, SelectItemIndicator, SelectItemText, SelectTrigger } from '@langgenius/dify-ui/select'
 import { toast } from '@langgenius/dify-ui/toast'
 import { useReducer } from 'react'
 import { useTranslation } from 'react-i18next'
-import { SimpleSelect } from '@/app/components/base/select'
 import Tooltip from '@/app/components/base/tooltip'
-import { languages, LanguagesSupported } from '@/i18n-config/language'
+import { languages } from '@/i18n-config/language'
 import { useRouter, useSearchParams } from '@/next/navigation'
 import { useOneMoreStep } from '@/service/use-common'
 import { timezones } from '@/utils/timezone'
@@ -43,6 +44,11 @@ const reducer: Reducer<IState, IAction> = (state: IState, action: IAction) => {
   }
 }
 
+type SelectOption = {
+  value: string
+  name: string
+}
+
 const OneMoreStep = () => {
   const { t } = useTranslation()
   const router = useRouter()
@@ -54,6 +60,9 @@ const OneMoreStep = () => {
     timezone: 'Asia/Shanghai',
   })
   const { mutateAsync: submitOneMoreStep, isPending } = useOneMoreStep()
+  const languageOptions: SelectOption[] = languages.filter(item => item.supported)
+  const selectedLanguage = languageOptions.find(item => item.value === state.interface_language)
+  const selectedTimezone = timezones.find(item => item.value === state.timezone)
 
   const handleSubmit = async () => {
     if (isPending)
@@ -115,13 +124,26 @@ const OneMoreStep = () => {
               {t('interfaceLanguage', { ns: 'login' })}
             </label>
             <div className="mt-1">
-              <SimpleSelect
-                defaultValue={LanguagesSupported[0]}
-                items={languages.filter(item => item.supported)}
-                onSelect={(item) => {
-                  dispatch({ type: 'interface_language', value: item.value as typeof LanguagesSupported[number] })
+              <Select
+                value={selectedLanguage?.value ?? null}
+                onValueChange={(nextValue) => {
+                  if (!nextValue)
+                    return
+                  dispatch({ type: 'interface_language', value: nextValue as typeof LanguagesSupported[number] })
                 }}
-              />
+              >
+                <SelectTrigger size="large">
+                  {selectedLanguage?.name ?? t('placeholder.select', { ns: 'common' })}
+                </SelectTrigger>
+                <SelectContent popupClassName="w-(--anchor-width)">
+                  {languageOptions.map(item => (
+                    <SelectItem key={item.value} value={item.value}>
+                      <SelectItemText>{item.name}</SelectItemText>
+                      <SelectItemIndicator />
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="mb-4">
@@ -129,13 +151,26 @@ const OneMoreStep = () => {
               {t('timezone', { ns: 'login' })}
             </label>
             <div className="mt-1">
-              <SimpleSelect
-                defaultValue={state.timezone}
-                items={timezones}
-                onSelect={(item) => {
-                  dispatch({ type: 'timezone', value: item.value as typeof state.timezone })
+              <Select
+                value={selectedTimezone ? String(selectedTimezone.value) : null}
+                onValueChange={(nextValue) => {
+                  if (!nextValue)
+                    return
+                  dispatch({ type: 'timezone', value: nextValue as typeof state.timezone })
                 }}
-              />
+              >
+                <SelectTrigger size="large">
+                  {selectedTimezone?.name ?? t('placeholder.select', { ns: 'common' })}
+                </SelectTrigger>
+                <SelectContent popupClassName="w-(--anchor-width)">
+                  {timezones.map(item => (
+                    <SelectItem key={item.value} value={String(item.value)}>
+                      <SelectItemText>{item.name}</SelectItemText>
+                      <SelectItemIndicator />
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div>

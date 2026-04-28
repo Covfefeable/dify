@@ -179,6 +179,7 @@ class SystemFeatureModel(BaseModel):
     enable_change_email: bool = True
     plugin_manager: PluginManagerModel = PluginManagerModel()
     trial_models: list[str] = []
+    enable_creators_platform: bool = False
     enable_trial_app: bool = False
     enable_explore_banner: bool = False
 
@@ -242,6 +243,9 @@ class FeatureService:
         if dify_config.MARKETPLACE_ENABLED:
             system_features.enable_marketplace = True
 
+        if dify_config.CREATORS_PLATFORM_FEATURES_ENABLED:
+            system_features.enable_creators_platform = True
+
         return system_features
 
     @classmethod
@@ -295,7 +299,7 @@ class FeatureService:
     def _fulfill_params_from_billing_api(cls, features: FeatureModel, tenant_id: str):
         billing_info = BillingService.get_info(tenant_id)
 
-        features_usage_info = BillingService.get_tenant_feature_plan_usage_info(tenant_id)
+        features_usage_info = BillingService.get_quota_info(tenant_id)
 
         features.billing.enabled = billing_info["enabled"]
         features.billing.subscription.plan = billing_info["subscription"]["plan"]
