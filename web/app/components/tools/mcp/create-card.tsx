@@ -5,11 +5,12 @@ import {
   RiArrowRightUpLine,
   RiBookOpenLine,
 } from '@remixicon/react'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppContext } from '@/context/app-context'
-import { useGlobalPublicStore } from '@/context/global-public-context'
 import { useDocLink } from '@/context/i18n'
+import { systemFeaturesQueryOptions } from '@/service/system-features'
 import { useCreateMCP } from '@/service/use-tools'
 import MCPModal from './modal'
 
@@ -21,7 +22,7 @@ const NewMCPCard = ({ handleCreate }: Props) => {
   const { t } = useTranslation()
   const docLink = useDocLink()
   const { isCurrentWorkspaceManager } = useAppContext()
-  const systemFeatures = useGlobalPublicStore(s => s.systemFeatures)
+  const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
 
   const { mutateAsync: createMCP } = useCreateMCP()
 

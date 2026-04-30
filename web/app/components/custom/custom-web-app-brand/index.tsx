@@ -1,17 +1,18 @@
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
 import { Switch } from '@langgenius/dify-ui/switch'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import Divider from '@/app/components/base/divider'
+import { systemFeaturesQueryOptions } from '@/service/system-features'
 import ChatPreviewCard from './components/chat-preview-card'
 import WorkflowPreviewCard from './components/workflow-preview-card'
 import useWebAppBrand from './hooks/use-web-app-brand'
-import { useGlobalPublicStore } from '@/context/global-public-context'
 
 const ALLOW_FILE_EXTENSIONS = ['svg', 'png']
 
 const CustomWebAppBrand = () => {
-  const { systemFeatures } = useGlobalPublicStore()
+  const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
   const { t } = useTranslation()
   const {
     fileId,

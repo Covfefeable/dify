@@ -56,7 +56,6 @@ const PluginPage = ({
   marketplace,
 }: PluginPageProps) => {
   const { t } = useTranslation()
-  const systemFeatures = useGlobalPublicStore(s => s.systemFeatures)
   const docLink = useDocLink()
   useDocumentTitle(t('metadata.title', { ns: 'plugin' }))
 
@@ -123,10 +122,7 @@ const PluginPage = ({
   const options = usePluginPageContext(v => v.options)
   const activeTab = usePluginPageContext(v => v.activeTab)
   const setActiveTab = usePluginPageContext(v => v.setActiveTab)
-  const { data: enable_marketplace } = useSuspenseQuery({
-    ...systemFeaturesQueryOptions(),
-    select: s => s.enable_marketplace,
-  })
+  const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
 
   const isPluginsTab = useMemo(() => activeTab === PLUGIN_PAGE_TABS_MAP.plugins, [activeTab])
   const isExploringMarketplace = useMemo(() => {
@@ -267,7 +263,7 @@ const PluginPage = ({
         </>
       )}
       {
-        isExploringMarketplace && enable_marketplace && marketplace
+        isExploringMarketplace && systemFeatures.enable_marketplace && marketplace
       }
 
       {showPluginSettingModal && (
