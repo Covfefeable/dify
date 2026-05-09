@@ -1,17 +1,21 @@
 'use client'
-import type { Option } from '../../base/prompt-editor/types'
+import { Button } from '@langgenius/dify-ui/button'
+import { cn } from '@langgenius/dify-ui/cn'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectItemText,
+  SelectTrigger,
+} from '@langgenius/dify-ui/select'
+import { toast } from '@langgenius/dify-ui/toast'
 import { RiCloseLine } from '@remixicon/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@langgenius/dify-ui/button'
 import Input from '@/app/components/base/input'
 import Modal from '@/app/components/base/modal'
-import { toast } from '@langgenius/dify-ui/toast'
 import { useAppContext } from '@/context/app-context'
 import { useWorkspacesContext } from '@/context/workspace-context'
-import { cn } from '@langgenius/dify-ui/cn'
-import { SimpleSelect } from '../../base/select'
-
 
 export type CopyToTenantModalProps = {
   appName: string
@@ -31,6 +35,8 @@ const CopyToTenantModal = ({
   const { currentWorkspace } = useAppContext()
   const [name, setName] = useState(appName)
   const [targetTenantId, setTargetTenantId] = useState('')
+  const selectableWorkspaces = workspaces.filter(item => item.id !== currentWorkspace?.id)
+  const selectedWorkspace = selectableWorkspaces.find(item => item.id === targetTenantId)
 
   const submit = () => {
     if (!name.trim() || !targetTenantId) {
@@ -72,18 +78,20 @@ const CopyToTenantModal = ({
           </div>
           <div className="space-y-2">
             <div className="text-sm font-medium text-text-primary">{t('copyToTenant.targetWorkspace', { ns: 'app' })}</div>
-            <SimpleSelect
-              className="w-full"
-              placeholder={t('copyToTenant.targetWorkspacePlaceholder', { ns: 'app' })}
-              items={workspaces.filter(item => item.id !== currentWorkspace?.id).map(item => ({
-                name: item.name,
-                value: item.id,
-              }))}
-              onSelect={(value) => {
-                const selectedWorkspace = value as unknown as Option
-                setTargetTenantId(selectedWorkspace.value)
-              }}
-            />
+            <Select value={targetTenantId} onValueChange={value => setTargetTenantId(value ?? '')}>
+              <SelectTrigger className="h-10 w-full">
+                <span className={selectedWorkspace ? 'text-text-primary' : 'text-text-placeholder'}>
+                  {selectedWorkspace?.name || t('copyToTenant.targetWorkspacePlaceholder', { ns: 'app' })}
+                </span>
+              </SelectTrigger>
+              <SelectContent popupClassName="w-[var(--trigger-width)]">
+                {selectableWorkspaces.map(workspace => (
+                  <SelectItem key={workspace.id} value={workspace.id}>
+                    <SelectItemText>{workspace.name}</SelectItemText>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="flex flex-row-reverse">
