@@ -2,6 +2,12 @@ import type { Plan } from '@/app/components/billing/type'
 import type { IWorkspace } from '@/models/common'
 import { Button } from '@langgenius/dify-ui/button'
 import {
+  Dialog,
+  DialogCloseButton,
+  DialogContent,
+  DialogTitle,
+} from '@langgenius/dify-ui/dialog'
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -15,7 +21,6 @@ import { memo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Divider from '@/app/components/base/divider'
 import Input from '@/app/components/base/input'
-import Modal from '@/app/components/base/modal'
 import { PlanBadge } from '@/app/components/header/plan-badge'
 import { useAppContext } from '@/context/app-context'
 import { useWorkspacesContext } from '@/context/workspace-context'
@@ -148,29 +153,29 @@ const WorkplaceSelector = () => {
           onCreateWorkspace={() => setIsShowCreateWorkspace(true)}
         />
       </Select>
-      <Modal
-        title={t('userProfile.createWorkspace', { ns: 'common' })}
-        closable
-        className="!w-[362px] !p-5"
-        isShow={isShowCreateWorkspace}
-        onClose={() => setIsShowCreateWorkspace(false)}
-      >
-        <Input
-          value={workspaceName}
-          onChange={e => setWorkspaceName(e.target.value)}
-          placeholder={t('account.workspaceName', { ns: 'common' })}
-          className="my-5 px-3 py-2.5"
-        />
-        <Divider className="m-0" />
-        <div className="mt-4 flex items-start justify-end gap-2 self-stretch">
-          <Button onClick={() => setIsShowCreateWorkspace(false)}>
-            {t('iconPicker.cancel', { ns: 'app' })}
-          </Button>
-          <Button variant="primary" disabled={false} loading={false} onClick={handleCreateWorkspace}>
-            {t('iconPicker.ok', { ns: 'app' })}
-          </Button>
-        </div>
-      </Modal>
+      <Dialog open={isShowCreateWorkspace} onOpenChange={setIsShowCreateWorkspace}>
+        <DialogContent className="!w-[362px] !p-5">
+          <DialogCloseButton />
+          <DialogTitle className="system-xl-semibold pr-8 text-text-primary">
+            {t('userProfile.createWorkspace', { ns: 'common' })}
+          </DialogTitle>
+          <Input
+            value={workspaceName}
+            onChange={e => setWorkspaceName(e.target.value)}
+            placeholder={t('account.workspaceName', { ns: 'common' })}
+            className="my-5 px-3 py-2.5"
+          />
+          <Divider className="m-0" />
+          <div className="mt-4 flex items-start justify-end gap-2 self-stretch">
+            <Button onClick={() => setIsShowCreateWorkspace(false)}>
+              {t('iconPicker.cancel', { ns: 'app' })}
+            </Button>
+            <Button variant="primary" disabled={false} loading={false} onClick={handleCreateWorkspace}>
+              {t('iconPicker.ok', { ns: 'app' })}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
