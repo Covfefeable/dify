@@ -1,5 +1,6 @@
 import concurrent.futures
 import logging
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, NotRequired, TypedDict
 
@@ -21,7 +22,7 @@ from core.rag.index_processor.constant.query_type import QueryType
 from core.rag.models.document import Document
 from core.rag.rerank.rerank_type import RerankMode
 from core.rag.retrieval.retrieval_methods import RetrievalMethod
-from core.tools.signature import sign_upload_file
+from core.tools.signature import sign_upload_file_preview_url
 from extensions.ext_database import db
 from graphon.model_runtime.entities.model_entities import ModelType
 from models.dataset import (
@@ -526,7 +527,7 @@ class RetrievalService:
             index_node_ids = [i for i in index_node_ids if i]
 
             segment_ids: list[str] = []
-            index_node_segments: list[DocumentSegment] = []
+            index_node_segments: Sequence[DocumentSegment] = []
             segments: list[DocumentSegment] = []
             attachment_map: dict[str, list[AttachmentInfoDict]] = {}
             child_chunk_map: dict[str, list[ChildChunk]] = {}
@@ -568,8 +569,9 @@ class RetrievalService:
                         DocumentSegment.status == "completed",
                         DocumentSegment.index_node_id.in_(index_node_ids),
                     )
-                    index_node_segments = session.execute(document_segment_stmt).scalars().all()  # type: ignore
+                    index_node_segments = session.execute(document_segment_stmt).scalars().all()
                     for index_node_segment in index_node_segments:
+                        assert index_node_segment.index_node_id
                         doc_segment_map[index_node_segment.id] = [index_node_segment.index_node_id]
 
                 if segment_ids:
@@ -893,7 +895,7 @@ class RetrievalService:
                     "name": upload_file.name,
                     "extension": "." + upload_file.extension,
                     "mime_type": upload_file.mime_type,
-                    "source_url": sign_upload_file(upload_file.id, upload_file.extension),
+                    "source_url": sign_upload_file_preview_url(upload_file.id, upload_file.extension),
                     "size": upload_file.size,
                 }
                 return {"attachment_info": attachment_info, "segment_id": attachment_binding.segment_id}
@@ -920,7 +922,7 @@ class RetrievalService:
                         "name": upload_file.name,
                         "extension": "." + upload_file.extension,
                         "mime_type": upload_file.mime_type,
-                        "source_url": sign_upload_file(upload_file.id, upload_file.extension),
+                        "source_url": sign_upload_file_preview_url(upload_file.id, upload_file.extension),
                         "size": upload_file.size,
                     }
                     if attachment_binding:

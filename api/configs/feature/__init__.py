@@ -23,9 +23,9 @@ class SecurityConfig(BaseSettings):
     """
 
     SECRET_KEY: str = Field(
-        description="Secret key for secure session cookie signing."
-        "Make sure you are changing this key for your deployment with a strong key."
-        "Generate a strong key using `openssl rand -base64 42` or set via the `SECRET_KEY` environment variable.",
+        description="Secret key for secure session cookie signing. "
+        "Leave empty to let Dify generate a persistent key in the storage directory, "
+        "or set a strong value via the `SECRET_KEY` environment variable.",
         default="",
     )
 
@@ -1147,6 +1147,18 @@ class MultiModalTransferConfig(BaseSettings):
     )
 
 
+class OpsTraceConfig(BaseSettings):
+    OPS_TRACE_RETRYABLE_DISPATCH_MAX_RETRIES: PositiveInt = Field(
+        description="Maximum retry attempts for transient ops trace provider dispatch failures.",
+        default=60,
+    )
+
+    OPS_TRACE_RETRYABLE_DISPATCH_DELAY_SECONDS: PositiveInt = Field(
+        description="Delay in seconds between transient ops trace provider dispatch retry attempts.",
+        default=5,
+    )
+
+
 class CeleryBeatConfig(BaseSettings):
     CELERY_BEAT_SCHEDULER_TIME: int = Field(
         description="Interval in days for Celery Beat scheduler execution, default to 1 day",
@@ -1308,7 +1320,7 @@ class PositionConfig(BaseSettings):
 class CollaborationConfig(BaseSettings):
     ENABLE_COLLABORATION_MODE: bool = Field(
         description="Whether to enable collaboration mode features across the workspace",
-        default=False,
+        default=True,
     )
 
 
@@ -1455,6 +1467,7 @@ class FeatureConfig(
     ModelLoadBalanceConfig,
     ModerationConfig,
     MultiModalTransferConfig,
+    OpsTraceConfig,
     PositionConfig,
     RagEtlConfig,
     RepositoryConfig,

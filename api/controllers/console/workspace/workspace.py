@@ -16,6 +16,7 @@ from controllers.common.errors import (
     TooManyFilesError,
     UnsupportedFileTypeError,
 )
+from controllers.common.schema import register_schema_models
 from controllers.console import console_ns
 from controllers.console.admin import admin_required
 from controllers.console.error import AccountNotLinkTenantError
@@ -38,7 +39,6 @@ from services.file_service import FileService
 from services.workspace_service import WorkspaceService
 
 logger = logging.getLogger(__name__)
-DEFAULT_REF_TEMPLATE_SWAGGER_2_0 = "#/definitions/{model}"
 
 
 class WorkspaceListQuery(BaseModel):
@@ -98,17 +98,16 @@ class TenantInfoResponse(ResponseModel):
         return value
 
 
-def reg(cls: type[BaseModel]):
-    console_ns.schema_model(cls.__name__, cls.model_json_schema(ref_template=DEFAULT_REF_TEMPLATE_SWAGGER_2_0))
-
-
-reg(WorkspaceListQuery)
-reg(SwitchWorkspacePayload)
-reg(WorkspaceCustomConfigPayload)
-reg(WorkspaceInfoPayload)
-reg(CreateWorkspacePayload)
-reg(DissolveWorkspacePayload)
-reg(TenantInfoResponse)
+register_schema_models(
+    console_ns,
+    WorkspaceListQuery,
+    SwitchWorkspacePayload,
+    WorkspaceCustomConfigPayload,
+    WorkspaceInfoPayload,
+    CreateWorkspacePayload,
+    DissolveWorkspacePayload,
+    TenantInfoResponse,
+)
 
 provider_fields = {
     "provider_name": fields.String,
@@ -378,7 +377,7 @@ class WebappLogoWorkspaceApi(Resource):
         try:
             upload_file = FileService(db.engine).upload_file(
                 filename=file.filename,
-                content=file.read(),
+                content=file.stream.read(),
                 mimetype=file.mimetype,
                 user=current_user,
             )
