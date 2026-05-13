@@ -57,7 +57,7 @@ const CopyToTenantModal = ({
   return (
     <>
       <Dialog open={show} onOpenChange={open => !open && onHide()}>
-        <DialogContent className={cn('relative !max-w-[480px]', 'px-8')}>
+        <DialogContent className={cn('w-full !max-w-[480px]', 'px-8')}>
           <DialogCloseButton />
           <DialogTitle className="relative mb-9 mt-3 text-xl font-semibold leading-[30px] text-text-primary">
             {t('copyToTenant.title', { ns: 'app' })}
