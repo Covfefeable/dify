@@ -3,7 +3,6 @@ import re
 import uuid
 from datetime import datetime
 from typing import Any, Literal
-from uuid import UUID
 
 from flask import request
 from flask_restx import Resource
@@ -34,7 +33,7 @@ from core.trigger.constants import TRIGGER_NODE_TYPES
 from extensions.ext_database import db
 from fields.base import ResponseModel
 from graphon.enums import WorkflowExecutionStatus
-from libs.helper import build_icon_url
+from libs.helper import build_icon_url, to_timestamp
 from libs.login import current_account_with_tenant, login_required
 from models import App, DatasetPermissionEnum, Workflow
 from models.model import IconType
@@ -187,12 +186,6 @@ class AppTracePayload(BaseModel):
 type JSONValue = Any
 
 
-def _to_timestamp(value: datetime | int | None) -> int | None:
-    if isinstance(value, datetime):
-        return int(value.timestamp())
-    return value
-
-
 class Tag(ResponseModel):
     id: str
     name: str
@@ -209,7 +202,7 @@ class WorkflowPartial(ResponseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return _to_timestamp(value)
+        return to_timestamp(value)
 
 
 class ModelConfigPartial(ResponseModel):
@@ -223,7 +216,7 @@ class ModelConfigPartial(ResponseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return _to_timestamp(value)
+        return to_timestamp(value)
 
 
 class ModelConfig(ResponseModel):
@@ -284,7 +277,7 @@ class ModelConfig(ResponseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return _to_timestamp(value)
+        return to_timestamp(value)
 
 
 class Site(ResponseModel):
@@ -327,7 +320,7 @@ class Site(ResponseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return _to_timestamp(value)
+        return to_timestamp(value)
 
 
 class DeletedTool(ResponseModel):
@@ -370,7 +363,7 @@ class AppPartial(ResponseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return _to_timestamp(value)
+        return to_timestamp(value)
 
 
 class AppDetail(ResponseModel):
@@ -400,7 +393,7 @@ class AppDetail(ResponseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def _normalize_timestamp(cls, value: datetime | int | None) -> int | None:
-        return _to_timestamp(value)
+        return to_timestamp(value)
 
 
 class AppDetailWithSite(AppDetail):
@@ -866,10 +859,11 @@ class AppTraceApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
-    def get(self, app_id: UUID):
+    @get_app_model
+    def get(self, app_model):
         """Get app trace"""
         with session_factory.create_session() as session:
-            app_trace_config = OpsTraceManager.get_app_tracing_config(str(app_id), session)
+            app_trace_config = OpsTraceManager.get_app_tracing_config(app_model.id, session)
 
         return app_trace_config
 
@@ -883,12 +877,13 @@ class AppTraceApi(Resource):
     @login_required
     @account_initialization_required
     @edit_permission_required
-    def post(self, app_id: UUID):
+    @get_app_model
+    def post(self, app_model):
         # add app trace
         args = AppTracePayload.model_validate(console_ns.payload)
 
         OpsTraceManager.update_app_tracing_config(
-            app_id=str(app_id),
+            app_id=app_model.id,
             enabled=args.enabled,
             tracing_provider=args.tracing_provider,
         )

@@ -1,13 +1,14 @@
 'use client'
-import type { InvitationResult } from '@/models/common'
+import type { InvitationResult, Member } from '@/models/common'
+import { Avatar } from '@langgenius/dify-ui/avatar'
+import { Button } from '@langgenius/dify-ui/button'
+import { cn } from '@langgenius/dify-ui/cn'
+import { toast } from '@langgenius/dify-ui/toast'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@langgenius/dify-ui/tooltip'
 import { RiUserForbidLine } from '@remixicon/react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@langgenius/dify-ui/button'
-import { toast } from '@langgenius/dify-ui/toast'
-import { Avatar } from '@langgenius/dify-ui/avatar'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@langgenius/dify-ui/tooltip'
 import { NUM_INFINITE } from '@/app/components/billing/config'
 import { Plan } from '@/app/components/billing/type'
 import UpgradeBtn from '@/app/components/billing/upgrade-btn'
@@ -19,7 +20,6 @@ import { LanguagesSupported } from '@/i18n-config/language'
 import { dissolveWorkspace } from '@/service/common'
 import { systemFeaturesQueryOptions } from '@/service/system-features'
 import { useMembers } from '@/service/use-common'
-import { cn } from '@langgenius/dify-ui/cn'
 import { basePath } from '@/utils/var'
 import DissolveModal from './dissolve-modal'
 import EditWorkspaceModal from './edit-workspace-modal'
@@ -67,6 +67,12 @@ const MembersPage = () => {
     }
   }
   const [showTransferOwnershipModal, setShowTransferOwnershipModal] = useState(false)
+  const canOperateMember = (account: Member) => {
+    if (isCurrentWorkspaceOwner)
+      return account.role !== 'owner'
+
+    return currentWorkspace.role === 'admin' && account.role !== 'owner' && account.email !== userProfile.email
+  }
 
   return (
     <>
@@ -135,7 +141,7 @@ const MembersPage = () => {
           )}
           <InviteButton disabled={!isCurrentWorkspaceManager || isMemberFull} onClick={() => setInviteModalVisible(true)} />
           {isCurrentWorkspaceOwner && (
-            <Button variant="primary" tone='destructive' className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager} onClick={() => setDissolveModalVisible(true)}>
+            <Button variant="primary" tone="destructive" className={cn('shrink-0')} disabled={!isCurrentWorkspaceManager} onClick={() => setDissolveModalVisible(true)}>
               <RiUserForbidLine className="mr-1 h-4 w-4" />
               {t('members.dissolve', { ns: 'common' })}
             </Button>
@@ -170,10 +176,10 @@ const MembersPage = () => {
                     {isCurrentWorkspaceOwner && account.role === 'owner' && !isAllowTransferWorkspace && (
                       <div className="px-3 system-sm-regular text-text-secondary">{RoleMap[account.role] || RoleMap.normal}</div>
                     )}
-                    {isCurrentWorkspaceOwner && account.role !== 'owner' && (
+                    {account.role !== 'owner' && canOperateMember(account) && (
                       <Operation member={account} operatorRole={currentWorkspace.role} onOperate={refetch} />
                     )}
-                    {!isCurrentWorkspaceOwner && (
+                    {account.role !== 'owner' && !canOperateMember(account) && (
                       <div className="px-3 system-sm-regular text-text-secondary">{RoleMap[account.role] || RoleMap.normal}</div>
                     )}
                   </div>
