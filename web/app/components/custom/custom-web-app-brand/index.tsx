@@ -4,7 +4,7 @@ import { Switch } from '@langgenius/dify-ui/switch'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import Divider from '@/app/components/base/divider'
-import { systemFeaturesQueryOptions } from '@/service/system-features'
+import { systemFeaturesQueryOptions } from '@/features/system-features/client'
 import ChatPreviewCard from './components/chat-preview-card'
 import WorkflowPreviewCard from './components/workflow-preview-card'
 import useWebAppBrand from './hooks/use-web-app-brand'
@@ -23,7 +23,7 @@ const CustomWebAppBrand = () => {
     webappBrandRemoved,
     uploadDisabled,
     workspaceLogo,
-    isCurrentWorkspaceManager,
+    canManageCustomBrand,
     isSandbox,
     handleApply,
     handleCancel,
@@ -39,18 +39,20 @@ const CustomWebAppBrand = () => {
         <Switch
           size="lg"
           checked={webappBrandRemoved ?? false}
-          disabled={isSandbox || !isCurrentWorkspaceManager}
+          disabled={isSandbox || !canManageCustomBrand}
           onCheckedChange={handleSwitch}
         />
       </div>
       <div className={cn('flex h-14 items-center justify-between rounded-xl bg-background-section-burn px-4', webappBrandRemoved && 'opacity-30')}>
         <div>
-          <div className='system-md-medium text-text-primary'>{t('webapp.changeLogo', { ns: 'custom' })}</div>
-          {systemFeatures.branding.workspace_logo ? (
-            <div className='system-xs-regular text-[#D92D20]'>{t('webapp.changeLogoDisabledTip', { ns: 'custom' })}</div>
-          ) : (
-            <div className='system-xs-regular text-text-tertiary'>{t('webapp.changeLogoTip', { ns: 'custom' })}</div>
-          )}
+          <div className="system-md-medium text-text-primary">{t('webapp.changeLogo', { ns: 'custom' })}</div>
+          {systemFeatures.branding.workspace_logo
+            ? (
+                <div className="system-xs-regular text-[#D92D20]">{t('webapp.changeLogoDisabledTip', { ns: 'custom' })}</div>
+              )
+            : (
+                <div className="system-xs-regular text-text-tertiary">{t('webapp.changeLogoTip', { ns: 'custom' })}</div>
+              )}
         </div>
         <div className="flex items-center">
           {(!uploadDisabled && webappLogo && !webappBrandRemoved) && (
@@ -71,7 +73,7 @@ const CustomWebAppBrand = () => {
                 className="relative mr-2"
                 disabled={uploadDisabled}
               >
-                <span className="mr-1 i-ri-image-add-line h-4 w-4" />
+                <span className="mr-1 i-ri-image-add-line size-4" />
                 {
                   (webappLogo || fileId)
                     ? t('change', { ns: 'custom' })
@@ -94,7 +96,7 @@ const CustomWebAppBrand = () => {
                 className="relative mr-2"
                 disabled={true}
               >
-                <span className="mr-1 i-ri-loader-2-line h-4 w-4 animate-spin" />
+                <span className="mr-1 i-ri-loader-2-line size-4 animate-spin" />
                 {t('uploading', { ns: 'custom' })}
               </Button>
             )
@@ -105,7 +107,7 @@ const CustomWebAppBrand = () => {
                 <Button
                   className="mr-2"
                   onClick={handleCancel}
-                  disabled={webappBrandRemoved || !isCurrentWorkspaceManager}
+                  disabled={webappBrandRemoved || !canManageCustomBrand}
                 >
                   {t('operation.cancel', { ns: 'common' })}
                 </Button>
@@ -113,7 +115,7 @@ const CustomWebAppBrand = () => {
                   variant="primary"
                   className="mr-2"
                   onClick={handleApply}
-                  disabled={webappBrandRemoved || !isCurrentWorkspaceManager}
+                  disabled={webappBrandRemoved || !canManageCustomBrand}
                 >
                   {t('apply', { ns: 'custom' })}
                 </Button>

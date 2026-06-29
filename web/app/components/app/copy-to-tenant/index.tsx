@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@langgenius/dify-ui/dialog'
+import { Input } from '@langgenius/dify-ui/input'
 import {
   Select,
   SelectContent,
@@ -15,11 +16,11 @@ import {
   SelectTrigger,
 } from '@langgenius/dify-ui/select'
 import { toast } from '@langgenius/dify-ui/toast'
+import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import Input from '@/app/components/base/input'
 import { useAppContext } from '@/context/app-context'
-import { useWorkspacesContext } from '@/context/workspace-context'
+import { consoleQuery } from '@/service/client'
 
 export type CopyToTenantModalProps = {
   appName: string
@@ -35,10 +36,11 @@ const CopyToTenantModal = ({
   onHide,
 }: CopyToTenantModalProps) => {
   const { t } = useTranslation()
-  const { workspaces } = useWorkspacesContext()
+  const { data } = useQuery(consoleQuery.workspaces.get.queryOptions())
   const { currentWorkspace } = useAppContext()
   const [name, setName] = useState(appName)
   const [targetTenantId, setTargetTenantId] = useState('')
+  const workspaces = data?.workspaces ?? []
   const selectableWorkspaces = workspaces.filter(item => item.id !== currentWorkspace?.id)
   const selectedWorkspace = selectableWorkspaces.find(item => item.id === targetTenantId)
 
@@ -59,10 +61,10 @@ const CopyToTenantModal = ({
       <Dialog open={show} onOpenChange={open => !open && onHide()}>
         <DialogContent className={cn('w-full !max-w-[480px]', 'px-8')}>
           <DialogCloseButton />
-          <DialogTitle className="relative mb-9 mt-3 text-xl font-semibold leading-[30px] text-text-primary">
+          <DialogTitle className="relative mt-3 mb-9 text-xl leading-[30px] font-semibold text-text-primary">
             {t('copyToTenant.title', { ns: 'app' })}
           </DialogTitle>
-          <div className="system-sm-regular mb-9 space-y-6 text-text-secondary">
+          <div className="mb-9 space-y-6 system-sm-regular text-text-secondary">
             <div className="space-y-2">
               <div className="text-sm font-medium text-text-primary">{t('copyToTenant.name', { ns: 'app' })}</div>
               <Input

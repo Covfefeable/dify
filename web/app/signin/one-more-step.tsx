@@ -4,10 +4,12 @@ import { Button } from '@langgenius/dify-ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@langgenius/dify-ui/popover'
 import { Select, SelectContent, SelectItem, SelectItemIndicator, SelectItemText, SelectTrigger } from '@langgenius/dify-ui/select'
 import { toast } from '@langgenius/dify-ui/toast'
+import { useQueryClient } from '@tanstack/react-query'
 import { useReducer } from 'react'
 import { useTranslation } from 'react-i18next'
 import { languages } from '@/i18n-config/language'
 import { useRouter, useSearchParams } from '@/next/navigation'
+import { consoleQuery } from '@/service/client'
 import { useOneMoreStep } from '@/service/use-common'
 import { timezones } from '@/utils/timezone'
 import Input from '../components/base/input'
@@ -64,6 +66,7 @@ const hasStatus = (error: unknown): error is { status: number } => {
 const OneMoreStep = () => {
   const { t } = useTranslation()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const searchParams = useSearchParams()
 
   const [state, dispatch] = useReducer(reducer, {
@@ -96,7 +99,8 @@ const OneMoreStep = () => {
         interface_language: state.interface_language,
         timezone: state.timezone,
       })
-      router.push('/apps')
+      await queryClient.resetQueries({ queryKey: consoleQuery.account.profile.get.key() })
+      router.replace('/')
     }
     catch (error: unknown) {
       if (hasStatus(error) && error.status === 400)

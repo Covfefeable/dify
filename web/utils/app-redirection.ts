@@ -1,50 +1,43 @@
-import { fetchInstalledAppList } from '@/service/explore'
+import type { ResourceMaintainerPermissionOptions } from '@/utils/permission'
 import { AppModeEnum } from '@/types/app'
-import { basePath } from './var'
-import { toast } from '@langgenius/dify-ui/toast'
+import { getAppACLCapabilities } from '@/utils/permission'
 
-export const getRedirectionPath = async (
-  isCurrentWorkspaceEditor: boolean,
-  app: { id: string, mode: AppModeEnum },
+type AppRedirectionTarget = {
+  id: string
+  mode: AppModeEnum
+  permission_keys?: string[]
+}
+
+export const getRedirectionPath = (
+  app: AppRedirectionTarget,
+  maintainerPermissionOptions?: ResourceMaintainerPermissionOptions,
 ) => {
-  if (!isCurrentWorkspaceEditor) {
-    // return `/app/${app.id}/overview`
-    const { installed_apps }: any = await fetchInstalledAppList(app.id) || {}
-    if (installed_apps?.length > 0)
-      return `${basePath}/explore/installed/${installed_apps[0].id}`
-    else
-      throw new Error('No app found in Explore')
-  }
-  else {
+  const appACLCapabilities = getAppACLCapabilities(app.permission_keys, maintainerPermissionOptions)
+
+  if (appACLCapabilities.canAccessLayout) {
     if (app.mode === AppModeEnum.WORKFLOW || app.mode === AppModeEnum.ADVANCED_CHAT)
       return `/app/${app.id}/workflow`
     else
       return `/app/${app.id}/configuration`
   }
+
+  if (appACLCapabilities.canMonitor)
+    return `/app/${app.id}/overview`
+
+  if (appACLCapabilities.canAccessLogAndAnnotation)
+    return `/app/${app.id}/logs`
+
+  if (appACLCapabilities.canAccessConfig)
+    return `/app/${app.id}/access-config`
+
+  return `/app/${app.id}/develop`
 }
 
-export const getRedirection = async (
-  isCurrentWorkspaceEditor: boolean,
-  app: { id: string, mode: AppModeEnum },
+export const getRedirection = (
+  app: AppRedirectionTarget,
   redirectionFunc: (href: string) => void,
+  maintainerPermissionOptions?: ResourceMaintainerPermissionOptions,
 ) => {
-  if (!isCurrentWorkspaceEditor) {
-    // redirectionFunc(`/app/${app.id}/overview`)
-    try {
-      const { installed_apps }: any = await fetchInstalledAppList(app.id) || {}
-      if (installed_apps?.length > 0)
-        window.open(`${basePath}/explore/installed/${installed_apps[0].id}`, '_blank')
-      else
-        throw new Error('No app found in Explore')
-    }
-    catch (e: any) {
-      toast.error(`${e.message || e}`)
-    }
-  }
-  else {
-    if (app.mode === 'workflow' || app.mode === 'advanced-chat')
-      redirectionFunc(`/app/${app.id}/workflow`)
-    else
-      redirectionFunc(`/app/${app.id}/configuration`)
-  }
+  const redirectionPath = getRedirectionPath(app, maintainerPermissionOptions)
+  redirectionFunc(redirectionPath)
 }
