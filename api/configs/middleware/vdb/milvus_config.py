@@ -42,3 +42,20 @@ class MilvusConfig(BaseSettings):
         description='Milvus text analyzer parameters, e.g., {"type": "chinese"} for Chinese segmentation support.',
         default=None,
     )
+
+    MILVUS_LIFECYCLE_MANAGER_BASE_URL: str | None = Field(
+        description=(
+            "Base URL of the external Milvus lifecycle manager used to ensure collections are loaded."
+        ),
+        default=None,
+    )
+
+    MILVUS_LIFECYCLE_MANAGER_API_KEY: str | None = Field(
+        description="API key sent as X-API-Key when calling the external Milvus lifecycle manager.",
+        default=None,
+    )
+
+    MILVUS_LIFECYCLE_MANAGER_TIMEOUT: float = Field(
+        description="Timeout in seconds for Milvus lifecycle manager requests.",
+        default=10.0,
+    )

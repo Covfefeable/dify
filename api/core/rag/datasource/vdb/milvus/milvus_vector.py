@@ -1,7 +1,9 @@
 import json
 import logging
 from typing import Any
+from urllib.parse import urljoin
 
+import httpx
 from packaging import version
 from pydantic import BaseModel, model_validator
 from pymilvus import MilvusClient, MilvusException  # type: ignore
@@ -33,6 +35,9 @@ class MilvusConfig(BaseModel):
     database: str = "default"  # Database name
     enable_hybrid_search: bool = False  # Flag to enable hybrid search
     analyzer_params: str | None = None  # Analyzer params
+    lifecycle_manager_base_url: str | None = None  # External lifecycle manager base URL
+    lifecycle_manager_api_key: str | None = None  # External lifecycle manager API key
+    lifecycle_manager_timeout: float = 10.0  # External lifecycle manager request timeout
 
     @model_validator(mode="before")
     @classmethod
@@ -61,6 +66,9 @@ class MilvusConfig(BaseModel):
             "password": self.password,
             "db_name": self.database,
             "analyzer_params": self.analyzer_params,
+            "lifecycle_manager_base_url": self.lifecycle_manager_base_url,
+            "lifecycle_manager_api_key": self.lifecycle_manager_api_key,
+            "lifecycle_manager_timeout": self.lifecycle_manager_timeout,
         }
 
 
@@ -209,6 +217,50 @@ class MilvusVector(BaseVector):
         """
         return field in self._fields
 
+    def _ensure_collection_loaded(self) -> None:
+        """
+        Ask the external lifecycle manager to load the collection before search.
+        """
+        base_url = self._client_config.lifecycle_manager_base_url
+        api_key = self._client_config.lifecycle_manager_api_key
+        if not base_url:
+            return
+        if not api_key:
+            raise RuntimeError(
+                "MILVUS_LIFECYCLE_MANAGER_API_KEY is required when lifecycle manager is enabled"
+            )
+
+        url = urljoin(base_url.rstrip("/") + "/", "ensure-loaded")
+        try:
+            response = httpx.post(
+                url,
+                json={"collection_name": self._collection_name},
+                headers={"X-API-Key": api_key},
+                timeout=self._client_config.lifecycle_manager_timeout,
+            )
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            response_text = e.response.text[:500] if e.response is not None else ""
+            logger.exception(
+                "Milvus lifecycle manager failed to ensure collection loaded: "
+                "collection=%s status=%s response=%s",
+                self._collection_name,
+                e.response.status_code if e.response is not None else None,
+                response_text,
+            )
+            raise RuntimeError(
+                f"Failed to ensure Milvus collection loaded: {self._collection_name}"
+            ) from e
+        except httpx.RequestError as e:
+            logger.exception(
+                "Milvus lifecycle manager request failed: collection=%s url=%s",
+                self._collection_name,
+                url,
+            )
+            raise RuntimeError(
+                f"Failed to call Milvus lifecycle manager: {self._collection_name}"
+            ) from e
+
     def _process_search_results(
         self, results: list[Any], output_fields: list[str], score_threshold: float = 0.0
     ) -> list[Document]:
@@ -240,6 +292,7 @@ class MilvusVector(BaseVector):
         if document_ids_filter:
             document_ids = ", ".join(f'"{id}"' for id in document_ids_filter)
             filter = f'metadata["document_id"] in [{document_ids}]'
+        self._ensure_collection_loaded()
         results = self._client.search(
             collection_name=self._collection_name,
             data=[query_vector],
@@ -276,6 +329,7 @@ class MilvusVector(BaseVector):
             document_ids = ", ".join(f"'{id}'" for id in document_ids_filter)
             filter = f'metadata["document_id"] in [{document_ids}]'
 
+        self._ensure_collection_loaded()
         results = self._client.search(
             collection_name=self._collection_name,
             data=[query],
@@ -412,5 +466,8 @@ class MilvusVectorFactory(AbstractVectorFactory):
                 database=dify_config.MILVUS_DATABASE or "",
                 enable_hybrid_search=dify_config.MILVUS_ENABLE_HYBRID_SEARCH or False,
                 analyzer_params=dify_config.MILVUS_ANALYZER_PARAMS or "",
+                lifecycle_manager_base_url=dify_config.MILVUS_LIFECYCLE_MANAGER_BASE_URL or "",
+                lifecycle_manager_api_key=dify_config.MILVUS_LIFECYCLE_MANAGER_API_KEY or "",
+                lifecycle_manager_timeout=dify_config.MILVUS_LIFECYCLE_MANAGER_TIMEOUT,
             ),
         )
