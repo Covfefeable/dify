@@ -367,7 +367,7 @@ class SwitchWorkspaceApi(Resource):
 @console_ns.route("/workspaces/create")
 class CreateWorkspaceApi(Resource):
     @console_ns.expect(console_ns.models[CreateWorkspacePayload.__name__])
-    @console_ns.response(200, "Success", console_ns.models[SwitchWorkspaceResponse.__name__])
+    @console_ns.response(HTTPStatus.OK, "Success", console_ns.models[SwitchWorkspaceResponse.__name__])
     @setup_required
     @login_required
     @account_initialization_required
@@ -378,13 +378,15 @@ class CreateWorkspaceApi(Resource):
         TenantService.create_tenant_member(tenant, current_user, db.session, role="owner")
         TenantService.switch_tenant(current_user, tenant.id, session=db.session)
 
-        return {"result": "success", "new_tenant": marshal(WorkspaceService.get_tenant_info(tenant), tenant_fields)}
+        return SwitchWorkspaceResponse(
+            result="success", new_tenant=WorkspaceService.get_tenant_info(tenant, session=db.session)
+        ).model_dump(mode="json"), HTTPStatus.OK
 
 
 @console_ns.route("/workspaces/dissolve")
 class DissolveWorkspaceApi(Resource):
     @console_ns.expect(console_ns.models[DissolveWorkspacePayload.__name__])
-    @console_ns.response(200, "Success", console_ns.models[WorkspaceMutationResponse.__name__])
+    @console_ns.response(HTTPStatus.OK, "Success", console_ns.models[WorkspaceTenantResultResponse.__name__])
     @setup_required
     @login_required
     @account_initialization_required
@@ -400,7 +402,9 @@ class DissolveWorkspaceApi(Resource):
             raise Unauthorized("can not dissolve the only workspace")
 
         TenantService.dissolve_tenant(tenant, current_user)
-        return {"result": "success", "tenant": marshal(WorkspaceService.get_tenant_info(tenant), tenant_fields)}
+        return WorkspaceTenantResultResponse(
+            result="success", tenant=WorkspaceService.get_tenant_info(tenant, session=db.session)
+        ).model_dump(mode="json"), HTTPStatus.OK
 
 
 @console_ns.route("/workspaces/custom-config")
