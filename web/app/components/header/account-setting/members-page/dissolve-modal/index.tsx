@@ -8,7 +8,6 @@ import Input from '@/app/components/base/input'
 
 import { cn } from '@langgenius/dify-ui/cn'
 import s from './index.module.css'
-import 'react-multi-email/dist/style.css'
 
 type IDissolveModalProps = {
   workspaceName?: string
