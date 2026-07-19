@@ -19,7 +19,6 @@ import { toast } from '@langgenius/dify-ui/toast'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAppContext } from '@/context/app-context'
 import { consoleQuery } from '@/service/client'
 
 export type CopyToTenantModalProps = {
@@ -37,16 +36,15 @@ const CopyToTenantModal = ({
 }: CopyToTenantModalProps) => {
   const { t } = useTranslation()
   const { data } = useQuery(consoleQuery.workspaces.get.queryOptions())
-  const { currentWorkspace } = useAppContext()
   const [name, setName] = useState(appName)
   const [targetTenantId, setTargetTenantId] = useState('')
   const workspaces = data?.workspaces ?? []
-  const selectableWorkspaces = workspaces.filter(item => item.id !== currentWorkspace?.id)
-  const selectedWorkspace = selectableWorkspaces.find(item => item.id === targetTenantId)
+  const selectableWorkspaces = workspaces.filter((item) => !item.current)
+  const selectedWorkspace = selectableWorkspaces.find((item) => item.id === targetTenantId)
 
   const submit = () => {
     if (!name.trim() || !targetTenantId) {
-      toast.error(t('copyToTenant.fieldRequired', { ns: 'app' }))
+      toast.error(t(($) => $['copyToTenant.fieldRequired'], { ns: 'app' }))
       return
     }
     onConfirm({
@@ -58,32 +56,40 @@ const CopyToTenantModal = ({
 
   return (
     <>
-      <Dialog open={show} onOpenChange={open => !open && onHide()}>
+      <Dialog open={show} onOpenChange={(open) => !open && onHide()}>
         <DialogContent className={cn('w-full !max-w-[480px]', 'px-8')}>
           <DialogCloseButton />
           <DialogTitle className="relative mt-3 mb-9 text-xl leading-[30px] font-semibold text-text-primary">
-            {t('copyToTenant.title', { ns: 'app' })}
+            {t(($) => $['copyToTenant.title'], { ns: 'app' })}
           </DialogTitle>
           <div className="mb-9 space-y-6 system-sm-regular text-text-secondary">
             <div className="space-y-2">
-              <div className="text-sm font-medium text-text-primary">{t('copyToTenant.name', { ns: 'app' })}</div>
+              <div className="text-sm font-medium text-text-primary">
+                {t(($) => $['copyToTenant.name'], { ns: 'app' })}
+              </div>
               <Input
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={(event) => setName(event.target.value)}
                 className="h-10 w-full"
-                placeholder={t('copyToTenant.namePlaceholder', { ns: 'app' })}
+                placeholder={t(($) => $['copyToTenant.namePlaceholder'], { ns: 'app' })}
               />
             </div>
             <div className="space-y-2">
-              <div className="text-sm font-medium text-text-primary">{t('copyToTenant.targetWorkspace', { ns: 'app' })}</div>
-              <Select value={targetTenantId} onValueChange={value => setTargetTenantId(value ?? '')}>
+              <div className="text-sm font-medium text-text-primary">
+                {t(($) => $['copyToTenant.targetWorkspace'], { ns: 'app' })}
+              </div>
+              <Select
+                value={targetTenantId}
+                onValueChange={(value) => setTargetTenantId(value ?? '')}
+              >
                 <SelectTrigger className="h-10 w-full">
                   <span className={selectedWorkspace ? 'text-text-primary' : 'text-text-placeholder'}>
-                    {selectedWorkspace?.name || t('copyToTenant.targetWorkspacePlaceholder', { ns: 'app' })}
+                    {selectedWorkspace?.name
+                      || t(($) => $['copyToTenant.targetWorkspacePlaceholder'], { ns: 'app' })}
                   </span>
                 </SelectTrigger>
                 <SelectContent popupClassName="w-[var(--trigger-width)]">
-                  {selectableWorkspaces.map(workspace => (
+                  {selectableWorkspaces.map((workspace) => (
                     <SelectItem key={workspace.id} value={workspace.id}>
                       <SelectItemText>{workspace.name}</SelectItemText>
                     </SelectItem>
@@ -98,10 +104,10 @@ const CopyToTenantModal = ({
               variant="primary"
               onClick={submit}
             >
-              {t('duplicate', { ns: 'app' })}
+              {t(($) => $.duplicate, { ns: 'app' })}
             </Button>
             <Button className="w-24" onClick={onHide}>
-              {t('operation.cancel', { ns: 'common' })}
+              {t(($) => $['operation.cancel'], { ns: 'common' })}
             </Button>
           </div>
         </DialogContent>
