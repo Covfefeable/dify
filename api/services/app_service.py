@@ -957,7 +957,7 @@ class AppService:
 
         with Session(db.engine, expire_on_commit=False) as session:
             export_service = AppDslService(session)
-            yaml_content = export_service.export_dsl(app_model=app_model, include_secret=True)
+            yaml_content = export_service.export_dsl(app_model=app_model, session=session, include_secret=True)
             try:
                 account.set_tenant_id(target_tenant_id)
                 import_service = AppDslService(session)
