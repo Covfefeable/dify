@@ -401,10 +401,11 @@ class DissolveWorkspaceApi(Resource):
         if len(user_tenants) <= 1:
             raise Unauthorized("can not dissolve the only workspace")
 
-        TenantService.dissolve_tenant(tenant, current_user)
-        return WorkspaceTenantResultResponse(
+        response = WorkspaceTenantResultResponse(
             result="success", tenant=WorkspaceService.get_tenant_info(tenant, session=db.session)
-        ).model_dump(mode="json"), HTTPStatus.OK
+        ).model_dump(mode="json")
+        TenantService.dissolve_tenant(tenant, current_user)
+        return response, HTTPStatus.OK
 
 
 @console_ns.route("/workspaces/custom-config")
