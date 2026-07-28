@@ -1,15 +1,21 @@
 import type { ComponentProps, ReactNode } from 'react'
+import type { AgentPreviewChatController } from '../chat-conversation'
 import type { SpeechToTextTarget } from '@/app/components/base/voice-input/types'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { createStore, Provider as JotaiProvider } from 'jotai'
-import { useState } from 'react'
+import { createRef, useState } from 'react'
 import { SupportUploadFileTypes } from '@/app/components/workflow/types'
 import { agentComposerModelAtom } from '@/features/agent-v2/agent-composer/store-modules/model'
 import { agentComposerPromptAtom } from '@/features/agent-v2/agent-composer/store-modules/prompt'
 import { consoleQuery } from '@/service/client'
+import { render } from '@/test/console/render'
+import { seedRegisteredConsoleStateFixture } from '@/test/console/state-fixture'
 import { TransferMethod } from '@/types/app'
+import { sendBuildChatMessage } from '../build-chat-request'
 import { AgentChatRuntime } from '../chat-runtime'
+import { sendPreviewChatMessage } from '../preview-chat-request'
 
 const useChatMock = vi.hoisted(() => vi.fn())
 const handleSendMock = vi.hoisted(() => vi.fn())
@@ -22,6 +28,14 @@ const sendResultRef = vi.hoisted(() => ({
 const chatMessagesGetMock = vi.hoisted(() => vi.fn())
 const suggestedQuestionsGetMock = vi.hoisted(() => vi.fn())
 const stopPostMock = vi.hoisted(() => vi.fn())
+const mockConsoleState = vi.hoisted(() => ({
+  deploymentEdition: 'COMMUNITY' as 'CLOUD' | 'COMMUNITY' | 'ENTERPRISE',
+}))
+
+vi.mock('@/context/system-features-state', async () => {
+  const { createSystemFeaturesStateModuleMock } = await import('@/test/console/state-fixture')
+  return createSystemFeaturesStateModuleMock(() => mockConsoleState)
+})
 
 vi.mock('@/next/dynamic', async () => {
   const { useState } = await import('react')
@@ -29,6 +43,7 @@ vi.mock('@/next/dynamic', async () => {
   return {
     default: () =>
       function MockChat(props: {
+        answerActionPosition?: 'auto' | 'below'
         onSend: (message: string) => unknown
         onStopResponding: () => void
         sendButtonLabel?: string
@@ -36,10 +51,22 @@ vi.mock('@/next/dynamic', async () => {
         showPromptLog?: boolean
         footerNotice?: string
         chatNode?: ReactNode
+        chatList?: Array<{
+          id: string
+          content: string
+          children?: Array<{ id: string; content: string }>
+        }>
+        noChatInput?: boolean
+        showRegenerate?: boolean
         speechToTextTarget?: SpeechToTextTarget
         onBeforeSpeechToText?: () => Promise<unknown>
       }) {
         const [sent, setSent] = useState(false)
+        const [initialChatList] = useState(props.chatList ?? [])
+        const initialVisibleMessages = initialChatList.flatMap((item) => [
+          item,
+          ...(item.children ?? []),
+        ])
 
         return (
           <div
@@ -47,8 +74,11 @@ vi.mock('@/next/dynamic', async () => {
             aria-label="chat"
             data-send-button-label={props.sendButtonLabel ?? ''}
             data-send-button-loading={String(!!props.sendButtonLoading)}
+            data-answer-action-position={props.answerActionPosition ?? 'auto'}
             data-show-prompt-log={String(!!props.showPromptLog)}
             data-footer-notice={props.footerNotice ?? ''}
+            data-no-chat-input={String(!!props.noChatInput)}
+            data-show-regenerate={String(!!props.showRegenerate)}
             data-speech-agent-id={
               props.speechToTextTarget?.type === 'agent' ? props.speechToTextTarget.agentId : ''
             }
@@ -57,6 +87,9 @@ vi.mock('@/next/dynamic', async () => {
             }
           >
             {props.chatNode}
+            {initialVisibleMessages.map((item) => (
+              <span key={item.id}>{item.content}</span>
+            ))}
             <span>{`sessionSent:${sent ? 'yes' : 'no'}`}</span>
             <button
               type="button"
@@ -80,24 +113,42 @@ vi.mock('@/next/dynamic', async () => {
 })
 
 vi.mock('@/app/components/base/chat/chat/chat-input-area', () => ({
-  default: ({
+  default: function MockChatInputArea({
     footerNotice,
+    footerNoticeTooltip,
     speechToTextTarget,
   }: {
     footerNotice?: ReactNode
+    footerNoticeTooltip?: ReactNode
     speechToTextTarget?: SpeechToTextTarget
-  }) => (
-    <div
-      role="group"
-      aria-label="voice input"
-      data-speech-agent-id={speechToTextTarget?.type === 'agent' ? speechToTextTarget.agentId : ''}
-      data-speech-draft-type={
-        speechToTextTarget?.type === 'agent' ? speechToTextTarget.draftType : ''
-      }
-    >
-      {footerNotice}
-    </div>
-  ),
+  }) {
+    const [inputValue, setInputValue] = useState('')
+
+    return (
+      <div
+        role="group"
+        aria-label="voice input"
+        data-speech-agent-id={
+          speechToTextTarget?.type === 'agent' ? speechToTextTarget.agentId : ''
+        }
+        data-speech-draft-type={
+          speechToTextTarget?.type === 'agent' ? speechToTextTarget.draftType : ''
+        }
+      >
+        <textarea
+          aria-label="chat draft"
+          value={inputValue}
+          onChange={(event) => setInputValue(event.target.value)}
+        />
+        {footerNotice}
+        {footerNoticeTooltip !== undefined && footerNoticeTooltip !== null && (
+          <button type="button" aria-label="sandbox notice info">
+            {footerNoticeTooltip}
+          </button>
+        )}
+      </div>
+    )
+  },
 }))
 
 vi.mock('@/app/components/base/chat/chat/hooks', () => ({
@@ -125,62 +176,14 @@ vi.mock('@/app/components/base/chat/chat/hooks', () => ({
   ),
 }))
 
-vi.mock('@/context/account-state', async (importOriginal) => {
-  const { createAppContextStateAtomMock } = await import('@/__tests__/utils/mock-app-context-state')
-
-  return createAppContextStateAtomMock(importOriginal, () => ({
+vi.mock('@/context/account-state', async () => {
+  const { createAccountStateModuleMock } = await import('@/test/console/state-fixture')
+  return createAccountStateModuleMock(() => ({
     userProfile: {
       avatar_url: '',
       name: 'User',
     },
   }))
-})
-vi.mock('@/context/workspace-state', async (importOriginal) => {
-  const { createAppContextStateAtomMock } = await import('@/__tests__/utils/mock-app-context-state')
-
-  return createAppContextStateAtomMock(importOriginal, () => ({
-    userProfile: {
-      avatar_url: '',
-      name: 'User',
-    },
-  }))
-})
-vi.mock('@/context/permission-state', async (importOriginal) => {
-  const { createAppContextStateAtomMock } = await import('@/__tests__/utils/mock-app-context-state')
-
-  return createAppContextStateAtomMock(importOriginal, () => ({
-    userProfile: {
-      avatar_url: '',
-      name: 'User',
-    },
-  }))
-})
-vi.mock('@/context/version-state', async (importOriginal) => {
-  const { createAppContextStateAtomMock } = await import('@/__tests__/utils/mock-app-context-state')
-
-  return createAppContextStateAtomMock(importOriginal, () => ({
-    userProfile: {
-      avatar_url: '',
-      name: 'User',
-    },
-  }))
-})
-vi.mock('@/context/system-features-state', async (importOriginal) => {
-  const { createAppContextStateAtomMock } = await import('@/__tests__/utils/mock-app-context-state')
-
-  return createAppContextStateAtomMock(importOriginal, () => ({
-    userProfile: {
-      avatar_url: '',
-      name: 'User',
-    },
-  }))
-})
-
-vi.mock('jotai', async (importOriginal) => {
-  const { createAppContextStateJotaiMock } =
-    await import('@/__tests__/utils/mock-app-context-state')
-
-  return createAppContextStateJotaiMock(importOriginal)
 })
 
 vi.mock('@/app/components/header/account-setting/model-provider-page/hooks', () => ({
@@ -243,6 +246,7 @@ vi.mock('@/service/client', async () => {
 
 function renderPreviewChat(props?: Partial<ComponentProps<typeof AgentChatRuntime>>) {
   const store = createStore()
+  seedRegisteredConsoleStateFixture(store)
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -266,6 +270,7 @@ function renderPreviewChat(props?: Partial<ComponentProps<typeof AgentChatRuntim
             clearChatList={false}
             inputPlaceholder="Message agent"
             renderEmptyState={() => null}
+            sendMessage={sendPreviewChatMessage}
             onClearChatListChange={vi.fn()}
             {...props}
           />
@@ -285,6 +290,7 @@ function RuntimeConversationHarness() {
       conversationId={conversationId}
       inputPlaceholder="Message agent"
       renderEmptyState={() => null}
+      sendMessage={sendPreviewChatMessage}
       onClearChatListChange={vi.fn()}
       onConversationIdChange={setConversationId}
     />
@@ -300,6 +306,7 @@ function RuntimeClearCommandHarness({ inputPlaceholder }: { inputPlaceholder: st
       clearChatList={clearChatList}
       inputPlaceholder={inputPlaceholder}
       renderEmptyState={() => null}
+      sendMessage={sendPreviewChatMessage}
       onClearChatListChange={setClearChatList}
     />
   )
@@ -307,6 +314,7 @@ function RuntimeClearCommandHarness({ inputPlaceholder }: { inputPlaceholder: st
 
 function renderPreviewChatWithConversationHarness() {
   const store = createStore()
+  seedRegisteredConsoleStateFixture(store)
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -331,6 +339,7 @@ function renderPreviewChatWithConversationHarness() {
 
 function renderPreviewChatWithClearCommandHarness() {
   const store = createStore()
+  seedRegisteredConsoleStateFixture(store)
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -360,18 +369,61 @@ function renderPreviewChatWithClearCommandHarness() {
 
 describe('AgentPreviewChat', () => {
   beforeEach(() => {
+    mockConsoleState.deploymentEdition = 'COMMUNITY'
     useChatMock.mockClear()
     handleSendMock.mockClear()
     chatMessagesGetMock.mockResolvedValue({ data: [] })
     suggestedQuestionsGetMock.mockResolvedValue({ data: [] })
+    stopPostMock.mockClear()
     stopPostMock.mockResolvedValue({ result: 'success' })
     stopCallbackRef.current = undefined
     sendResultRef.current = undefined
   })
 
+  it('should keep build and preview chat requests independently replaceable', () => {
+    const buildHandleSend = vi.fn()
+    const previewHandleSend = vi.fn()
+    const callbacks = {
+      onSendSettled: vi.fn(),
+    }
+    const buildData = {
+      query: 'Build an agent',
+      draft_type: 'debug_build',
+    }
+    const previewData = {
+      query: 'Preview the agent',
+    }
+
+    expect(sendBuildChatMessage).not.toBe(sendPreviewChatMessage)
+
+    sendBuildChatMessage({
+      agentId: 'agent-1',
+      callbacks,
+      data: buildData,
+      handleSend: buildHandleSend,
+    })
+    sendPreviewChatMessage({
+      agentId: 'agent-1',
+      callbacks,
+      data: previewData,
+      handleSend: previewHandleSend,
+    })
+
+    expect(buildHandleSend).toHaveBeenCalledWith(
+      'agent/agent-1/chat-messages',
+      buildData,
+      callbacks,
+    )
+    expect(previewHandleSend).toHaveBeenCalledWith(
+      'agent/agent-1/chat-messages',
+      previewData,
+      callbacks,
+    )
+  })
+
   it('should bind Agent preview voice input to the normal Agent draft', () => {
     renderPreviewChat({
-      renderEmptyState: ({ inputNode }) => inputNode,
+      renderEmptyState: () => null,
     })
 
     expect(screen.getByRole('group', { name: 'voice input' })).toHaveAttribute(
@@ -395,7 +447,7 @@ describe('AgentPreviewChat', () => {
   it('should bind Agent build voice input to the account build draft', () => {
     renderPreviewChat({
       draftType: 'debug_build',
-      renderEmptyState: ({ inputNode }) => inputNode,
+      renderEmptyState: () => null,
     })
 
     expect(screen.getByRole('group', { name: 'voice input' })).toHaveAttribute(
@@ -405,6 +457,40 @@ describe('AgentPreviewChat', () => {
     expect(screen.getByRole('region', { name: 'chat' })).toHaveAttribute(
       'data-speech-draft-type',
       'debug_build',
+    )
+  })
+
+  it('should bind pre-checkout Build voice input to the normal Agent draft', () => {
+    renderPreviewChat({
+      draftType: 'debug_build',
+      speechToTextDraftType: 'draft',
+      renderEmptyState: () => null,
+    })
+
+    expect(screen.getByRole('group', { name: 'voice input' })).toHaveAttribute(
+      'data-speech-draft-type',
+      'draft',
+    )
+    expect(screen.getByRole('region', { name: 'chat' })).toHaveAttribute(
+      'data-speech-draft-type',
+      'draft',
+    )
+  })
+
+  it('should keep answer regeneration available when the chat input is external', () => {
+    renderPreviewChat()
+
+    expect(screen.getByRole('region', { name: 'chat' })).toHaveAttribute(
+      'data-answer-action-position',
+      'auto',
+    )
+    expect(screen.getByRole('region', { name: 'chat' })).toHaveAttribute(
+      'data-no-chat-input',
+      'true',
+    )
+    expect(screen.getByRole('region', { name: 'chat' })).toHaveAttribute(
+      'data-show-regenerate',
+      'true',
     )
   })
 
@@ -476,6 +562,135 @@ describe('AgentPreviewChat', () => {
     )
   })
 
+  it('should preserve the input draft when cached conversation history refreshes', async () => {
+    const user = userEvent.setup()
+    const conversationInput = {
+      params: {
+        agent_id: 'agent-1',
+      },
+      query: {
+        conversation_id: 'debug-conversation-1',
+      },
+    }
+    const { queryClient } = renderPreviewChat({
+      conversationId: 'debug-conversation-1',
+      renderEmptyState: () => null,
+    })
+    const input = await screen.findByRole('textbox', { name: 'chat draft' })
+    const conversationQueryKey = consoleQuery.agent.byAgentId.chatMessages.get.queryKey({
+      input: conversationInput,
+    })
+
+    await user.type(input, 'Keep this draft')
+    const updatedAt = queryClient.getQueryState(conversationQueryKey)?.dataUpdatedAt ?? 0
+    act(() => {
+      queryClient.setQueryData(
+        conversationQueryKey,
+        {
+          data: [
+            {
+              id: 'message-1',
+              conversation_id: 'debug-conversation-1',
+              query: 'previous question',
+              answer: 'refreshed answer',
+              inputs: {},
+              message: [],
+              message_files: [],
+              agent_thoughts: [],
+              feedbacks: [],
+              answer_tokens: 3,
+              message_tokens: 2,
+              metadata: {},
+              provider_response_latency: 1,
+              status: 'success',
+              from_source: 'console',
+            },
+          ],
+          has_more: false,
+          limit: 20,
+        },
+        {
+          updatedAt: updatedAt + 1,
+        },
+      )
+    })
+
+    expect(queryClient.getQueryState(conversationQueryKey)?.dataUpdatedAt).toBe(updatedAt + 1)
+    expect(await screen.findByText('refreshed answer')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'chat draft' })).toHaveValue('Keep this draft')
+  })
+
+  it('should preserve the footer input draft when cached conversation history refreshes', async () => {
+    chatMessagesGetMock.mockResolvedValue({
+      data: [
+        {
+          id: 'message-1',
+          conversation_id: 'debug-conversation-1',
+          query: 'previous question',
+          answer: 'previous answer',
+          inputs: {},
+          message: [],
+          message_files: [],
+          agent_thoughts: [],
+          feedbacks: [],
+          answer_tokens: 3,
+          message_tokens: 2,
+          provider_response_latency: 1,
+          status: 'success',
+          from_source: 'console',
+        },
+      ],
+    })
+    const user = userEvent.setup()
+    const conversationInput = {
+      params: {
+        agent_id: 'agent-1',
+      },
+      query: {
+        conversation_id: 'debug-conversation-1',
+      },
+    }
+    const { queryClient } = renderPreviewChat({
+      conversationId: 'debug-conversation-1',
+    })
+    const input = await screen.findByRole('textbox', { name: 'chat draft' })
+    const conversationQueryKey = consoleQuery.agent.byAgentId.chatMessages.get.queryKey({
+      input: conversationInput,
+    })
+
+    await user.type(input, 'Keep this footer draft')
+    const updatedAt = queryClient.getQueryState(conversationQueryKey)?.dataUpdatedAt ?? 0
+    act(() => {
+      queryClient.setQueryData(
+        conversationQueryKey,
+        (currentData) => {
+          if (!currentData) return currentData
+
+          return {
+            ...currentData,
+            data: currentData.data.map((message) => ({
+              ...message,
+              answer: 'refreshed answer',
+            })),
+          }
+        },
+        {
+          updatedAt: updatedAt + 1,
+        },
+      )
+    })
+
+    expect(queryClient.getQueryState(conversationQueryKey)?.dataUpdatedAt).toBe(updatedAt + 1)
+    expect(await screen.findByText('refreshed answer')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'chat' })).toHaveAttribute(
+      'data-no-chat-input',
+      'true',
+    )
+    expect(screen.getByRole('textbox', { name: 'chat draft' })).toHaveValue(
+      'Keep this footer draft',
+    )
+  })
+
   it('should save draft before sending preview chat through the agent chat endpoints', async () => {
     const saveDraftBeforeRun = vi.fn().mockResolvedValue(undefined)
     renderPreviewChat({
@@ -492,6 +707,7 @@ describe('AgentPreviewChat', () => {
     expect(handleSendMock).toHaveBeenCalledWith(
       'agent/agent-1/chat-messages',
       expect.not.objectContaining({
+        draft_type: expect.anything(),
         model_config: expect.anything(),
       }),
       expect.objectContaining({
@@ -572,7 +788,7 @@ describe('AgentPreviewChat', () => {
     )
     renderPreviewChat({
       sendButtonLabel: 'Start build',
-      renderEmptyState: ({ inputNode }) => <div>{inputNode}</div>,
+      renderEmptyState: () => null,
       onSaveDraftBeforeRun: saveDraftBeforeRun,
     })
 
@@ -648,39 +864,40 @@ describe('AgentPreviewChat', () => {
   })
 
   it('should use the default send button after the first build message', async () => {
-    useChatMock.mockImplementationOnce(
-      (
-        _config: unknown,
-        _formSettings: unknown,
-        _chatList: unknown[],
-        stopCallback: (taskId: string) => void,
-      ) => {
-        stopCallbackRef.current = stopCallback
+    const useChatWithExistingMessage = (
+      _config: unknown,
+      _formSettings: unknown,
+      _chatList: unknown[],
+      stopCallback: (taskId: string) => void,
+    ) => {
+      stopCallbackRef.current = stopCallback
 
-        return {
-          chatList: [
-            {
-              id: 'question-1',
-              content: 'Build an agent',
-              isAnswer: false,
-            },
-            {
-              id: 'answer-1',
-              content: 'Done',
-              isAnswer: true,
-            },
-          ],
-          setTargetMessageId: vi.fn(),
-          isResponding: false,
-          handleSend: handleSendMock,
-          suggestedQuestions: [],
-          handleStop: () => stopCallback('task-1'),
-          handleAnnotationAdded: vi.fn(),
-          handleAnnotationEdited: vi.fn(),
-          handleAnnotationRemoved: vi.fn(),
-        }
-      },
-    )
+      return {
+        chatList: [
+          {
+            id: 'question-1',
+            content: 'Build an agent',
+            isAnswer: false,
+          },
+          {
+            id: 'answer-1',
+            content: 'Done',
+            isAnswer: true,
+          },
+        ],
+        setTargetMessageId: vi.fn(),
+        isResponding: false,
+        handleSend: handleSendMock,
+        suggestedQuestions: [],
+        handleStop: () => stopCallback('task-1'),
+        handleAnnotationAdded: vi.fn(),
+        handleAnnotationEdited: vi.fn(),
+        handleAnnotationRemoved: vi.fn(),
+      }
+    }
+    useChatMock
+      .mockImplementationOnce(useChatWithExistingMessage)
+      .mockImplementationOnce(useChatWithExistingMessage)
     renderPreviewChat({
       sendButtonLabel: 'Start build',
     })
@@ -886,6 +1103,23 @@ describe('AgentPreviewChat', () => {
     })
   })
 
+  it('should stop the active SSE through the runtime controller', async () => {
+    const controllerRef = createRef<AgentPreviewChatController>()
+    renderPreviewChat({ controllerRef })
+
+    await waitFor(() => expect(controllerRef.current).not.toBeNull())
+    act(() => {
+      controllerRef.current?.stop()
+    })
+
+    expect(stopPostMock).toHaveBeenCalledWith({
+      params: {
+        agent_id: 'agent-1',
+        task_id: 'task-1',
+      },
+    })
+  })
+
   it('should notify the owner once when a stopped send later settles with an error', async () => {
     const onSendInterrupted = vi.fn()
     renderPreviewChat({
@@ -921,6 +1155,7 @@ describe('AgentPreviewChat', () => {
   it('should send build chat with the debug build draft type', async () => {
     renderPreviewChat({
       draftType: 'debug_build',
+      sendMessage: sendBuildChatMessage,
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'send' }))
@@ -950,12 +1185,13 @@ describe('AgentPreviewChat', () => {
 
   it('should hide the sandbox notice after the first send starts', async () => {
     renderPreviewChat({
-      renderEmptyState: ({ inputNode }) => <div>{inputNode}</div>,
+      renderEmptyState: () => null,
     })
 
     expect(
       screen.getByText('agentV2.agentDetail.configure.preview.sandboxNotice'),
     ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'sandbox notice info' })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'send' }))
 
@@ -964,6 +1200,19 @@ describe('AgentPreviewChat', () => {
         screen.queryByText('agentV2.agentDetail.configure.preview.sandboxNotice'),
       ).not.toBeInTheDocument()
     })
+  })
+
+  it('should hide only the sandbox notice infotip outside community edition', () => {
+    mockConsoleState.deploymentEdition = 'CLOUD'
+
+    renderPreviewChat({
+      renderEmptyState: () => null,
+    })
+
+    expect(
+      screen.getByText('agentV2.agentDetail.configure.preview.sandboxNotice'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'sandbox notice info' })).not.toBeInTheDocument()
   })
 
   it('should send build chat inputs from the prepared build draft snapshot', async () => {
@@ -996,6 +1245,7 @@ describe('AgentPreviewChat', () => {
         ],
       },
       draftType: 'debug_build',
+      sendMessage: sendBuildChatMessage,
       onSaveDraftBeforeRun: saveDraftBeforeRun,
     })
 
@@ -1062,6 +1312,39 @@ describe('AgentPreviewChat', () => {
       expect.objectContaining({
         enabled: false,
         allowed_file_upload_methods: [TransferMethod.local_file, TransferMethod.remote_url],
+      }),
+    )
+  })
+
+  it('should preserve the tool provider type in the preview runtime config', async () => {
+    renderPreviewChat({
+      agentSoulConfig: {
+        tools: {
+          dify_tools: [
+            {
+              provider_id: 'workflow-provider',
+              provider_type: 'workflow',
+              tool_name: 'search',
+              credential_type: 'unauthorized',
+            },
+          ],
+        },
+      },
+    })
+
+    await waitFor(() => expect(useChatMock).toHaveBeenCalled())
+
+    const config = useChatMock.mock.calls.at(-1)?.[0]
+    expect(config.agent_mode).toEqual(
+      expect.objectContaining({
+        enabled: true,
+        tools: [
+          expect.objectContaining({
+            provider_id: 'workflow-provider',
+            provider_type: 'workflow',
+            tool_name: 'search',
+          }),
+        ],
       }),
     )
   })
