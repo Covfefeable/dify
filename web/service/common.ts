@@ -1,4 +1,8 @@
 import type {
+  PostWorkspacesInfoData,
+  PostWorkspacesInfoResponse,
+} from '@dify/contracts/api/console/workspaces/types.gen'
+import type {
   DefaultModelResponse,
   Model,
   ModelItem,
@@ -7,8 +11,6 @@ import type {
 } from '@/app/components/header/account-setting/model-provider-page/declarations'
 import type {
   CommonResponse,
-  ICurrentWorkspace,
-  IWorkspace,
   InitValidateStatusResponse,
   SetupStatusResponse,
 } from '@/models/common'
@@ -106,41 +108,21 @@ export const ownershipTransfer = (
 export const fetchFilePreview = ({ fileID }: { fileID: string }): Promise<{ content: string }> => {
   return get<{ content: string }>(`/files/${fileID}/preview`)
 }
-export const updateCurrentWorkspace = ({
-  url,
-  body,
-}: {
-  url: string
-  body: Record<string, any>
-}): Promise<ICurrentWorkspace> => {
-  return post<ICurrentWorkspace>(url, { body })
-}
-
 export const updateWorkspaceInfo = ({
   url,
   body,
 }: {
-  url: string
-  body: Record<string, any>
-}): Promise<ICurrentWorkspace> => {
-  return post<ICurrentWorkspace>(url, { body })
+  url: PostWorkspacesInfoData['url']
+  body: PostWorkspacesInfoData['body']
+}): Promise<PostWorkspacesInfoResponse> => {
+  return post<PostWorkspacesInfoResponse>(url, { body })
 }
 
-export const fetchWorkspaces = ({ url, params }: { url: string, params: Record<string, any> }): Promise<{ workspaces: IWorkspace[] }> => {
-  return get<{ workspaces: IWorkspace[] }>(url, { params })
-}
-
-export const switchWorkspace = ({ url, body }: { url: string, body: Record<string, any> }): Promise<CommonResponse & { new_tenant: IWorkspace }> => {
-  return post<CommonResponse & { new_tenant: IWorkspace }>(url, { body })
-}
-
-export const createWorkspace = ({ url, body }: { url: string; body: Record<string, any> }): Promise<ICurrentWorkspace> => {
-  return post<ICurrentWorkspace>(url, { body })
-}
-
-export const dissolveWorkspace = ({ url, body }: { url: string; body: Record<string, any> }): Promise<CommonResponse> => {
-  return post<CommonResponse>(url, { body })
-}
+export const createWorkspace = ({
+  name,
+}: {
+  name: string
+}): Promise<unknown> => post('/workspaces/create', { body: { name } })
 
 type InvitationCheckData = {
   workspace_name: string

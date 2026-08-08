@@ -1,10 +1,8 @@
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
 import { Switch } from '@langgenius/dify-ui/switch'
-import { useSuspenseQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import Divider from '@/app/components/base/divider'
-import { systemFeaturesQueryOptions } from '@/features/system-features/client'
 import ChatPreviewCard from './components/chat-preview-card'
 import WorkflowPreviewCard from './components/workflow-preview-card'
 import useWebAppBrand from './hooks/use-web-app-brand'
@@ -12,7 +10,6 @@ import useWebAppBrand from './hooks/use-web-app-brand'
 const ALLOW_FILE_EXTENSIONS = ['svg', 'png']
 
 const CustomWebAppBrand = () => {
-  const { data: systemFeatures } = useSuspenseQuery(systemFeaturesQueryOptions())
   const { t } = useTranslation()
   const {
     fileId,
@@ -21,6 +18,7 @@ const CustomWebAppBrand = () => {
     uploading,
     webappLogo,
     webappBrandRemoved,
+    isCustomConfigUnavailable,
     uploadDisabled,
     workspaceLogo,
     canManageCustomBrand,
@@ -39,7 +37,7 @@ const CustomWebAppBrand = () => {
         <Switch
           size="lg"
           checked={webappBrandRemoved ?? false}
-          disabled={isSandbox || !canManageCustomBrand}
+          disabled={isCustomConfigUnavailable || isSandbox || !canManageCustomBrand}
           onCheckedChange={handleSwitch}
         />
       </div>
@@ -53,15 +51,9 @@ const CustomWebAppBrand = () => {
           <div className="system-md-medium text-text-primary">
             {t(($) => $['webapp.changeLogo'], { ns: 'custom' })}
           </div>
-          {systemFeatures.branding.workspace_logo ? (
-            <div className="system-xs-regular text-[#D92D20]">
-              {t(($) => $['webapp.changeLogoDisabledTip'], { ns: 'custom' })}
-            </div>
-          ) : (
-            <div className="system-xs-regular text-text-tertiary">
-              {t(($) => $['webapp.changeLogoTip'], { ns: 'custom' })}
-            </div>
-          )}
+          <div className="system-xs-regular text-text-tertiary">
+            {t(($) => $['webapp.changeLogoTip'], { ns: 'custom' })}
+          </div>
         </div>
         <div className="flex items-center">
           {!uploadDisabled && webappLogo && !webappBrandRemoved && (
@@ -81,14 +73,16 @@ const CustomWebAppBrand = () => {
               className="relative mr-2"
               disabled={uploadDisabled || !!systemFeatures.branding.workspace_logo}
             >
-              <span className="mr-1 i-ri-image-add-line size-4" />
+              <span className="i-ri-image-add-line size-4" />
               {webappLogo || fileId
                 ? t(($) => $.change, { ns: 'custom' })
                 : t(($) => $.upload, { ns: 'custom' })}
               <input
                 className={cn(
                   'absolute inset-0 block w-full text-[0] opacity-0',
-                  uploadDisabled ? 'cursor-not-allowed' : 'cursor-pointer',
+                  uploadDisabled || systemFeatures.branding.workspace_logo
+                    ? 'cursor-not-allowed'
+                    : 'cursor-pointer',
                 )}
                 onClick={(e) => ((e.target as HTMLInputElement).value = '')}
                 type="file"
@@ -100,7 +94,7 @@ const CustomWebAppBrand = () => {
           )}
           {uploading && (
             <Button className="relative mr-2" disabled={true}>
-              <span className="mr-1 i-ri-loader-2-line size-4 animate-spin" />
+              <span className="i-ri-loader-2-line size-4 animate-spin" />
               {t(($) => $.uploading, { ns: 'custom' })}
             </Button>
           )}
@@ -117,7 +111,7 @@ const CustomWebAppBrand = () => {
                 variant="primary"
                 className="mr-2"
                 onClick={handleApply}
-                disabled={webappBrandRemoved || !canManageCustomBrand}
+                disabled={isCustomConfigUnavailable || webappBrandRemoved || !canManageCustomBrand}
               >
                 {t(($) => $.apply, { ns: 'custom' })}
               </Button>
