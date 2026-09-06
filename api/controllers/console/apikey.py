@@ -1,3 +1,4 @@
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from uuid import UUID
 
@@ -5,7 +6,7 @@ import flask_restx
 from flask_restx import Resource
 from flask_restx._http import HTTPStatus
 from pydantic import field_validator
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 from werkzeug.exceptions import Forbidden
 
@@ -40,6 +41,9 @@ class ApiKeyItem(ResponseModel):
     id: str
     type: str
     token: str
+    # Dataset keys only: the knowledge bases this key is bound to. Empty = the key can
+    # access every dataset in the tenant (default). App keys are always empty.
+    dataset_ids: list[str] = []
     last_used_at: int | None = None
     created_at: int | None = None
 
@@ -54,6 +58,38 @@ class ApiKeyList(ResponseModel):
 
 
 register_response_schema_models(console_ns, ApiKeyItem, ApiKeyList)
+
+
+def mask_api_token(token: str) -> str:
+    """Mask a secret token for list responses.
+
+    Reveal-once: the full secret is only returned by the create endpoint. List
+    endpoints expose just enough (prefix + last 4) to identify a key, never the
+    full value, so an existing key's secret cannot be retrieved after creation.
+    """
+    if len(token) <= 8:
+        return "***"
+    return f"{token[:5]}...{token[-4:]}"
+
+
+def build_masked_api_key_list(
+    api_tokens: Iterable[ApiToken],
+    bindings_by_token: Mapping[str, list[str]] | None = None,
+) -> ApiKeyList:
+    """Build an ApiKeyList from ORM tokens with their secrets masked.
+
+    ``bindings_by_token`` maps an api_token id to the dataset ids it is bound to
+    (from DatasetApiTokenBinding); tokens absent from the map are unbound (empty =
+    access all). App-key lists omit it entirely.
+    """
+    bindings_by_token = bindings_by_token or {}
+    items: list[ApiKeyItem] = []
+    for api_token in api_tokens:
+        item = ApiKeyItem.model_validate(api_token, from_attributes=True)
+        item.token = mask_api_token(item.token)
+        item.dataset_ids = bindings_by_token.get(str(api_token.id), [])
+        items.append(item)
+    return ApiKeyList(data=items)
 
 
 def _get_resource(resource_id, tenant_id, resource_model, *, session: Session):
@@ -89,10 +125,14 @@ class BaseApiKeyListResource(Resource):
         _get_resource(resource_id, current_tenant_id, self.resource_model, session=session)
         keys = session.scalars(
             select(ApiToken).where(
-                ApiToken.type == self.resource_type, getattr(ApiToken, self.resource_id_field) == resource_id
+                or_(ApiToken.tenant_id == current_tenant_id, ApiToken.tenant_id.is_(None)),
+                ApiToken.type == self.resource_type,
+                getattr(ApiToken, self.resource_id_field) == resource_id,
             )
         ).all()
-        return ApiKeyList.model_validate({"data": keys}, from_attributes=True)
+        # App and agent keys keep their existing (unmasked) list behavior; reveal-once
+        # masking is scoped to dataset keys, which build their list in datasets.py.
+        return ApiKeyList(data=[ApiKeyItem.model_validate(key, from_attributes=True) for key in keys])
 
     @edit_permission_required
     @with_session
@@ -110,7 +150,9 @@ class BaseApiKeyListResource(Resource):
         current_key_count: int = (
             session.scalar(
                 select(func.count(ApiToken.id)).where(
-                    ApiToken.type == self.resource_type, getattr(ApiToken, self.resource_id_field) == resource_id
+                    or_(ApiToken.tenant_id == current_tenant_id, ApiToken.tenant_id.is_(None)),
+                    ApiToken.type == self.resource_type,
+                    getattr(ApiToken, self.resource_id_field) == resource_id,
                 )
             )
             or 0
@@ -172,6 +214,7 @@ class BaseApiKeyResource(Resource):
         key = session.scalar(
             select(ApiToken)
             .where(
+                or_(ApiToken.tenant_id == current_tenant_id, ApiToken.tenant_id.is_(None)),
                 getattr(ApiToken, self.resource_id_field) == resource_id,
                 ApiToken.type == self.resource_type,
                 ApiToken.id == api_key_id,
@@ -187,7 +230,7 @@ class BaseApiKeyResource(Resource):
         assert key is not None  # nosec - for type checker only
         ApiTokenCache.delete(key.token, key.type)
 
-        session.execute(delete(ApiToken).where(ApiToken.id == api_key_id))
+        session.delete(key)
         session.commit()
 
 
@@ -198,13 +241,15 @@ class AppApiKeyListResource(BaseApiKeyListResource):
     @console_ns.doc(params={"resource_id": "App ID"})
     @console_ns.response(200, "API keys retrieved successfully", console_ns.models[ApiKeyList.__name__])
     @with_current_tenant_id
+    @edit_permission_required
+    @rbac_permission_required(RBACResourceScope.APP, RBACPermission.APP_RELEASE_AND_VERSION)
     @agent_manage_required_for_agent_app
     @with_session(write=False)
     def get(self, session: Session, current_tenant_id: str, resource_id: UUID) -> dict[str, object]:
         """Get all API keys for an app"""
         return dump_response(
             ApiKeyList,
-            self._get_api_key_list(str(resource_id), current_tenant_id, session=session),
+            self._get_api_key_list(str(resource_id), current_tenant_id, session=session),  # pyrefly: ignore[unnecessary-type-conversion]
         )
 
     @console_ns.doc("create_app_api_key")
@@ -221,7 +266,7 @@ class AppApiKeyListResource(BaseApiKeyListResource):
         """Create a new API key for an app"""
         return dump_response(
             ApiKeyItem,
-            self._create_api_key(str(resource_id), current_tenant_id, session=session),
+            self._create_api_key(str(resource_id), current_tenant_id, session=session),  # pyrefly: ignore[unnecessary-type-conversion]
         ), 201
 
     resource_type = ApiTokenType.APP
@@ -251,7 +296,7 @@ class AppApiKeyResource(BaseApiKeyResource):
     ) -> tuple[str, int]:
         """Delete an API key for an app"""
         self._delete_api_key(
-            str(resource_id),
+            str(resource_id),  # pyrefly: ignore[unnecessary-type-conversion]
             str(api_key_id),
             current_tenant_id,
             current_user,
@@ -264,6 +309,10 @@ class AppApiKeyResource(BaseApiKeyResource):
     resource_id_field = "app_id"
 
 
+# Dataset service-API keys are also managed at the workspace level (create with a set of
+# knowledge bases, list, delete) by DatasetApiKeyApi in
+# controllers/console/datasets/datasets.py, using DatasetApiTokenBinding for scoping.
+# The per-dataset routes below remain for callers that key an API token to a single dataset.
 @console_ns.route("/datasets/<uuid:resource_id>/api-keys")
 class DatasetApiKeyListResource(BaseApiKeyListResource):
     @console_ns.doc("get_dataset_api_keys")
@@ -271,12 +320,14 @@ class DatasetApiKeyListResource(BaseApiKeyListResource):
     @console_ns.doc(params={"resource_id": "Dataset ID"})
     @console_ns.response(200, "API keys retrieved successfully", console_ns.models[ApiKeyList.__name__])
     @with_current_tenant_id
+    @edit_permission_required
+    @rbac_permission_required(RBACResourceScope.DATASET, RBACPermission.DATASET_API_KEY_MANAGE)
     @with_session(write=False)
     def get(self, session: Session, current_tenant_id: str, resource_id: UUID) -> dict[str, object]:
         """Get all API keys for a dataset"""
         return dump_response(
             ApiKeyList,
-            self._get_api_key_list(str(resource_id), current_tenant_id, session=session),
+            self._get_api_key_list(str(resource_id), current_tenant_id, session=session),  # pyrefly: ignore[unnecessary-type-conversion]
         )
 
     @console_ns.doc("create_dataset_api_key")
@@ -292,7 +343,7 @@ class DatasetApiKeyListResource(BaseApiKeyListResource):
         """Create a new API key for a dataset"""
         return dump_response(
             ApiKeyItem,
-            self._create_api_key(str(resource_id), current_tenant_id, session=session),
+            self._create_api_key(str(resource_id), current_tenant_id, session=session),  # pyrefly: ignore[unnecessary-type-conversion]
         ), 201
 
     resource_type = ApiTokenType.DATASET
@@ -321,7 +372,7 @@ class DatasetApiKeyResource(BaseApiKeyResource):
     ) -> tuple[str, int]:
         """Delete an API key for a dataset"""
         self._delete_api_key(
-            str(resource_id),
+            str(resource_id),  # pyrefly: ignore[unnecessary-type-conversion]
             str(api_key_id),
             current_tenant_id,
             current_user,

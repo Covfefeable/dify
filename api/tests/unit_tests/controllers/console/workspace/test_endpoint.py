@@ -1,5 +1,6 @@
 import inspect
 from datetime import UTC, datetime
+from types import FunctionType
 from unittest.mock import patch
 
 import pytest
@@ -17,10 +18,13 @@ from controllers.console.workspace.endpoint import (
     EndpointIdPayload,
     EndpointItemApi,
     EndpointListApi,
+    EndpointListForPluginQuery,
     EndpointListForSinglePluginApi,
+    EndpointListQuery,
     EndpointUpdatePayload,
     LegacyEndpointUpdatePayload,
 )
+from controllers.console.wraps import RBACPermission, RBACResourceScope
 from core.entities.provider_entities import ProviderConfig, ProviderConfigType
 from core.plugin.entities.endpoint import EndpointEntityWithInstance, EndpointProviderDeclaration
 from core.plugin.impl.exc import PluginPermissionDeniedError
@@ -52,6 +56,22 @@ def _endpoint_entity() -> EndpointEntityWithInstance:
         url="https://example.test/hook-1",
         hook_id="hook-1",
     )
+
+
+@pytest.mark.parametrize("method", [EndpointListApi.get, EndpointListForSinglePluginApi.get])
+def test_endpoint_lists_require_management_permission(method: FunctionType) -> None:
+    legacy_wrapper = inspect.unwrap(
+        method, stop=lambda wrapper: "is_admin_or_owner_required" in wrapper.__code__.co_qualname
+    )
+    assert "is_admin_or_owner_required" in legacy_wrapper.__code__.co_qualname
+
+    rbac_wrapper = inspect.unwrap(
+        method, stop=lambda wrapper: "rbac_permission_required" in wrapper.__code__.co_qualname
+    )
+    rbac_config = inspect.getclosurevars(rbac_wrapper).nonlocals
+    assert rbac_config["resource_type"] == RBACResourceScope.WORKSPACE
+    assert rbac_config["scene"] == RBACPermission.PLUGIN_MODEL_CONFIG
+    assert rbac_config["resource_required"] is False
 
 
 class TestEndpointCollectionApi:
@@ -146,7 +166,7 @@ class TestEndpointListApi:
                 return_value=[endpoint_entity],
             ),
         ):
-            result = method(api, "t1", "u1")
+            result = method(api, EndpointListQuery(page=1, page_size=10), "t1", "u1")
 
         endpoint = result["endpoints"][0]
         assert endpoint["id"] == "e1"
@@ -180,7 +200,7 @@ class TestEndpointListApi:
             app.test_request_context("/?page=0&page_size=10"),
         ):
             with pytest.raises(ValueError):
-                method(api, "t1", "u1")
+                method(api, EndpointListQuery(page=0, page_size=10), "t1", "u1")
 
 
 class TestEndpointListForSinglePluginApi:
@@ -195,7 +215,7 @@ class TestEndpointListForSinglePluginApi:
                 return_value=[_endpoint_entity()],
             ),
         ):
-            result = method(api, "t1", "u1")
+            result = method(api, EndpointListForPluginQuery(page=1, page_size=10, plugin_id="p1"), "t1", "u1")
 
         assert result["endpoints"][0]["id"] == "e1"
         assert result["endpoints"][0]["settings"]["api_key"] == "pl********et"
@@ -209,7 +229,7 @@ class TestEndpointListForSinglePluginApi:
             app.test_request_context("/?page=1&page_size=10"),
         ):
             with pytest.raises(ValueError):
-                method(api, "t1", "u1")
+                method(api, EndpointListForPluginQuery(page=1, page_size=10), "t1", "u1")
 
 
 class TestEndpointItemApi:

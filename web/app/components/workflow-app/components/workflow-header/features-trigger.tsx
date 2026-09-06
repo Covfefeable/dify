@@ -1,4 +1,8 @@
-import type { AppPublisherPublishParams } from '@/app/components/app/app-publisher'
+import type {
+  AppPublisherPublishOptions,
+  AppPublisherPublishParams,
+} from '@/app/components/app/app-publisher/types'
+import type { WorkflowToolOutputVariable } from '@/app/components/tools/types'
 import type { EndNodeType } from '@/app/components/workflow/nodes/end/types'
 import type { StartNodeType } from '@/app/components/workflow/nodes/start/types'
 import type { CommonEdgeType, Node } from '@/app/components/workflow/types'
@@ -12,7 +16,6 @@ import { useEdges } from 'reactflow'
 import { AppPublisher } from '@/app/components/app/app-publisher'
 import { useStore as useAppStore } from '@/app/components/app/store'
 import { useFeatures } from '@/app/components/base/features/hooks'
-import { Plan } from '@/app/components/billing/type'
 // useWorkflowRunValidation,
 import { useHooksStore } from '@/app/components/workflow/hooks-store'
 import {
@@ -74,7 +77,6 @@ const FeaturesTrigger = () => {
   }, [nodes])
   const hasWorkflowNodes = nodes.length > 0
   const startNode = nodes.find((node) => node.data.type === BlockEnum.Start)
-  const endNode = nodes.find((node) => node.data.type === BlockEnum.End)
   const startVariables = (startNode as Node<StartNodeType>)?.data?.variables
   const edges = useEdges<CommonEdgeType>()
 
@@ -95,7 +97,22 @@ const FeaturesTrigger = () => {
 
     return data
   }, [fileSettings?.image?.enabled, startVariables])
-  const endVariables = useMemo(() => (endNode as Node<EndNodeType>)?.data?.outputs || [], [endNode])
+  const endVariables = useMemo<WorkflowToolOutputVariable[]>(
+    () =>
+      nodes.flatMap((node) => {
+        if (node.data.type !== BlockEnum.End) return []
+
+        return ((node as Node<EndNodeType>).data.outputs || []).map((output, outputIndex) => ({
+          ...output,
+          source: {
+            nodeId: node.id,
+            nodeTitle: node.data.title,
+            outputIndex,
+          },
+        }))
+      }),
+    [nodes],
+  )
 
   const { handleCheckBeforePublish } = useChecklistBeforePublish()
   const { handleSyncWorkflowDraft } = useNodesSyncDraft()
@@ -118,7 +135,7 @@ const FeaturesTrigger = () => {
       if (nodeType === BlockEnum.Start || isTriggerNode(nodeType)) return count + 1
       return count
     }, 0)
-    return isFetchedPlan && plan.type === Plan.sandbox && entryCount > 2
+    return isFetchedPlan && plan.type === 'sandbox' && entryCount > 2
   }, [nodes, plan.type, isFetchedPlan])
 
   const hasHumanInputNode = useMemo(() => {
@@ -151,7 +168,7 @@ const FeaturesTrigger = () => {
 
   const updatePublishedWorkflow = useInvalidateAppWorkflow()
   const onPublish = useCallback(
-    async (params?: AppPublisherPublishParams) => {
+    async (params?: AppPublisherPublishParams, options?: AppPublisherPublishOptions) => {
       const publishParams = params && 'title' in params ? params : undefined
       // First check if there are any items in the checklist
       // if (!validateBeforeRun())
@@ -173,7 +190,9 @@ const FeaturesTrigger = () => {
           releaseNotes: publishParams?.releaseNotes || '',
         })
         if (res) {
-          toast.success(t(($) => $['api.actionSuccess'], { ns: 'common' }))
+          if (options?.showSuccessToast !== false) {
+            toast.success(t(($) => $['api.actionSuccess'], { ns: 'common' }))
+          }
           updatePublishedWorkflow(appID!)
           updateAppDetail()
           invalidateAppTriggers(appID!)

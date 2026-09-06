@@ -1,19 +1,17 @@
 import { DropdownMenuItem, DropdownMenuLinkItem } from '@langgenius/dify-ui/dropdown-menu'
+import { toast } from '@langgenius/dify-ui/toast'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { useAtomValue } from 'jotai'
 import { useTranslation } from 'react-i18next'
-import { openZendeskWindow } from '@/app/components/base/zendesk/utils'
-import { Plan } from '@/app/components/billing/type'
+import { zendeskRuntime } from '@/app/components/base/zendesk/runtime'
 import {
   ExternalLinkIndicator,
   MenuItemContent,
 } from '@/app/components/header/account-dropdown/menu-item-content'
 import { mailToSupport } from '@/app/components/header/utils/util'
 import { SUPPORT_EMAIL_ADDRESS, ZENDESK_WIDGET_KEY } from '@/config'
-import { userProfileAtom } from '@/context/account-state'
 import { useModalContext } from '@/context/modal-context'
 import { useProviderContext } from '@/context/provider-context'
-import { langGeniusVersionInfoAtom } from '@/context/version-state'
+import { userProfileQueryOptions } from '@/features/account-profile/client'
 import { systemFeaturesQueryOptions } from '@/features/system-features/client'
 
 export default function SupportMenu() {
@@ -23,14 +21,19 @@ export default function SupportMenu() {
     select: ({ deployment_edition }) => deployment_edition,
   })
   const { enableBilling, plan } = useProviderContext()
-  const userProfile = useAtomValue(userProfileAtom)
-  const langGeniusVersionInfo = useAtomValue(langGeniusVersionInfoAtom)
+  const { data: accountProfile } = useSuspenseQuery({
+    ...userProfileQueryOptions(),
+    select: (data) => ({
+      email: data.profile.email,
+      currentVersion: data.meta.currentVersion,
+    }),
+  })
   const { setShowPricingModal } = useModalContext()
-  const hasDedicatedChannel = plan.type !== Plan.sandbox || Boolean(SUPPORT_EMAIL_ADDRESS.trim())
+  const hasDedicatedChannel = plan.type !== 'sandbox' || Boolean(SUPPORT_EMAIL_ADDRESS.trim())
   const shouldShowUpgradeContact =
     deploymentEdition === 'CLOUD' &&
     enableBilling &&
-    plan.type === Plan.sandbox &&
+    plan.type === 'sandbox' &&
     !hasDedicatedChannel
   const hasZendeskWidget = deploymentEdition === 'CLOUD' && Boolean(ZENDESK_WIDGET_KEY.trim())
 
@@ -66,7 +69,9 @@ export default function SupportMenu() {
         <DropdownMenuItem
           className="mx-0 h-8 gap-1 px-3 py-1"
           onClick={() => {
-            openZendeskWindow(deploymentEdition)
+            void zendeskRuntime.open(deploymentEdition).catch(() => {
+              toast.error(t(($) => $['api.actionFailed'], { ns: 'common' }))
+            })
           }}
         >
           <MenuItemContent
@@ -79,9 +84,9 @@ export default function SupportMenu() {
         <DropdownMenuLinkItem
           className="mx-0 h-8 gap-1 px-3 py-1"
           href={mailToSupport(
-            userProfile.email,
+            accountProfile.email,
             plan.type,
-            langGeniusVersionInfo?.current_version,
+            accountProfile.currentVersion ?? '',
             SUPPORT_EMAIL_ADDRESS,
           )}
           rel="noopener noreferrer"
@@ -96,25 +101,13 @@ export default function SupportMenu() {
       )}
       <DropdownMenuLinkItem
         className="mx-0 h-8 gap-1 px-3 py-1"
-        href="https://forum.dify.ai/"
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        <MenuItemContent
-          iconClassName="i-ri-discuss-line"
-          label={t(($) => $['userProfile.forum'], { ns: 'common' })}
-          trailing={<ExternalLinkIndicator />}
-        />
-      </DropdownMenuLinkItem>
-      <DropdownMenuLinkItem
-        className="mx-0 h-8 gap-1 px-3 py-1"
         href="https://discord.gg/5AEfbxcd9k"
         rel="noopener noreferrer"
         target="_blank"
       >
         <MenuItemContent
           iconClassName="i-ri-discord-line"
-          label={t(($) => $['userProfile.community'], { ns: 'common' })}
+          label={t(($) => $['userProfile.discord'], { ns: 'common' })}
           trailing={<ExternalLinkIndicator />}
         />
       </DropdownMenuLinkItem>

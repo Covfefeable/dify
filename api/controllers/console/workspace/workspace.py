@@ -38,6 +38,7 @@ from controllers.console.wraps import (
     with_current_tenant_id,
     with_current_user,
 )
+from enums import CloudPlan
 from extensions.ext_application_services import application_services
 from extensions.ext_database import db
 from fields.base import ResponseModel
@@ -49,6 +50,7 @@ from models.account import Account, Tenant, TenantAccountRole, TenantCustomConfi
 from services.account_service import TenantService
 from services.enterprise.enterprise_service import EnterpriseService
 from services.file_service import FileService
+from services.system_feature_service import SystemFeatureService
 from services.workspace_service import WorkspaceService
 
 logger = logging.getLogger(__name__)
@@ -80,7 +82,7 @@ class WorkspaceInfoPayload(BaseModel):
 class TenantInfoResponse(ResponseModel):
     id: str
     name: str | None = None
-    plan: str | None = None
+    plan: CloudPlan | None = None
     status: str | None = None
     created_at: int | None = None
     role: str | None = None
@@ -92,7 +94,7 @@ class TenantInfoResponse(ResponseModel):
     trial_credits_exhausted_at: int | None = None
     next_credit_reset_date: int | None = None
 
-    @field_validator("plan", "status", "trial_end_reason", mode="before")
+    @field_validator("status", "trial_end_reason", mode="before")
     @classmethod
     def _normalize_enum_like(cls, value):
         if value is None:
@@ -111,20 +113,20 @@ class CurrentWorkspaceSummaryResponse(ResponseModel):
     id: str
     name: str
     role: TenantAccountRole
-    plan: str | None
+    plan: CloudPlan | None
     credits: int | None = Field(description="Remaining credits in the effective pool; -1 means unlimited.")
 
 
 class TenantListItemResponse(ResponseModel):
     id: str
     name: str | None = None
-    plan: str | None = None
+    plan: CloudPlan | None = None
     status: str | None = None
     created_at: int | None = None
     last_opened_at: int | None = None
     current: bool
 
-    @field_validator("plan", "status", mode="before")
+    @field_validator("status", mode="before")
     @classmethod
     def _normalize_enum_like(cls, value):
         if value is None:
@@ -236,7 +238,7 @@ class TenantListApi(Resource):
             TenantListResponse,
             {
                 "workspaces": workspaces,
-                "allow_create_workspace": FeatureService.is_workspace_creation_allowed(),
+                "allow_create_workspace": SystemFeatureService.is_workspace_creation_allowed(),
             },
         ), HTTPStatus.OK
 
@@ -308,8 +310,8 @@ class SwitchWorkspaceApi(Resource):
         # Check whether the tenant_id belongs to the current account.
         try:
             TenantService.switch_tenant(current_user, args.tenant_id, session=session)
-        except Exception:
-            raise AccountNotLinkTenantError("Account not link tenant")
+        except Exception as e:
+            raise AccountNotLinkTenantError("Account not link tenant") from e
 
         new_tenant = TenantService.get_tenant_by_id(args.tenant_id, session=session)
         if new_tenant is None:

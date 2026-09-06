@@ -11,7 +11,6 @@ from enum import StrEnum
 from http import HTTPStatus
 from typing import Any
 
-from flask import request
 from flask_restx import Resource
 from pydantic import BaseModel, Field
 
@@ -291,17 +290,19 @@ class EndpointListApi(Resource):
     )
     @setup_required
     @login_required
+    @is_admin_or_owner_required
+    @rbac_permission_required(RBACResourceScope.WORKSPACE, RBACPermission.PLUGIN_MODEL_CONFIG, resource_required=False)
     @account_initialization_required
     @with_current_user_id
     @with_current_tenant_id
-    def get(self, tenant_id: str, user_id: str):
-        args = EndpointListQuery.model_validate(request.args.to_dict(flat=True))
+    @model_validate(EndpointListQuery)
+    def get(self, req_data: EndpointListQuery, tenant_id: str, user_id: str):
 
         endpoints = EndpointService.list_endpoints(
             tenant_id=tenant_id,
             user_id=user_id,
-            page=args.page,
-            page_size=args.page_size,
+            page=req_data.page,
+            page_size=req_data.page_size,
         )
 
         return EndpointListResponse(endpoints=endpoints).model_dump(mode="json")
@@ -319,18 +320,20 @@ class EndpointListForSinglePluginApi(Resource):
     )
     @setup_required
     @login_required
+    @is_admin_or_owner_required
+    @rbac_permission_required(RBACResourceScope.WORKSPACE, RBACPermission.PLUGIN_MODEL_CONFIG, resource_required=False)
     @account_initialization_required
     @with_current_user_id
     @with_current_tenant_id
-    def get(self, tenant_id: str, user_id: str):
-        args = EndpointListForPluginQuery.model_validate(request.args.to_dict(flat=True))
+    @model_validate(EndpointListForPluginQuery)
+    def get(self, req_data: EndpointListForPluginQuery, tenant_id: str, user_id: str):
 
         endpoints = EndpointService.list_endpoints_for_single_plugin(
             tenant_id=tenant_id,
             user_id=user_id,
-            plugin_id=args.plugin_id,
-            page=args.page,
-            page_size=args.page_size,
+            plugin_id=req_data.plugin_id,
+            page=req_data.page,
+            page_size=req_data.page_size,
         )
 
         return EndpointListResponse(endpoints=endpoints).model_dump(mode="json")

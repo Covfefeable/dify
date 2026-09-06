@@ -2,6 +2,7 @@ import type {
   EducationStatusResponse,
   GetAccountProfileResponse,
 } from '@dify/contracts/api/console/account/types.gen'
+import type { GetFeaturesResponse } from '@dify/contracts/api/console/features/types.gen'
 import type {
   GetSystemFeaturesLicenseResponse,
   GetSystemFeaturesResponse,
@@ -15,7 +16,10 @@ import type {
   RenderResult,
 } from '@testing-library/react'
 import type { ReactElement, ReactNode } from 'react'
+import type { UserProfileWithMeta } from '@/features/account-profile/client'
 import type { DeepPartial } from '@/test/console/system-features'
+import { zGetFeaturesResponse } from '@dify/contracts/api/console/features/zod.gen'
+import { noop } from '@tanstack/react-query'
 import { render, renderHook } from '@testing-library/react'
 import { consoleQuery } from '@/service/client'
 import { ensureAccountProfileQuery, seedAccountProfileQuery } from '@/test/console/account-profile'
@@ -122,6 +126,15 @@ export const seedEducationStatus = (
   return data
 }
 
+export const seedFeatures = (
+  queryClient: QueryClient,
+  overrides: DeepPartial<GetFeaturesResponse> = {},
+): GetFeaturesResponse => {
+  const data = zGetFeaturesResponse.parse(overrides)
+  queryClient.setQueryData(consoleQuery.features.get.queryKey(), data)
+  return data
+}
+
 const ensureSystemFeatures = (queryClient: QueryClient) => {
   const queryKey = consoleQuery.systemFeatures.get.queryKey()
   const existingSystemFeatures = queryClient.getQueryData<GetSystemFeaturesResponse>(queryKey)
@@ -131,10 +144,12 @@ const ensureSystemFeatures = (queryClient: QueryClient) => {
 }
 
 const seedPendingSystemFeatures = (queryClient: QueryClient) => {
-  void queryClient.prefetchQuery({
-    queryKey: consoleQuery.systemFeatures.get.queryKey(),
-    queryFn: () => new Promise<GetSystemFeaturesResponse>(() => {}),
-  })
+  void queryClient
+    .query({
+      queryKey: consoleQuery.systemFeatures.get.queryKey(),
+      queryFn: () => new Promise<GetSystemFeaturesResponse>(() => {}),
+    })
+    .catch(noop)
 }
 
 const seedTrialModels = (queryClient: QueryClient, trialModels: readonly string[] = []) => {
@@ -159,6 +174,7 @@ export type ConsoleQueryTestOptions = {
    */
   systemFeatures?: DeepPartial<GetSystemFeaturesResponse> | null
   accountProfile?: Partial<GetAccountProfileResponse> | null
+  accountProfileMeta?: Partial<UserProfileWithMeta['meta']>
   educationStatus?: Partial<EducationStatusResponse>
   currentWorkspace?: Partial<GetWorkspacesCurrentSummaryResponse> | null
   trialModels?: readonly string[] | null
@@ -182,8 +198,9 @@ export const createConsoleQueryWrapper = (
 ): ConsoleQueryWrapper => {
   const queryClient = options.queryClient ?? createConsoleQueryClient()
   if (options.accountProfile !== null) {
-    if (options.accountProfile) seedAccountProfileQuery(queryClient, options.accountProfile)
-    else ensureAccountProfileQuery(queryClient, { timezone: 'UTC' })
+    if (options.accountProfile)
+      seedAccountProfileQuery(queryClient, options.accountProfile, options.accountProfileMeta)
+    else ensureAccountProfileQuery(queryClient, { timezone: 'UTC' }, options.accountProfileMeta)
   }
   if (options.educationStatus) seedEducationStatus(queryClient, options.educationStatus)
   if (options.currentWorkspace !== null) {
@@ -224,6 +241,7 @@ export const renderWithConsoleQuery = (
   const {
     systemFeatures: sf,
     accountProfile,
+    accountProfileMeta,
     educationStatus,
     currentWorkspace,
     trialModels,
@@ -235,6 +253,7 @@ export const renderWithConsoleQuery = (
   const { wrapper, queryClient, systemFeatures } = createConsoleQueryWrapper({
     systemFeatures: sf,
     accountProfile,
+    accountProfileMeta,
     educationStatus,
     currentWorkspace,
     trialModels,
@@ -256,6 +275,7 @@ export const renderHookWithConsoleQuery = <Result, Props = void>(
   const {
     systemFeatures: sf,
     accountProfile,
+    accountProfileMeta,
     educationStatus,
     currentWorkspace,
     trialModels,
@@ -267,6 +287,7 @@ export const renderHookWithConsoleQuery = <Result, Props = void>(
   const { wrapper, queryClient, systemFeatures } = createConsoleQueryWrapper({
     systemFeatures: sf,
     accountProfile,
+    accountProfileMeta,
     educationStatus,
     currentWorkspace,
     trialModels,
