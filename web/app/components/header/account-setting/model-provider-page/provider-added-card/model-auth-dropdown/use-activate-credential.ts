@@ -1,12 +1,12 @@
 import type { Credential, ModelProvider } from '../../declarations'
-import { toast } from '@langgenius/dify-ui/toast'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from '@/app/notifications'
 import { useActiveProviderCredential } from '@/service/use-models'
 import { useUpdateModelList, useUpdateModelProviders } from '../../hooks'
 
 export function useActivateCredential(provider: ModelProvider) {
-  const { t } = useTranslation()
+  const { t } = useTranslation(['common'])
   const updateModelProviders = useUpdateModelProviders()
   const updateModelList = useUpdateModelList()
   const { mutate, isPending } = useActiveProviderCredential(provider.provider)
@@ -28,7 +28,6 @@ export function useActivateCredential(provider: ModelProvider) {
         { credential_id: credential.credential_id },
         {
           onSuccess: () => {
-            toast.success(t(($) => $['api.actionSuccess'], { ns: 'common' }))
             updateModelProviders()
             supportedModelTypesRef.current.forEach((type) => updateModelList(type))
           },

@@ -3,14 +3,58 @@
 import * as z from 'zod'
 
 /**
- * AgentProviderResponse
+ * ErrorResponse
+ *
+ * Documented non-2xx body emitted by ``register_external_error_handlers``.
+ *
+ * ``params`` and ``details`` appear only on the errors that set them. The schema
+ * stays open because ``HTTPException.data`` may carry extra keys.
  */
-export const zAgentProviderResponse = z.record(z.string(), z.unknown())
+export const zErrorResponse = z.object({
+  code: z.string(),
+  details: z.record(z.string(), z.unknown()).optional(),
+  message: z.string(),
+  params: z.string().optional(),
+  status: z.int(),
+})
 
 /**
- * AgentProviderListResponse
+ * CreateWorkspacePayload
  */
-export const zAgentProviderListResponse = z.array(z.record(z.string(), z.unknown()))
+export const zCreateWorkspacePayload = z.object({
+  name: z.string().max(255),
+})
+
+/**
+ * SimpleResultResponse
+ */
+export const zSimpleResultResponse = z.object({
+  result: z.string(),
+})
+
+/**
+ * LimitExceededError
+ *
+ * Unable to create account because the licensed seats limit was exceeded
+ */
+export const zLimitExceededError = zErrorResponse.and(
+  z.object({
+    code: z.literal('limit_exceeded'),
+    status: z.literal(400),
+  }),
+)
+
+/**
+ * NotAllowedCreateWorkspaceError
+ *
+ * Workspace not found, please contact system admin to invite you to join in a workspace.
+ */
+export const zNotAllowedCreateWorkspaceError = zErrorResponse.and(
+  z.object({
+    code: z.literal('not_allowed_create_workspace'),
+    status: z.literal(400),
+  }),
+)
 
 /**
  * AgentSkillBindingsPayload
@@ -18,6 +62,18 @@ export const zAgentProviderListResponse = z.array(z.record(z.string(), z.unknown
 export const zAgentSkillBindingsPayload = z.object({
   skill_ids: z.array(z.string()).optional(),
 })
+
+/**
+ * InvalidRequestError
+ *
+ * Invalid skill request.
+ */
+export const zInvalidRequestError = zErrorResponse.and(
+  z.object({
+    code: z.literal('invalid_request'),
+    status: z.literal(400),
+  }),
+)
 
 /**
  * SnippetImportPayload
@@ -47,13 +103,6 @@ export const zSnippetUseCountResponse = z.object({
 })
 
 /**
- * SimpleResultResponse
- */
-export const zSimpleResultResponse = z.object({
-  result: z.string(),
-})
-
-/**
  * EndpointCreatePayload
  */
 export const zEndpointCreatePayload = z.object({
@@ -63,10 +112,10 @@ export const zEndpointCreatePayload = z.object({
 })
 
 /**
- * SuccessResponse
+ * EndpointMutationResponse
  */
-export const zSuccessResponse = z.object({
-  success: z.boolean(),
+export const zEndpointMutationResponse = z.object({
+  success: z.literal(true),
 })
 
 /**
@@ -112,6 +161,18 @@ export const zMemberInviteErrorResponse = z.object({
 })
 
 /**
+ * InvalidRoleError
+ *
+ * Invalid role.
+ */
+export const zInvalidRoleError = zErrorResponse.and(
+  z.object({
+    code: z.literal('invalid_role'),
+    status: z.literal(400),
+  }),
+)
+
+/**
  * OwnerTransferCheckPayload
  */
 export const zOwnerTransferCheckPayload = z.object({
@@ -129,6 +190,66 @@ export const zVerificationTokenResponse = z.object({
 })
 
 /**
+ * EmailCodeError
+ *
+ * Email code is invalid or expired.
+ */
+export const zEmailCodeError = zErrorResponse.and(
+  z.object({
+    code: z.literal('email_code_error'),
+    status: z.literal(400),
+  }),
+)
+
+/**
+ * InvalidEmailError
+ *
+ * The email address is not valid.
+ */
+export const zInvalidEmailError = zErrorResponse.and(
+  z.object({
+    code: z.literal('invalid_email'),
+    status: z.literal(400),
+  }),
+)
+
+/**
+ * InvalidOrExpiredTokenError
+ *
+ * The token is invalid or has expired.
+ */
+export const zInvalidOrExpiredTokenError = zErrorResponse.and(
+  z.object({
+    code: z.literal('invalid_or_expired_token'),
+    status: z.literal(400),
+  }),
+)
+
+/**
+ * NotOwnerError
+ *
+ * You are not the owner of the workspace.
+ */
+export const zNotOwnerError = zErrorResponse.and(
+  z.object({
+    code: z.literal('not_owner'),
+    status: z.literal(400),
+  }),
+)
+
+/**
+ * OwnerTransferLimitError
+ *
+ * Too many failed owner transfer attempts. Please try again in 24 hours.
+ */
+export const zOwnerTransferLimitError = zErrorResponse.and(
+  z.object({
+    code: z.literal('owner_transfer_limit'),
+    status: z.literal(429),
+  }),
+)
+
+/**
  * OwnerTransferEmailPayload
  */
 export const zOwnerTransferEmailPayload = z.object({
@@ -144,12 +265,72 @@ export const zSimpleResultDataResponse = z.object({
 })
 
 /**
+ * EmailSendIpLimitError
+ *
+ * Too many emails have been sent from this IP address recently. Please try again later.
+ */
+export const zEmailSendIpLimitError = zErrorResponse.and(
+  z.object({
+    code: z.literal('email_send_ip_limit'),
+    status: z.literal(429),
+  }),
+)
+
+/**
+ * OwnerTransferRateLimitExceededError
+ *
+ * Too many owner transfer emails have been sent. Please try again in {minutes} minutes.
+ */
+export const zOwnerTransferRateLimitExceededError = zErrorResponse.and(
+  z.object({
+    code: z.literal('owner_transfer_rate_limit_exceeded'),
+    status: z.literal(429),
+  }),
+)
+
+/**
  * MemberActionResponse
  */
 export const zMemberActionResponse = z.object({
   result: z.string(),
   tenant_id: z.string(),
 })
+
+/**
+ * CannotOperateSelfError
+ *
+ * Cannot operate on yourself.
+ */
+export const zCannotOperateSelfError = zErrorResponse.and(
+  z.object({
+    code: z.literal('cannot_operate_self'),
+    status: z.literal(400),
+  }),
+)
+
+/**
+ * ForbiddenError
+ *
+ * You don't have the permission to access the requested resource.
+ */
+export const zForbiddenError = zErrorResponse.and(
+  z.object({
+    code: z.literal('forbidden'),
+    status: z.literal(403),
+  }),
+)
+
+/**
+ * MemberNotFoundError
+ *
+ * Member not found.
+ */
+export const zMemberNotFoundError = zErrorResponse.and(
+  z.object({
+    code: z.literal('member_not_found'),
+    status: z.literal(404),
+  }),
+)
 
 /**
  * OwnerTransferPayload
@@ -159,11 +340,47 @@ export const zOwnerTransferPayload = z.object({
 })
 
 /**
+ * CannotTransferOwnerToSelfError
+ *
+ * You cannot transfer ownership to yourself.
+ */
+export const zCannotTransferOwnerToSelfError = zErrorResponse.and(
+  z.object({
+    code: z.literal('cannot_transfer_owner_to_self'),
+    status: z.literal(400),
+  }),
+)
+
+/**
+ * MemberNotInTenantError
+ *
+ * The member is not in the workspace.
+ */
+export const zMemberNotInTenantError = zErrorResponse.and(
+  z.object({
+    code: z.literal('member_not_in_tenant'),
+    status: z.literal(400),
+  }),
+)
+
+/**
  * MemberRoleUpdatePayload
  */
 export const zMemberRoleUpdatePayload = z.object({
   role: z.string(),
 })
+
+/**
+ * RoleAlreadyAssignedError
+ *
+ * Role already assigned.
+ */
+export const zRoleAlreadyAssignedError = zErrorResponse.and(
+  z.object({
+    code: z.literal('role_already_assigned'),
+    status: z.literal(400),
+  }),
+)
 
 /**
  * ModelProviderCreditsResponse
@@ -271,10 +488,29 @@ export const zBinaryFileResponse = z.custom<Blob | File>(
 )
 
 /**
+ * PluginError
+ *
+ * Plugin operation failed.
+ */
+export const zPluginError = zErrorResponse.and(
+  z.object({
+    code: z.literal('plugin_error'),
+    status: z.literal(400),
+  }),
+)
+
+/**
  * PluginAutoUpgradeChangeResponse
  */
 export const zPluginAutoUpgradeChangeResponse = z.object({
   message: z.string().nullish(),
+  success: z.boolean(),
+})
+
+/**
+ * SuccessResponse
+ */
+export const zSuccessResponse = z.object({
   success: z.boolean(),
 })
 
@@ -391,6 +627,15 @@ export const zAccessPolicy = z.object({
 })
 
 /**
+ * _AccessPolicyUpdateRequest
+ */
+export const zAccessPolicyUpdateRequest = z.object({
+  description: z.string().optional().default(''),
+  name: z.string(),
+  permission_keys: z.array(z.string()).optional().default([]),
+})
+
+/**
  * AccessPolicyBindingState
  */
 export const zAccessPolicyBindingState = z.object({
@@ -500,6 +745,30 @@ export const zSkillFileUploadResponse = z.object({
   name: z.string(),
   size: z.int(),
 })
+
+/**
+ * FilenameMissingError
+ *
+ * filename is required
+ */
+export const zFilenameMissingError = zErrorResponse.and(
+  z.object({
+    code: z.literal('filename_missing'),
+    status: z.literal(400),
+  }),
+)
+
+/**
+ * NoFileUploadedError
+ *
+ * Please upload your file.
+ */
+export const zNoFileUploadedError = zErrorResponse.and(
+  z.object({
+    code: z.literal('no_file_uploaded'),
+    status: z.literal(400),
+  }),
+)
 
 /**
  * SkillDeletePayload
@@ -631,6 +900,18 @@ export const zSkillVersionUpdatePayload = z.object({
 })
 
 /**
+ * CurrentWorkspaceArchivedError
+ *
+ * The current workspace has been archived.
+ */
+export const zCurrentWorkspaceArchivedError = zErrorResponse.and(
+  z.object({
+    code: z.literal('current_workspace_archived'),
+    status: z.literal(409),
+  }),
+)
+
+/**
  * ApiToolProviderDeletePayload
  */
 export const zApiToolProviderDeletePayload = z.object({
@@ -704,6 +985,18 @@ export const zMcpAuthResponse = z.object({
   authorization_url: z.string().nullish(),
   result: z.literal('success').nullish(),
 })
+
+/**
+ * WorkflowToolHumanInputNotSupportedError
+ *
+ * Workflow with Human Input nodes cannot be published as a workflow tool.
+ */
+export const zWorkflowToolHumanInputNotSupportedError = zErrorResponse.and(
+  z.object({
+    code: z.literal('workflow_tool_human_input_not_supported'),
+    status: z.literal(400),
+  }),
+)
 
 /**
  * WorkflowToolDeletePayload
@@ -789,6 +1082,61 @@ export const zWorkspaceLogoUploadResponse = z.object({
 })
 
 /**
+ * FilenameNotExistsError
+ *
+ * The specified filename does not exist.
+ */
+export const zFilenameNotExistsError = zErrorResponse.and(
+  z.object({
+    code: z.literal('filename_not_exists_error'),
+    status: z.literal(400),
+  }),
+)
+
+/**
+ * TooManyFilesError
+ *
+ * Only one file is allowed.
+ */
+export const zTooManyFilesError = zErrorResponse.and(
+  z.object({
+    code: z.literal('too_many_files'),
+    status: z.literal(400),
+  }),
+)
+
+/**
+ * FileTooLargeError
+ *
+ * File size exceeded. {message}
+ */
+export const zFileTooLargeError = zErrorResponse.and(
+  z.object({
+    code: z.literal('file_too_large'),
+    status: z.literal(413),
+  }),
+)
+
+/**
+ * UnsupportedFileTypeError
+ *
+ * File type not allowed.
+ */
+export const zUnsupportedFileTypeError = zErrorResponse.and(
+  z.object({
+    code: z.literal('unsupported_file_type'),
+    status: z.literal(415),
+  }),
+)
+
+/**
+ * DissolveWorkspacePayload
+ */
+export const zDissolveWorkspacePayload = z.object({
+  id: z.string(),
+})
+
+/**
  * WorkspaceInfoPayload
  */
 export const zWorkspaceInfoPayload = z.object({
@@ -800,6 +1148,26 @@ export const zWorkspaceInfoPayload = z.object({
  */
 export const zSwitchWorkspacePayload = z.object({
   tenant_id: z.string(),
+})
+
+/**
+ * AccountNotLinkTenantError
+ *
+ * Account not link tenant.
+ */
+export const zAccountNotLinkTenantError = zErrorResponse.and(
+  z.object({
+    code: z.literal('account_not_link_tenant'),
+    status: z.literal(403),
+  }),
+)
+
+/**
+ * Meta
+ */
+export const zMeta = z.object({
+  minimum_dify_version: z.string().nullish(),
+  version: z.string().nullish(),
 })
 
 /**
@@ -1068,6 +1436,14 @@ export const zMemberInviteResponse = z.object({
 })
 
 /**
+ * LoadBalancingPayload
+ */
+export const zLoadBalancingPayload = z.object({
+  configs: z.array(z.record(z.string(), z.unknown())).nullish(),
+  enabled: z.boolean().nullish(),
+})
+
+/**
  * ModelType
  *
  * Enum class for model type.
@@ -1082,18 +1458,12 @@ export const zModelType = z.enum([
 ])
 
 /**
- * ParserDeleteModels
+ * ParserPostModels
  */
-export const zParserDeleteModels = z.object({
-  model: z.string(),
-  model_type: zModelType,
-})
-
-/**
- * ParserDeleteCredential
- */
-export const zParserDeleteCredential = z.object({
-  credential_id: z.string(),
+export const zParserPostModels = z.object({
+  config_from: z.string().nullish(),
+  credential_id: z.string().nullish(),
+  load_balancing: zLoadBalancingPayload.nullish(),
   model: z.string(),
   model_type: zModelType,
 })
@@ -1138,6 +1508,14 @@ export const zParserValidate = z.object({
 })
 
 /**
+ * ParserDeleteModels
+ */
+export const zParserDeleteModels = z.object({
+  model: z.string(),
+  model_type: zModelType,
+})
+
+/**
  * LoadBalancingCredentialPayload
  */
 export const zLoadBalancingCredentialPayload = z.object({
@@ -1160,25 +1538,6 @@ export const zInner = z.object({
  */
 export const zParserPostDefault = z.object({
   model_settings: z.array(zInner),
-})
-
-/**
- * LoadBalancingPayload
- */
-export const zLoadBalancingPayload = z.object({
-  configs: z.array(z.record(z.string(), z.unknown())).nullish(),
-  enabled: z.boolean().nullish(),
-})
-
-/**
- * ParserPostModels
- */
-export const zParserPostModels = z.object({
-  config_from: z.string().nullish(),
-  credential_id: z.string().nullish(),
-  load_balancing: zLoadBalancingPayload.nullish(),
-  model: z.string(),
-  model_type: zModelType,
 })
 
 /**
@@ -1283,6 +1642,23 @@ export const zRbacRoleList = z.object({
 })
 
 /**
+ * RBACResourceType
+ *
+ * Resource types understood by access policies.
+ */
+export const zRbacResourceType = z.enum(['agent', 'app', 'dataset'])
+
+/**
+ * _AccessPolicyCreateRequest
+ */
+export const zAccessPolicyCreateRequest = z.object({
+  description: z.string().optional().default(''),
+  name: z.string(),
+  permission_keys: z.array(z.string()).optional().default([]),
+  resource_type: zRbacResourceType,
+})
+
+/**
  * AccessPolicyMemberBinding
  */
 export const zAccessPolicyMemberBinding = z.object({
@@ -1377,6 +1753,14 @@ export const zAccessMatrixItem = z.object({
   accounts: z.array(zAccessPolicyAccount).optional(),
   policy: zAccessPolicy.nullish(),
   roles: z.array(zAccessPolicyRole).optional(),
+})
+
+/**
+ * AgentAccessMatrix
+ */
+export const zAgentAccessMatrix = z.object({
+  agent_id: z.string().optional().default(''),
+  items: z.array(zAccessMatrixItem).optional(),
 })
 
 /**
@@ -1619,6 +2003,7 @@ export const zTenantListItemResponse = z.object({
  * TenantListResponse
  */
 export const zTenantListResponse = z.object({
+  allow_create_workspace: z.boolean(),
   workspaces: z.array(zTenantListItemResponse),
 })
 
@@ -2368,14 +2753,6 @@ export const zCoreToolsEntitiesCommonEntitiesI18nObject = z.object({
 })
 
 /**
- * Meta
- */
-export const zMeta = z.object({
-  minimum_dify_version: z.string().nullish(),
-  version: z.string().nullish(),
-})
-
-/**
  * Plugins
  */
 export const zPlugins = z.object({
@@ -2553,6 +2930,7 @@ export const zResourcePermissionSnapshot = z.object({
  * MyPermissionsResponse
  */
 export const zMyPermissionsResponse = z.object({
+  agent: zResourcePermissionSnapshot.optional(),
   app: zResourcePermissionSnapshot.optional(),
   dataset: zResourcePermissionSnapshot.optional(),
   workspace: zWorkspacePermissionSnapshot.optional(),
@@ -2806,6 +3184,72 @@ export const zOAuthSchema = z.object({
 })
 
 /**
+ * ToolLabelEnum
+ */
+export const zToolLabelEnum = z.enum([
+  'business',
+  'design',
+  'education',
+  'entertainment',
+  'finance',
+  'image',
+  'medical',
+  'news',
+  'other',
+  'productivity',
+  'rag',
+  'search',
+  'social',
+  'travel',
+  'utilities',
+  'videos',
+  'weather',
+])
+
+/**
+ * AgentStrategyProviderIdentity
+ *
+ * Inherits from ToolProviderIdentity, without any additional fields.
+ */
+export const zAgentStrategyProviderIdentity = z.object({
+  author: z.string(),
+  description: zCoreToolsEntitiesCommonEntitiesI18nObject,
+  icon: z.string(),
+  icon_dark: z.string().nullish(),
+  label: zCoreToolsEntitiesCommonEntitiesI18nObject,
+  name: z.string(),
+  tags: z.array(zToolLabelEnum).nullish().default([]),
+})
+
+/**
+ * AgentStrategyProviderEntity
+ */
+export const zAgentStrategyProviderEntity = z.object({
+  identity: zAgentStrategyProviderIdentity,
+  plugin_id: z.string().nullish(),
+})
+
+/**
+ * AgentFeature
+ *
+ * Agent Feature, used to describe the features of the agent strategy.
+ */
+export const zAgentFeature = z.enum(['history-messages'])
+
+/**
+ * AgentStrategyIdentity
+ *
+ * Inherits from ToolIdentity, without any additional fields.
+ */
+export const zAgentStrategyIdentity = z.object({
+  author: z.string(),
+  icon: z.string().nullish(),
+  label: zI18nObject,
+  name: z.string(),
+  provider: z.string(),
+})
+
+/**
  * EndpointDeclarationResponse
  */
 export const zEndpointDeclarationResponse = z.object({
@@ -2867,6 +3311,18 @@ export const zFieldModelSchema = z.object({
 export const zProviderQuotaType = z.enum(['free', 'paid', 'trial'])
 
 /**
+ * DatasourceProviderIdentity
+ */
+export const zDatasourceProviderIdentity = z.object({
+  author: z.string(),
+  description: zCoreToolsEntitiesCommonEntitiesI18nObject,
+  icon: z.string(),
+  label: zCoreToolsEntitiesCommonEntitiesI18nObject,
+  name: z.string(),
+  tags: z.array(zToolLabelEnum).nullish().default([]),
+})
+
+/**
  * DatasourceProviderType
  *
  * Enum class for datasource provider
@@ -2877,6 +3333,18 @@ export const zDatasourceProviderType = z.enum([
   'online_drive',
   'website_crawl',
 ])
+
+/**
+ * DatasourceProviderEntity
+ *
+ * Datasource provider entity
+ */
+export const zDatasourceProviderEntity = z.object({
+  credentials_schema: z.array(zProviderConfig).optional(),
+  identity: zDatasourceProviderIdentity,
+  oauth_schema: zOAuthSchema.nullish(),
+  provider_type: zDatasourceProviderType,
+})
 
 /**
  * EndpointDeclaration
@@ -2897,6 +3365,29 @@ export const zEndpointDeclaration = z.object({
 export const zEndpointProviderDeclaration = z.object({
   endpoints: z.array(zEndpointDeclaration).nullish(),
   settings: z.array(zProviderConfig).optional(),
+})
+
+/**
+ * ToolProviderIdentity
+ */
+export const zToolProviderIdentity = z.object({
+  author: z.string(),
+  description: zCoreToolsEntitiesCommonEntitiesI18nObject,
+  icon: z.string(),
+  icon_dark: z.string().nullish(),
+  label: zCoreToolsEntitiesCommonEntitiesI18nObject,
+  name: z.string(),
+  tags: z.array(zToolLabelEnum).nullish().default([]),
+})
+
+/**
+ * ToolProviderEntity
+ */
+export const zToolProviderEntity = z.object({
+  credentials_schema: z.array(zProviderConfig).optional(),
+  identity: zToolProviderIdentity,
+  oauth_schema: zOAuthSchema.nullish(),
+  plugin_id: z.string().nullish(),
 })
 
 /**
@@ -2964,6 +3455,26 @@ export const zEventParameterType = z.enum([
   'object',
   'select',
   'string',
+])
+
+/**
+ * AgentStrategyParameterType
+ *
+ * Keep all the types from PluginParameterType
+ */
+export const zAgentStrategyParameterType = z.enum([
+  'any',
+  'app-selector',
+  'array[tools]',
+  'boolean',
+  'file',
+  'files',
+  'model-selector',
+  'number',
+  'secret-input',
+  'select',
+  'string',
+  'system-files',
 ])
 
 /**
@@ -3384,99 +3895,6 @@ export const zModelProviderListResponse = z.object({
 })
 
 /**
- * ToolLabelEnum
- */
-export const zToolLabelEnum = z.enum([
-  'business',
-  'design',
-  'education',
-  'entertainment',
-  'finance',
-  'image',
-  'medical',
-  'news',
-  'other',
-  'productivity',
-  'rag',
-  'search',
-  'social',
-  'travel',
-  'utilities',
-  'videos',
-  'weather',
-])
-
-/**
- * AgentStrategyProviderIdentity
- *
- * Inherits from ToolProviderIdentity, without any additional fields.
- */
-export const zAgentStrategyProviderIdentity = z.object({
-  author: z.string(),
-  description: zCoreToolsEntitiesCommonEntitiesI18nObject,
-  icon: z.string(),
-  icon_dark: z.string().nullish(),
-  label: zCoreToolsEntitiesCommonEntitiesI18nObject,
-  name: z.string(),
-  tags: z.array(zToolLabelEnum).nullish().default([]),
-})
-
-/**
- * AgentStrategyProviderEntity
- */
-export const zAgentStrategyProviderEntity = z.object({
-  identity: zAgentStrategyProviderIdentity,
-  plugin_id: z.string().nullish(),
-})
-
-/**
- * DatasourceProviderIdentity
- */
-export const zDatasourceProviderIdentity = z.object({
-  author: z.string(),
-  description: zCoreToolsEntitiesCommonEntitiesI18nObject,
-  icon: z.string(),
-  label: zCoreToolsEntitiesCommonEntitiesI18nObject,
-  name: z.string(),
-  tags: z.array(zToolLabelEnum).nullish().default([]),
-})
-
-/**
- * DatasourceProviderEntity
- *
- * Datasource provider entity
- */
-export const zDatasourceProviderEntity = z.object({
-  credentials_schema: z.array(zProviderConfig).optional(),
-  identity: zDatasourceProviderIdentity,
-  oauth_schema: zOAuthSchema.nullish(),
-  provider_type: zDatasourceProviderType,
-})
-
-/**
- * ToolProviderIdentity
- */
-export const zToolProviderIdentity = z.object({
-  author: z.string(),
-  description: zCoreToolsEntitiesCommonEntitiesI18nObject,
-  icon: z.string(),
-  icon_dark: z.string().nullish(),
-  label: zCoreToolsEntitiesCommonEntitiesI18nObject,
-  name: z.string(),
-  tags: z.array(zToolLabelEnum).nullish().default([]),
-})
-
-/**
- * ToolProviderEntity
- */
-export const zToolProviderEntity = z.object({
-  credentials_schema: z.array(zProviderConfig).optional(),
-  identity: zToolProviderIdentity,
-  oauth_schema: zOAuthSchema.nullish(),
-  plugin_id: z.string().nullish(),
-})
-
-/**
  * PriceConfig
  *
  * Model class for pricing info.
@@ -3828,6 +4246,72 @@ export const zTriggerProviderApiEntity = z.object({
 export const zTriggerProviderListResponse = z.array(zTriggerProviderApiEntity)
 
 /**
+ * AgentStrategyParameter
+ */
+export const zAgentStrategyParameter = z.object({
+  auto_generate: zPluginParameterAutoGenerate.nullish(),
+  default: z
+    .union([
+      z.number(),
+      z.int(),
+      z.string(),
+      z.boolean(),
+      z.array(z.unknown()),
+      z.record(z.string(), z.unknown()),
+    ])
+    .nullish(),
+  help: zI18nObject.nullish(),
+  label: zI18nObject,
+  max: z.union([z.number(), z.int()]).nullish(),
+  min: z.union([z.number(), z.int()]).nullish(),
+  name: z.string(),
+  options: z.array(zPluginParameterOption).optional(),
+  placeholder: zI18nObject.nullish(),
+  precision: z.int().nullish(),
+  required: z.boolean().optional().default(false),
+  scope: z.string().nullish(),
+  template: zPluginParameterTemplate.nullish(),
+  type: zAgentStrategyParameterType,
+})
+
+/**
+ * AgentStrategyEntity
+ */
+export const zAgentStrategyEntity = z.object({
+  description: zI18nObject,
+  features: z.array(zAgentFeature).nullish(),
+  identity: zAgentStrategyIdentity,
+  meta_version: z.string().nullish(),
+  output_schema: z.record(z.string(), z.unknown()).nullish(),
+  parameters: z.array(zAgentStrategyParameter).optional(),
+})
+
+/**
+ * AgentProviderEntityWithPlugin
+ */
+export const zAgentProviderEntityWithPlugin = z.object({
+  identity: zAgentStrategyProviderIdentity,
+  plugin_id: z.string().nullish(),
+  strategies: z.array(zAgentStrategyEntity).optional(),
+})
+
+/**
+ * AgentProviderResponse
+ */
+export const zAgentProviderResponse = z.object({
+  declaration: zAgentProviderEntityWithPlugin,
+  meta: zMeta,
+  plugin_id: z.string(),
+  plugin_unique_identifier: z.string(),
+  provider: z.string(),
+})
+
+/**
+ * AgentProviderListResponse
+ */
+export const zAgentProviderListResponse = z.array(zAgentProviderResponse)
+
+/**
  * EventEntity
  *
  * The configuration of an event
@@ -3954,6 +4438,13 @@ export const zAccountWithRoleListResponseWritable = z.object({
  * Success
  */
 export const zGetWorkspacesResponse = zTenantListResponse
+
+export const zPostWorkspacesCreateBody = zCreateWorkspacePayload
+
+/**
+ * Workspace created
+ */
+export const zPostWorkspacesCreateResponse = zSimpleResultResponse
 
 export const zGetWorkspacesCurrentAgentProviderByProviderNamePath = z.object({
   provider_name: z.string(),
@@ -4116,35 +4607,35 @@ export const zPostWorkspacesCurrentEndpointsBody = zEndpointCreatePayload
 /**
  * Endpoint created successfully
  */
-export const zPostWorkspacesCurrentEndpointsResponse = zSuccessResponse
+export const zPostWorkspacesCurrentEndpointsResponse = zEndpointMutationResponse
 
 export const zPostWorkspacesCurrentEndpointsCreateBody = zEndpointCreatePayload
 
 /**
  * Endpoint created successfully
  */
-export const zPostWorkspacesCurrentEndpointsCreateResponse = zSuccessResponse
+export const zPostWorkspacesCurrentEndpointsCreateResponse = zEndpointMutationResponse
 
 export const zPostWorkspacesCurrentEndpointsDeleteBody = zEndpointIdPayload
 
 /**
  * Endpoint deleted successfully
  */
-export const zPostWorkspacesCurrentEndpointsDeleteResponse = zSuccessResponse
+export const zPostWorkspacesCurrentEndpointsDeleteResponse = zEndpointMutationResponse
 
 export const zPostWorkspacesCurrentEndpointsDisableBody = zEndpointIdPayload
 
 /**
  * Endpoint disabled successfully
  */
-export const zPostWorkspacesCurrentEndpointsDisableResponse = zSuccessResponse
+export const zPostWorkspacesCurrentEndpointsDisableResponse = zEndpointMutationResponse
 
 export const zPostWorkspacesCurrentEndpointsEnableBody = zEndpointIdPayload
 
 /**
  * Endpoint enabled successfully
  */
-export const zPostWorkspacesCurrentEndpointsEnableResponse = zSuccessResponse
+export const zPostWorkspacesCurrentEndpointsEnableResponse = zEndpointMutationResponse
 
 export const zGetWorkspacesCurrentEndpointsListQuery = z.object({
   page: z.int().gte(1),
@@ -4172,7 +4663,7 @@ export const zPostWorkspacesCurrentEndpointsUpdateBody = zLegacyEndpointUpdatePa
 /**
  * Endpoint updated successfully
  */
-export const zPostWorkspacesCurrentEndpointsUpdateResponse = zSuccessResponse
+export const zPostWorkspacesCurrentEndpointsUpdateResponse = zEndpointMutationResponse
 
 export const zDeleteWorkspacesCurrentEndpointsByIdPath = z.object({
   id: z.string(),
@@ -4181,7 +4672,7 @@ export const zDeleteWorkspacesCurrentEndpointsByIdPath = z.object({
 /**
  * Endpoint deleted successfully
  */
-export const zDeleteWorkspacesCurrentEndpointsByIdResponse = zSuccessResponse
+export const zDeleteWorkspacesCurrentEndpointsByIdResponse = zEndpointMutationResponse
 
 export const zPatchWorkspacesCurrentEndpointsByIdBody = zEndpointUpdatePayload
 
@@ -4192,7 +4683,7 @@ export const zPatchWorkspacesCurrentEndpointsByIdPath = z.object({
 /**
  * Endpoint updated successfully
  */
-export const zPatchWorkspacesCurrentEndpointsByIdResponse = zSuccessResponse
+export const zPatchWorkspacesCurrentEndpointsByIdResponse = zEndpointMutationResponse
 
 /**
  * Success
@@ -4360,10 +4851,13 @@ export const zPostWorkspacesCurrentModelProvidersByProviderCredentialsValidatePa
 export const zPostWorkspacesCurrentModelProvidersByProviderCredentialsValidateResponse =
   zValidationResultResponse
 
-export const zDeleteWorkspacesCurrentModelProvidersByProviderModelsBody = zParserDeleteModels
-
 export const zDeleteWorkspacesCurrentModelProvidersByProviderModelsPath = z.object({
   provider: z.string(),
+})
+
+export const zDeleteWorkspacesCurrentModelProvidersByProviderModelsQuery = z.object({
+  model: z.string(),
+  model_type: z.enum(['llm', 'moderation', 'rerank', 'speech2text', 'text-embedding', 'tts']),
 })
 
 /**
@@ -4392,11 +4886,14 @@ export const zPostWorkspacesCurrentModelProvidersByProviderModelsPath = z.object
  */
 export const zPostWorkspacesCurrentModelProvidersByProviderModelsResponse = zSimpleResultResponse
 
-export const zDeleteWorkspacesCurrentModelProvidersByProviderModelsCredentialsBody =
-  zParserDeleteCredential
-
 export const zDeleteWorkspacesCurrentModelProvidersByProviderModelsCredentialsPath = z.object({
   provider: z.string(),
+})
+
+export const zDeleteWorkspacesCurrentModelProvidersByProviderModelsCredentialsQuery = z.object({
+  credential_id: z.string(),
+  model: z.string(),
+  model_type: z.enum(['llm', 'moderation', 'rerank', 'speech2text', 'text-embedding', 'tts']),
 })
 
 /**
@@ -4845,6 +5342,8 @@ export const zGetWorkspacesCurrentPluginByCategoryListResponse = zPluginCategory
  */
 export const zGetWorkspacesCurrentRbacAccessPoliciesResponse = zAccessPolicyList
 
+export const zPostWorkspacesCurrentRbacAccessPoliciesBody = zAccessPolicyCreateRequest
+
 /**
  * Policy created
  */
@@ -4857,7 +5356,7 @@ export const zDeleteWorkspacesCurrentRbacAccessPoliciesByPolicyIdPath = z.object
 /**
  * Success
  */
-export const zDeleteWorkspacesCurrentRbacAccessPoliciesByPolicyIdResponse = zAccessPolicy
+export const zDeleteWorkspacesCurrentRbacAccessPoliciesByPolicyIdResponse = zSimpleResultResponse
 
 export const zGetWorkspacesCurrentRbacAccessPoliciesByPolicyIdPath = z.object({
   policy_id: z.uuid(),
@@ -4867,6 +5366,8 @@ export const zGetWorkspacesCurrentRbacAccessPoliciesByPolicyIdPath = z.object({
  * Success
  */
 export const zGetWorkspacesCurrentRbacAccessPoliciesByPolicyIdResponse = zAccessPolicy
+
+export const zPutWorkspacesCurrentRbacAccessPoliciesByPolicyIdBody = zAccessPolicyUpdateRequest
 
 export const zPutWorkspacesCurrentRbacAccessPoliciesByPolicyIdPath = z.object({
   policy_id: z.uuid(),
@@ -4906,6 +5407,120 @@ export const zPutWorkspacesCurrentRbacAccessPolicyBindingsByBindingIdUnlockPath 
 export const zPutWorkspacesCurrentRbacAccessPolicyBindingsByBindingIdUnlockResponse =
   zAccessPolicyBindingState
 
+export const zDeleteWorkspacesCurrentRbacAgentsByAgentIdAccessPoliciesByPolicyIdMemberBindingsBody =
+  zDeleteMemberBindingsRequest
+
+export const zDeleteWorkspacesCurrentRbacAgentsByAgentIdAccessPoliciesByPolicyIdMemberBindingsPath =
+  z.object({
+    agent_id: z.uuid(),
+    policy_id: z.string(),
+  })
+
+/**
+ * Success
+ */
+export const zDeleteWorkspacesCurrentRbacAgentsByAgentIdAccessPoliciesByPolicyIdMemberBindingsResponse =
+  zSimpleResultResponse
+
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdAccessPoliciesByPolicyIdMemberBindingsPath =
+  z.object({
+    agent_id: z.uuid(),
+    policy_id: z.string(),
+  })
+
+/**
+ * Success
+ */
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdAccessPoliciesByPolicyIdMemberBindingsResponse =
+  zMemberBindingsResponse
+
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdAccessPoliciesByPolicyIdRoleBindingsPath =
+  z.object({
+    agent_id: z.uuid(),
+    policy_id: z.uuid(),
+  })
+
+/**
+ * Success
+ */
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdAccessPoliciesByPolicyIdRoleBindingsResponse =
+  zRoleBindingsResponse
+
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdAccessPolicyPath = z.object({
+  agent_id: z.uuid(),
+})
+
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdAccessPolicyQuery = z.object({
+  language: z.enum(['en', 'ja', 'zh']).optional(),
+})
+
+/**
+ * Success
+ */
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdAccessPolicyResponse = zAgentAccessMatrix
+
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdUserAccessPoliciesPath = z.object({
+  agent_id: z.uuid(),
+})
+
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdUserAccessPoliciesQuery = z.object({
+  language: z.enum(['en', 'ja', 'zh']).optional(),
+  limit: z.int().gte(1).lte(99999).optional(),
+  page: z.int().gte(1).optional(),
+  reverse: z.boolean().optional(),
+})
+
+/**
+ * Success
+ */
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdUserAccessPoliciesResponse =
+  zResourceUserAccessPoliciesResponse
+
+export const zPutWorkspacesCurrentRbacAgentsByAgentIdUsersByTargetAccountIdAccessPoliciesBody =
+  zReplaceUserAccessPolicies
+
+export const zPutWorkspacesCurrentRbacAgentsByAgentIdUsersByTargetAccountIdAccessPoliciesPath =
+  z.object({
+    agent_id: z.uuid(),
+    target_account_id: z.uuid(),
+  })
+
+/**
+ * Success
+ */
+export const zPutWorkspacesCurrentRbacAgentsByAgentIdUsersByTargetAccountIdAccessPoliciesResponse =
+  zReplaceUserAccessPoliciesResponse
+
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdWhitelistPath = z.object({
+  agent_id: z.uuid(),
+})
+
+/**
+ * Success
+ */
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdWhitelistResponse = zResourceWhitelist
+
+export const zPutWorkspacesCurrentRbacAgentsByAgentIdWhitelistBody = zResourceAccessScopeRequest
+
+export const zPutWorkspacesCurrentRbacAgentsByAgentIdWhitelistPath = z.object({
+  agent_id: z.uuid(),
+})
+
+/**
+ * Success
+ */
+export const zPutWorkspacesCurrentRbacAgentsByAgentIdWhitelistResponse = zResourceWhitelist
+
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdWhitelistConfigPath = z.object({
+  agent_id: z.uuid(),
+})
+
+/**
+ * Success
+ */
+export const zGetWorkspacesCurrentRbacAgentsByAgentIdWhitelistConfigResponse =
+  zResourceWhitelistConfig
+
 export const zDeleteWorkspacesCurrentRbacAppsByAppIdAccessPoliciesByPolicyIdMemberBindingsBody =
   zDeleteMemberBindingsRequest
 
@@ -4919,7 +5534,7 @@ export const zDeleteWorkspacesCurrentRbacAppsByAppIdAccessPoliciesByPolicyIdMemb
  * Success
  */
 export const zDeleteWorkspacesCurrentRbacAppsByAppIdAccessPoliciesByPolicyIdMemberBindingsResponse =
-  zMemberBindingsResponse
+  zSimpleResultResponse
 
 export const zGetWorkspacesCurrentRbacAppsByAppIdAccessPoliciesByPolicyIdMemberBindingsPath =
   z.object({
@@ -5032,7 +5647,7 @@ export const zDeleteWorkspacesCurrentRbacDatasetsByDatasetIdAccessPoliciesByPoli
  * Success
  */
 export const zDeleteWorkspacesCurrentRbacDatasetsByDatasetIdAccessPoliciesByPolicyIdMemberBindingsResponse =
-  zMemberBindingsResponse
+  zSimpleResultResponse
 
 export const zGetWorkspacesCurrentRbacDatasetsByDatasetIdAccessPoliciesByPolicyIdMemberBindingsPath =
   z.object({
@@ -5166,6 +5781,12 @@ export const zGetWorkspacesCurrentRbacRolePermissionsCatalogResponse = zPermissi
 /**
  * Success
  */
+export const zGetWorkspacesCurrentRbacRolePermissionsCatalogAgentResponse =
+  zPermissionCatalogResponse
+
+/**
+ * Success
+ */
 export const zGetWorkspacesCurrentRbacRolePermissionsCatalogAppResponse = zPermissionCatalogResponse
 
 /**
@@ -5191,7 +5812,7 @@ export const zDeleteWorkspacesCurrentRbacRolesByRoleIdPath = z.object({
 /**
  * Success
  */
-export const zDeleteWorkspacesCurrentRbacRolesByRoleIdResponse = zRbacRole
+export const zDeleteWorkspacesCurrentRbacRolesByRoleIdResponse = zSimpleResultResponse
 
 export const zGetWorkspacesCurrentRbacRolesByRoleIdPath = z.object({
   role_id: z.uuid(),
@@ -5228,6 +5849,47 @@ export const zGetWorkspacesCurrentRbacRolesByRoleIdMembersPath = z.object({
  * Success
  */
 export const zGetWorkspacesCurrentRbacRolesByRoleIdMembersResponse = zMembersInRoleList
+
+export const zPutWorkspacesCurrentRbacWorkspaceAgentsAccessPoliciesByPolicyIdBindingsBody =
+  zReplaceBindingsRequest
+
+export const zPutWorkspacesCurrentRbacWorkspaceAgentsAccessPoliciesByPolicyIdBindingsPath =
+  z.object({
+    policy_id: z.uuid(),
+  })
+
+/**
+ * Success
+ */
+export const zPutWorkspacesCurrentRbacWorkspaceAgentsAccessPoliciesByPolicyIdBindingsResponse =
+  zAccessMatrixItem
+
+export const zGetWorkspacesCurrentRbacWorkspaceAgentsAccessPoliciesByPolicyIdMemberBindingsPath =
+  z.object({
+    policy_id: z.uuid(),
+  })
+
+/**
+ * Success
+ */
+export const zGetWorkspacesCurrentRbacWorkspaceAgentsAccessPoliciesByPolicyIdMemberBindingsResponse =
+  zMemberBindingsResponse
+
+export const zGetWorkspacesCurrentRbacWorkspaceAgentsAccessPoliciesByPolicyIdRoleBindingsPath =
+  z.object({
+    policy_id: z.uuid(),
+  })
+
+/**
+ * Success
+ */
+export const zGetWorkspacesCurrentRbacWorkspaceAgentsAccessPoliciesByPolicyIdRoleBindingsResponse =
+  zRoleBindingsResponse
+
+/**
+ * Success
+ */
+export const zGetWorkspacesCurrentRbacWorkspaceAgentsAccessPolicyResponse = zWorkspaceAccessMatrix
 
 export const zPutWorkspacesCurrentRbacWorkspaceAppsAccessPoliciesByPolicyIdBindingsBody =
   zReplaceBindingsRequest
@@ -5407,7 +6069,7 @@ export const zGetWorkspacesCurrentSkillsBySkillIdExportPath = z.object({
 })
 
 /**
- * Published Skill zip archive
+ * Draft Skill zip archive
  */
 export const zGetWorkspacesCurrentSkillsBySkillIdExportResponse = z.record(z.string(), z.unknown())
 
@@ -6127,6 +6789,13 @@ export const zPostWorkspacesCustomConfigWebappLogoUploadBody = z.object({
  * Logo uploaded
  */
 export const zPostWorkspacesCustomConfigWebappLogoUploadResponse = zWorkspaceLogoUploadResponse
+
+export const zPostWorkspacesDissolveBody = zDissolveWorkspacePayload
+
+/**
+ * Workspace dissolved
+ */
+export const zPostWorkspacesDissolveResponse = zSimpleResultResponse
 
 export const zPostWorkspacesInfoBody = zWorkspaceInfoPayload
 

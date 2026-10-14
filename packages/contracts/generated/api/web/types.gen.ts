@@ -17,6 +17,16 @@ export type AccessTokenResultResponse = {
   result: string
 }
 
+export type AccountBannedError = ErrorResponse & {
+  code: 'account_banned'
+  status: 400
+}
+
+export type AgentNotPublishedError = ErrorResponse & {
+  code: 'agent_not_published'
+  status: 400
+}
+
 export type AgentThought = {
   answer?: string | null
   chain_id?: string | null
@@ -53,12 +63,37 @@ export type AppMode =
   | 'rag-pipeline'
   | 'workflow'
 
+export type AppMoreLikeThisDisabledError = ErrorResponse & {
+  code: 'app_more_like_this_disabled'
+  status: 403
+}
+
 export type AppPermissionQuery = {
   appId: string
 }
 
+export type AppSuggestedQuestionsAfterAnswerDisabledError = ErrorResponse & {
+  code: 'app_suggested_questions_after_answer_disabled'
+  status: 403
+}
+
+export type AppUnavailableError = ErrorResponse & {
+  code: 'app_unavailable'
+  status: 400
+}
+
 export type AudioToTextResponse = {
   text: string
+}
+
+export type AudioTooLargeError = ErrorResponse & {
+  code: 'audio_too_large'
+  status: 413
+}
+
+export type AuthenticationFailedError = ErrorResponse & {
+  code: 'authentication_failed'
+  status: 401
 }
 
 export type BooleanResultResponse = {
@@ -102,6 +137,11 @@ export type CompletionMessagePayload = {
   retriever_from?: string
 }
 
+export type CompletionRequestError = ErrorResponse & {
+  code: 'completion_request_error'
+  status: 400
+}
+
 export type ConversationInfiniteScrollPagination = {
   data: Array<SimpleConversation>
   has_more: boolean
@@ -131,6 +171,11 @@ export type ConversationRenamePayload = (
 
 export type DeploymentEdition = 'CLOUD' | 'COMMUNITY' | 'ENTERPRISE'
 
+export type EmailCodeError = ErrorResponse & {
+  code: 'email_code_error'
+  status: 400
+}
+
 export type EmailCodeLoginSendPayload = {
   email: string
   language?: string | null
@@ -142,9 +187,34 @@ export type EmailCodeLoginVerifyPayload = {
   token: string
 }
 
+export type EmailPasswordResetLimitError = ErrorResponse & {
+  code: 'email_password_reset_limit'
+  status: 429
+}
+
+export type EmailSendIpLimitError = ErrorResponse & {
+  code: 'email_send_ip_limit'
+  status: 429
+}
+
+export type ErrorResponse = {
+  code: string
+  details?: {
+    [key: string]: unknown
+  }
+  message: string
+  params?: string
+  status: number
+}
+
 export type EventStreamResponse = string
 
 export type ExecutionContentType = 'human_input'
+
+export type FileExtensionBlockedError = ErrorResponse & {
+  code: 'file_extension_blocked'
+  status: 400
+}
 
 export type FileInputConfig = {
   allowed_file_extensions?: Array<string>
@@ -181,6 +251,11 @@ export type FileResponse = {
   user_id?: string | null
 }
 
+export type FileTooLargeError = ErrorResponse & {
+  code: 'file_too_large'
+  status: 413
+}
+
 export type FileTransferMethod = 'datasource_file' | 'local_file' | 'remote_url' | 'tool_file'
 
 export type FileType = 'audio' | 'custom' | 'document' | 'image' | 'video'
@@ -194,6 +269,11 @@ export type FileWithSignedUrl = {
   name: string
   size: number
   url: string | null
+}
+
+export type FilenameNotExistsError = ErrorResponse & {
+  code: 'filename_not_exists_error'
+  status: 400
 }
 
 export type ForgotPasswordCheckPayload = {
@@ -267,6 +347,11 @@ export type HumanInputFormDefinitionResponse = {
   user_actions: Array<UserActionConfig>
 }
 
+export type HumanInputFormExpiredError = ErrorResponse & {
+  code: 'human_input_form_expired'
+  status: 412
+}
+
 export type HumanInputFormSubmissionData = {
   action_id: string
   action_text: string
@@ -289,9 +374,39 @@ export type HumanInputFormSubmitResponse = {
   [key: string]: unknown
 }
 
+export type HumanInputFormSubmittedError = ErrorResponse & {
+  code: 'human_input_form_submitted'
+  status: 412
+}
+
 export type HumanInputUploadTokenResponse = {
   expires_at: number
   upload_token: string
+}
+
+export type InvalidEmailError = ErrorResponse & {
+  code: 'invalid_email'
+  status: 400
+}
+
+export type InvalidFormDataError = ErrorResponse & {
+  code: 'invalid_form_data'
+  status: 400
+}
+
+export type InvalidOrExpiredTokenError = ErrorResponse & {
+  code: 'invalid_or_expired_token'
+  status: 400
+}
+
+export type InvalidParamError = ErrorResponse & {
+  code: 'invalid_param'
+  status: 400
+}
+
+export type InvalidUploadTokenError = ErrorResponse & {
+  code: 'invalid_upload_token'
+  status: 403
 }
 
 export type JsonValue =
@@ -330,6 +445,11 @@ export type LoginStatusResponse = {
   logged_in: boolean
 }
 
+export type MalformedUploadTokenError = ErrorResponse & {
+  code: 'malformed_upload_token'
+  status: 400
+}
+
 export type MessageFeedbackPayload = {
   content?: string | null
   rating?: 'dislike' | 'like' | null
@@ -355,6 +475,36 @@ export type MessageListQuery = {
 
 export type MessageMoreLikeThisQuery = {
   response_mode: 'blocking' | 'streaming'
+}
+
+export type ModelCurrentlyNotSupportError = ErrorResponse & {
+  code: 'model_currently_not_support'
+  status: 400
+}
+
+export type NoAudioUploadedError = ErrorResponse & {
+  code: 'no_audio_uploaded'
+  status: 400
+}
+
+export type NoFileUploadedError = ErrorResponse & {
+  code: 'no_file_uploaded'
+  status: 400
+}
+
+export type NotChatAppError = ErrorResponse & {
+  code: 'not_chat_app'
+  status: 400
+}
+
+export type NotCompletionAppError = ErrorResponse & {
+  code: 'not_completion_app'
+  status: 400
+}
+
+export type NotWorkflowAppError = ErrorResponse & {
+  code: 'not_workflow_app'
+  status: 400
 }
 
 export type ParagraphInputConfig = {
@@ -695,6 +845,16 @@ export type PassportQuery = {
   user_id?: string | null
 }
 
+export type PasswordMismatchError = ErrorResponse & {
+  code: 'password_mismatch'
+  status: 400
+}
+
+export type PasswordResetRateLimitExceededError = ErrorResponse & {
+  code: 'password_reset_rate_limit_exceeded'
+  status: 429
+}
+
 export type PluginInstallationPermissionModel = {
   plugin_installation_scope: PluginInstallationScope
   restrict_to_marketplace_only: boolean
@@ -706,13 +866,63 @@ export type PluginInstallationScope =
   | 'official_and_specific_partners'
   | 'official_only'
 
+export type ProviderNotInitializeError = ErrorResponse & {
+  code: 'provider_not_initialize'
+  status: 400
+}
+
+export type ProviderNotSupportSpeechToTextError = ErrorResponse & {
+  code: 'provider_not_support_speech_to_text'
+  status: 400
+}
+
+export type ProviderQuotaExceededError = ErrorResponse & {
+  code: 'provider_quota_exceeded'
+  status: 400
+}
+
+export type RateLimitError = ErrorResponse & {
+  code: 'rate_limit_error'
+  status: 429
+}
+
+export type RemoteFileAccessDeniedError = ErrorResponse & {
+  code: 'remote_file_access_denied'
+  status: 400
+}
+
 export type RemoteFileInfo = {
   file_length: number
   file_type: string
 }
 
+export type RemoteFileInvalidResponseError = ErrorResponse & {
+  code: 'remote_file_invalid_response'
+  status: 502
+}
+
+export type RemoteFileInvalidUrlError = ErrorResponse & {
+  code: 'remote_file_invalid_url'
+  status: 400
+}
+
+export type RemoteFileNotFoundError = ErrorResponse & {
+  code: 'remote_file_not_found'
+  status: 404
+}
+
+export type RemoteFileUnavailableError = ErrorResponse & {
+  code: 'remote_file_unavailable'
+  status: 502
+}
+
 export type RemoteFileUploadPayload = {
   url: string
+}
+
+export type RemoteFileUrlBlockedError = ErrorResponse & {
+  code: 'remote_file_url_blocked'
+  status: 400
 }
 
 export type ResultResponse = {
@@ -725,17 +935,26 @@ export type RetrieverResource = {
   data_source_type?: string | null
   dataset_id?: string | null
   dataset_name?: string | null
+  doc_metadata?: {
+    [key: string]: JsonValueType
+  } | null
   document_id?: string | null
   document_name?: string | null
+  files?: Array<{
+    [key: string]: JsonValueType
+  }> | null
   hit_count?: number | null
   id?: string
   index_node_hash?: string | null
   message_id?: string
+  page?: number | null
   position: number
+  retriever_from?: string | null
   score?: number | null
   segment_id?: string | null
   segment_position?: number | null
   summary?: string | null
+  title?: string | null
   word_count?: number | null
 }
 
@@ -799,6 +1018,11 @@ export type SimpleResultResponse = {
   result: string
 }
 
+export type SpeechToTextDisabledError = ErrorResponse & {
+  code: 'speech_to_text_disabled'
+  status: 400
+}
+
 export type StringListSource = {
   selector?: Array<string>
   type: ValueSourceType
@@ -855,6 +1079,31 @@ export type TextToAudioPayload = {
   voice?: string | null
 }
 
+export type TooManyFilesError = ErrorResponse & {
+  code: 'too_many_files'
+  status: 400
+}
+
+export type TriggerWorkflowServiceModeUnavailableError = ErrorResponse & {
+  code: 'trigger_workflow_service_mode_unavailable'
+  status: 403
+}
+
+export type UnsupportedAudioTypeError = ErrorResponse & {
+  code: 'unsupported_audio_type'
+  status: 415
+}
+
+export type UnsupportedFileTypeError = ErrorResponse & {
+  code: 'unsupported_file_type'
+  status: 415
+}
+
+export type UploadTokenRequiredError = ErrorResponse & {
+  code: 'upload_token_required'
+  status: 401
+}
+
 export type UserActionConfig = {
   button_style?: ButtonStyle
   id: string
@@ -897,6 +1146,11 @@ export type WebAppSiteResponse = {
   model_config?: WebModelConfigResponse | null
   plan: string
   site: WebSiteResponse
+}
+
+export type WebFormRateLimitExceededError = ErrorResponse & {
+  code: 'web_form_rate_limit_exceeded'
+  status: 429
 }
 
 export type WebMessageInfiniteScrollPagination = {
@@ -1041,13 +1295,24 @@ export type PostAudioToTextData = {
 }
 
 export type PostAudioToTextErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  413: unknown
-  415: unknown
-  500: unknown
+  400:
+    | AppUnavailableError
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | NoAudioUploadedError
+    | ProviderNotInitializeError
+    | ProviderNotSupportSpeechToTextError
+    | ProviderQuotaExceededError
+    | SpeechToTextDisabledError
+    | ErrorResponse
+  401: ErrorResponse
+  413: AudioTooLargeError | ErrorResponse
+  415: UnsupportedAudioTypeError | ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAudioToTextError = PostAudioToTextErrors[keyof PostAudioToTextErrors]
 
 export type PostAudioToTextResponses = {
   200: AudioToTextResponse
@@ -1063,12 +1328,23 @@ export type PostChatMessagesData = {
 }
 
 export type PostChatMessagesErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400:
+    | AgentNotPublishedError
+    | AppUnavailableError
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | NotChatAppError
+    | ProviderNotInitializeError
+    | ProviderQuotaExceededError
+    | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  429: RateLimitError | ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostChatMessagesError = PostChatMessagesErrors[keyof PostChatMessagesErrors]
 
 export type PostChatMessagesResponses = {
   200: GeneratedAppResponse
@@ -1086,12 +1362,15 @@ export type PostChatMessagesByTaskIdStopData = {
 }
 
 export type PostChatMessagesByTaskIdStopErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotChatAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostChatMessagesByTaskIdStopError =
+  PostChatMessagesByTaskIdStopErrors[keyof PostChatMessagesByTaskIdStopErrors]
 
 export type PostChatMessagesByTaskIdStopResponses = {
   200: SimpleResultResponse
@@ -1108,12 +1387,22 @@ export type PostCompletionMessagesData = {
 }
 
 export type PostCompletionMessagesErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400:
+    | AppUnavailableError
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | NotCompletionAppError
+    | ProviderNotInitializeError
+    | ProviderQuotaExceededError
+    | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostCompletionMessagesError =
+  PostCompletionMessagesErrors[keyof PostCompletionMessagesErrors]
 
 export type PostCompletionMessagesResponses = {
   200: GeneratedAppResponse
@@ -1132,12 +1421,15 @@ export type PostCompletionMessagesByTaskIdStopData = {
 }
 
 export type PostCompletionMessagesByTaskIdStopErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotCompletionAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostCompletionMessagesByTaskIdStopError =
+  PostCompletionMessagesByTaskIdStopErrors[keyof PostCompletionMessagesByTaskIdStopErrors]
 
 export type PostCompletionMessagesByTaskIdStopResponses = {
   200: SimpleResultResponse
@@ -1159,12 +1451,14 @@ export type GetConversationsData = {
 }
 
 export type GetConversationsErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotChatAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetConversationsError = GetConversationsErrors[keyof GetConversationsErrors]
 
 export type GetConversationsResponses = {
   200: ConversationInfiniteScrollPagination
@@ -1182,12 +1476,15 @@ export type DeleteConversationsByCIdData = {
 }
 
 export type DeleteConversationsByCIdErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotChatAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type DeleteConversationsByCIdError =
+  DeleteConversationsByCIdErrors[keyof DeleteConversationsByCIdErrors]
 
 export type DeleteConversationsByCIdResponses = {
   204: void
@@ -1209,12 +1506,15 @@ export type PostConversationsByCIdNameData = {
 }
 
 export type PostConversationsByCIdNameErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotChatAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostConversationsByCIdNameError =
+  PostConversationsByCIdNameErrors[keyof PostConversationsByCIdNameErrors]
 
 export type PostConversationsByCIdNameResponses = {
   200: SimpleConversation
@@ -1233,12 +1533,15 @@ export type PatchConversationsByCIdPinData = {
 }
 
 export type PatchConversationsByCIdPinErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotChatAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PatchConversationsByCIdPinError =
+  PatchConversationsByCIdPinErrors[keyof PatchConversationsByCIdPinErrors]
 
 export type PatchConversationsByCIdPinResponses = {
   200: ResultResponse
@@ -1257,12 +1560,15 @@ export type PatchConversationsByCIdUnpinData = {
 }
 
 export type PatchConversationsByCIdUnpinErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotChatAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PatchConversationsByCIdUnpinError =
+  PatchConversationsByCIdUnpinErrors[keyof PatchConversationsByCIdUnpinErrors]
 
 export type PatchConversationsByCIdUnpinResponses = {
   200: ResultResponse
@@ -1279,9 +1585,13 @@ export type PostEmailCodeLoginData = {
 }
 
 export type PostEmailCodeLoginErrors = {
-  400: unknown
-  404: unknown
+  400: ErrorResponse
+  401: AuthenticationFailedError | ErrorResponse
+  404: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostEmailCodeLoginError = PostEmailCodeLoginErrors[keyof PostEmailCodeLoginErrors]
 
 export type PostEmailCodeLoginResponses = {
   200: SimpleResultDataResponse
@@ -1298,10 +1608,14 @@ export type PostEmailCodeLoginValidityData = {
 }
 
 export type PostEmailCodeLoginValidityErrors = {
-  400: unknown
-  401: unknown
-  404: unknown
+  400: AccountBannedError | EmailCodeError | InvalidEmailError | ErrorResponse
+  401: AuthenticationFailedError | ErrorResponse
+  404: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostEmailCodeLoginValidityError =
+  PostEmailCodeLoginValidityErrors[keyof PostEmailCodeLoginValidityErrors]
 
 export type PostEmailCodeLoginValidityResponses = {
   200: AccessTokenResultResponse
@@ -1318,10 +1632,18 @@ export type PostFilesUploadData = {
 }
 
 export type PostFilesUploadErrors = {
-  400: unknown
-  413: unknown
-  415: unknown
+  400:
+    | FileExtensionBlockedError
+    | FilenameNotExistsError
+    | NoFileUploadedError
+    | TooManyFilesError
+    | ErrorResponse
+  413: FileTooLargeError | ErrorResponse
+  415: UnsupportedFileTypeError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostFilesUploadError = PostFilesUploadErrors[keyof PostFilesUploadErrors]
 
 export type PostFilesUploadResponses = {
   201: FileResponse
@@ -1337,10 +1659,14 @@ export type PostForgotPasswordData = {
 }
 
 export type PostForgotPasswordErrors = {
-  400: unknown
-  404: unknown
-  429: unknown
+  400: ErrorResponse
+  401: AuthenticationFailedError | ErrorResponse
+  404: ErrorResponse
+  429: EmailSendIpLimitError | PasswordResetRateLimitExceededError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostForgotPasswordError = PostForgotPasswordErrors[keyof PostForgotPasswordErrors]
 
 export type PostForgotPasswordResponses = {
   200: SimpleResultDataResponse
@@ -1357,10 +1683,14 @@ export type PostForgotPasswordResetsData = {
 }
 
 export type PostForgotPasswordResetsErrors = {
-  400: unknown
-  401: unknown
-  404: unknown
+  400: InvalidOrExpiredTokenError | PasswordMismatchError | ErrorResponse
+  401: AuthenticationFailedError | ErrorResponse
+  404: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostForgotPasswordResetsError =
+  PostForgotPasswordResetsErrors[keyof PostForgotPasswordResetsErrors]
 
 export type PostForgotPasswordResetsResponses = {
   200: SimpleResultResponse
@@ -1377,9 +1707,14 @@ export type PostForgotPasswordValidityData = {
 }
 
 export type PostForgotPasswordValidityErrors = {
-  400: unknown
-  401: unknown
+  400: EmailCodeError | InvalidEmailError | InvalidOrExpiredTokenError | ErrorResponse
+  401: ErrorResponse
+  429: EmailPasswordResetLimitError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostForgotPasswordValidityError =
+  PostForgotPasswordValidityErrors[keyof PostForgotPasswordValidityErrors]
 
 export type PostForgotPasswordValidityResponses = {
   200: VerificationTokenResponse
@@ -1398,11 +1733,15 @@ export type GetFormHumanInputByFormTokenData = {
 }
 
 export type GetFormHumanInputByFormTokenErrors = {
-  403: unknown
-  404: unknown
-  412: unknown
-  429: unknown
+  403: ErrorResponse
+  404: ErrorResponse
+  412: HumanInputFormExpiredError | HumanInputFormSubmittedError | ErrorResponse
+  429: WebFormRateLimitExceededError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetFormHumanInputByFormTokenError =
+  GetFormHumanInputByFormTokenErrors[keyof GetFormHumanInputByFormTokenErrors]
 
 export type GetFormHumanInputByFormTokenResponses = {
   200: HumanInputFormDefinitionResponse
@@ -1421,11 +1760,15 @@ export type PostFormHumanInputByFormTokenData = {
 }
 
 export type PostFormHumanInputByFormTokenErrors = {
-  400: unknown
-  404: unknown
-  412: unknown
-  429: unknown
+  400: InvalidFormDataError | ErrorResponse
+  404: ErrorResponse
+  412: HumanInputFormExpiredError | HumanInputFormSubmittedError | ErrorResponse
+  429: WebFormRateLimitExceededError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostFormHumanInputByFormTokenError =
+  PostFormHumanInputByFormTokenErrors[keyof PostFormHumanInputByFormTokenErrors]
 
 export type PostFormHumanInputByFormTokenResponses = {
   200: HumanInputFormSubmitResponse
@@ -1444,10 +1787,14 @@ export type PostFormHumanInputByFormTokenUploadTokenData = {
 }
 
 export type PostFormHumanInputByFormTokenUploadTokenErrors = {
-  404: unknown
-  412: unknown
-  429: unknown
+  404: ErrorResponse
+  412: HumanInputFormExpiredError | HumanInputFormSubmittedError | ErrorResponse
+  429: WebFormRateLimitExceededError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostFormHumanInputByFormTokenUploadTokenError =
+  PostFormHumanInputByFormTokenUploadTokenErrors[keyof PostFormHumanInputByFormTokenUploadTokenErrors]
 
 export type PostFormHumanInputByFormTokenUploadTokenResponses = {
   200: HumanInputUploadTokenResponse
@@ -1462,6 +1809,30 @@ export type PostHumanInputFormsFilesData = {
   query?: never
   url: '/human-input-forms/files'
 }
+
+export type PostHumanInputFormsFilesErrors = {
+  400:
+    | FileExtensionBlockedError
+    | FilenameNotExistsError
+    | MalformedUploadTokenError
+    | NoFileUploadedError
+    | RemoteFileAccessDeniedError
+    | RemoteFileInvalidUrlError
+    | RemoteFileUrlBlockedError
+    | TooManyFilesError
+    | ErrorResponse
+  401: UploadTokenRequiredError | ErrorResponse
+  403: InvalidUploadTokenError | ErrorResponse
+  404: RemoteFileNotFoundError | ErrorResponse
+  412: HumanInputFormExpiredError | HumanInputFormSubmittedError | ErrorResponse
+  413: FileTooLargeError | ErrorResponse
+  415: UnsupportedFileTypeError | ErrorResponse
+  502: RemoteFileInvalidResponseError | RemoteFileUnavailableError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostHumanInputFormsFilesError =
+  PostHumanInputFormsFilesErrors[keyof PostHumanInputFormsFilesErrors]
 
 export type PostHumanInputFormsFilesResponses = {
   201: FileResponse
@@ -1478,11 +1849,13 @@ export type PostLoginData = {
 }
 
 export type PostLoginErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
+  400: AccountBannedError | ErrorResponse
+  401: AuthenticationFailedError | ErrorResponse
+  404: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostLoginError = PostLoginErrors[keyof PostLoginErrors]
 
 export type PostLoginResponses = {
   200: AccessTokenResultResponse
@@ -1501,8 +1874,11 @@ export type GetLoginStatusData = {
 }
 
 export type GetLoginStatusErrors = {
-  401: unknown
+  401: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetLoginStatusError = GetLoginStatusErrors[keyof GetLoginStatusErrors]
 
 export type GetLoginStatusResponses = {
   200: LoginStatusResponse
@@ -1516,6 +1892,12 @@ export type PostLogoutData = {
   query?: never
   url: '/logout'
 }
+
+export type PostLogoutErrors = {
+  default: ErrorResponse
+}
+
+export type PostLogoutError = PostLogoutErrors[keyof PostLogoutErrors]
 
 export type PostLogoutResponses = {
   200: SimpleResultResponse
@@ -1535,12 +1917,14 @@ export type GetMessagesData = {
 }
 
 export type GetMessagesErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotChatAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetMessagesError = GetMessagesErrors[keyof GetMessagesErrors]
 
 export type GetMessagesResponses = {
   200: WebMessageInfiniteScrollPagination
@@ -1561,12 +1945,15 @@ export type PostMessagesByMessageIdFeedbacksData = {
 }
 
 export type PostMessagesByMessageIdFeedbacksErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostMessagesByMessageIdFeedbacksError =
+  PostMessagesByMessageIdFeedbacksErrors[keyof PostMessagesByMessageIdFeedbacksErrors]
 
 export type PostMessagesByMessageIdFeedbacksResponses = {
   200: ResultResponse
@@ -1587,12 +1974,22 @@ export type GetMessagesByMessageIdMoreLikeThisData = {
 }
 
 export type GetMessagesByMessageIdMoreLikeThisErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400:
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | NotCompletionAppError
+    | ProviderNotInitializeError
+    | ProviderQuotaExceededError
+    | ErrorResponse
+  401: ErrorResponse
+  403: AppMoreLikeThisDisabledError | ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetMessagesByMessageIdMoreLikeThisError =
+  GetMessagesByMessageIdMoreLikeThisErrors[keyof GetMessagesByMessageIdMoreLikeThisErrors]
 
 export type GetMessagesByMessageIdMoreLikeThisResponses = {
   200: GeneratedAppResponse
@@ -1611,12 +2008,22 @@ export type GetMessagesByMessageIdSuggestedQuestionsData = {
 }
 
 export type GetMessagesByMessageIdSuggestedQuestionsErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400:
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | NotChatAppError
+    | ProviderNotInitializeError
+    | ProviderQuotaExceededError
+    | ErrorResponse
+  401: ErrorResponse
+  403: AppSuggestedQuestionsAfterAnswerDisabledError | ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetMessagesByMessageIdSuggestedQuestionsError =
+  GetMessagesByMessageIdSuggestedQuestionsErrors[keyof GetMessagesByMessageIdSuggestedQuestionsErrors]
 
 export type GetMessagesByMessageIdSuggestedQuestionsResponses = {
   200: SuggestedQuestionsResponse
@@ -1633,12 +2040,14 @@ export type GetMetaData = {
 }
 
 export type GetMetaErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: AppUnavailableError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetMetaError = GetMetaErrors[keyof GetMetaErrors]
 
 export type GetMetaResponses = {
   200: AppMetaResponse
@@ -1654,12 +2063,14 @@ export type GetParametersData = {
 }
 
 export type GetParametersErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: AgentNotPublishedError | AppUnavailableError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetParametersError = GetParametersErrors[keyof GetParametersErrors]
 
 export type GetParametersResponses = {
   200: Parameters
@@ -1677,9 +2088,12 @@ export type GetPassportData = {
 }
 
 export type GetPassportErrors = {
-  401: unknown
-  404: unknown
+  401: ErrorResponse
+  404: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetPassportError = GetPassportErrors[keyof GetPassportErrors]
 
 export type GetPassportResponses = {
   200: PassportAccessTokenResponse
@@ -1695,14 +2109,23 @@ export type PostRemoteFilesUploadData = {
 }
 
 export type PostRemoteFilesUploadErrors = {
-  400: unknown
-  404: unknown
-  413: unknown
-  415: unknown
-  422: unknown
-  500: unknown
-  502: unknown
+  400:
+    | FileExtensionBlockedError
+    | RemoteFileAccessDeniedError
+    | RemoteFileInvalidUrlError
+    | RemoteFileUrlBlockedError
+    | ErrorResponse
+  404: RemoteFileNotFoundError | ErrorResponse
+  413: FileTooLargeError | ErrorResponse
+  415: UnsupportedFileTypeError | ErrorResponse
+  422: ErrorResponse
+  500: ErrorResponse
+  502: RemoteFileInvalidResponseError | RemoteFileUnavailableError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostRemoteFilesUploadError =
+  PostRemoteFilesUploadErrors[keyof PostRemoteFilesUploadErrors]
 
 export type PostRemoteFilesUploadResponses = {
   201: FileWithSignedUrl
@@ -1721,11 +2144,18 @@ export type GetRemoteFilesByUrlData = {
 }
 
 export type GetRemoteFilesByUrlErrors = {
-  400: unknown
-  404: unknown
-  500: unknown
-  502: unknown
+  400:
+    | RemoteFileAccessDeniedError
+    | RemoteFileInvalidUrlError
+    | RemoteFileUrlBlockedError
+    | ErrorResponse
+  404: RemoteFileNotFoundError | ErrorResponse
+  500: ErrorResponse
+  502: RemoteFileInvalidResponseError | RemoteFileUnavailableError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetRemoteFilesByUrlError = GetRemoteFilesByUrlErrors[keyof GetRemoteFilesByUrlErrors]
 
 export type GetRemoteFilesByUrlResponses = {
   200: RemoteFileInfo
@@ -1745,12 +2175,14 @@ export type GetSavedMessagesData = {
 }
 
 export type GetSavedMessagesErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotCompletionAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetSavedMessagesError = GetSavedMessagesErrors[keyof GetSavedMessagesErrors]
 
 export type GetSavedMessagesResponses = {
   200: SavedMessageInfiniteScrollPagination
@@ -1768,12 +2200,14 @@ export type PostSavedMessagesData = {
 }
 
 export type PostSavedMessagesErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotCompletionAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostSavedMessagesError = PostSavedMessagesErrors[keyof PostSavedMessagesErrors]
 
 export type PostSavedMessagesResponses = {
   200: ResultResponse
@@ -1791,12 +2225,15 @@ export type DeleteSavedMessagesByMessageIdData = {
 }
 
 export type DeleteSavedMessagesByMessageIdErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotCompletionAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type DeleteSavedMessagesByMessageIdError =
+  DeleteSavedMessagesByMessageIdErrors[keyof DeleteSavedMessagesByMessageIdErrors]
 
 export type DeleteSavedMessagesByMessageIdResponses = {
   204: void
@@ -1813,12 +2250,15 @@ export type GetSiteData = {
 }
 
 export type GetSiteErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: ErrorResponse
+  401: ErrorResponse
+  403: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetSiteError = GetSiteErrors[keyof GetSiteErrors]
 
 export type GetSiteResponses = {
   200: WebAppSiteResponse
@@ -1834,8 +2274,11 @@ export type GetSystemFeaturesData = {
 }
 
 export type GetSystemFeaturesErrors = {
-  500: unknown
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetSystemFeaturesError = GetSystemFeaturesErrors[keyof GetSystemFeaturesErrors]
 
 export type GetSystemFeaturesResponses = {
   200: SystemFeatureModel
@@ -1851,11 +2294,19 @@ export type PostTextToAudioData = {
 }
 
 export type PostTextToAudioErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  500: unknown
+  400:
+    | AppUnavailableError
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | ProviderNotInitializeError
+    | ProviderQuotaExceededError
+    | ErrorResponse
+  401: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostTextToAudioError = PostTextToAudioErrors[keyof PostTextToAudioErrors]
 
 export type PostTextToAudioResponses = {
   200: {
@@ -1876,11 +2327,14 @@ export type GetWebappAccessModeData = {
 }
 
 export type GetWebappAccessModeErrors = {
-  400: unknown
-  404: unknown
-  500: unknown
-  503: unknown
+  400: InvalidParamError | ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  503: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetWebappAccessModeError = GetWebappAccessModeErrors[keyof GetWebappAccessModeErrors]
 
 export type GetWebappAccessModeResponses = {
   200: AccessModeResponse
@@ -1899,11 +2353,14 @@ export type GetWebappPermissionData = {
 }
 
 export type GetWebappPermissionErrors = {
-  400: unknown
-  401: unknown
-  500: unknown
-  503: unknown
+  400: ErrorResponse
+  401: ErrorResponse
+  500: ErrorResponse
+  503: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetWebappPermissionError = GetWebappPermissionErrors[keyof GetWebappPermissionErrors]
 
 export type GetWebappPermissionResponses = {
   200: BooleanResultResponse
@@ -1921,6 +2378,14 @@ export type GetWorkflowByTaskIdEventsData = {
   url: '/workflow/{task_id}/events'
 }
 
+export type GetWorkflowByTaskIdEventsErrors = {
+  400: InvalidParamError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetWorkflowByTaskIdEventsError =
+  GetWorkflowByTaskIdEventsErrors[keyof GetWorkflowByTaskIdEventsErrors]
+
 export type GetWorkflowByTaskIdEventsResponses = {
   200: EventStreamResponse
 }
@@ -1936,12 +2401,22 @@ export type PostWorkflowsRunData = {
 }
 
 export type PostWorkflowsRunErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400:
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | NotWorkflowAppError
+    | ProviderNotInitializeError
+    | ProviderQuotaExceededError
+    | ErrorResponse
+  401: ErrorResponse
+  403: TriggerWorkflowServiceModeUnavailableError | ErrorResponse
+  404: ErrorResponse
+  429: RateLimitError | ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostWorkflowsRunError = PostWorkflowsRunErrors[keyof PostWorkflowsRunErrors]
 
 export type PostWorkflowsRunResponses = {
   200: GeneratedAppResponse
@@ -1959,12 +2434,15 @@ export type PostWorkflowsTasksByTaskIdStopData = {
 }
 
 export type PostWorkflowsTasksByTaskIdStopErrors = {
-  400: unknown
-  401: unknown
-  403: unknown
-  404: unknown
-  500: unknown
+  400: NotWorkflowAppError | ErrorResponse
+  401: ErrorResponse
+  404: ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostWorkflowsTasksByTaskIdStopError =
+  PostWorkflowsTasksByTaskIdStopErrors[keyof PostWorkflowsTasksByTaskIdStopErrors]
 
 export type PostWorkflowsTasksByTaskIdStopResponses = {
   200: SimpleResultResponse

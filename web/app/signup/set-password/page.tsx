@@ -12,18 +12,17 @@ import {
 } from '@langgenius/dify-ui/field'
 import { Form } from '@langgenius/dify-ui/form'
 import { Input } from '@langgenius/dify-ui/input'
-import { toast } from '@langgenius/dify-ui/toast'
 import { useQueryClient } from '@tanstack/react-query'
 import Cookies from 'js-cookie'
 import { useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useLocale } from '#i18n'
 import { rememberRegistrationSuccess } from '@/app/components/base/amplitude/registration-tracking'
 import { resolvePostLoginRedirect } from '@/app/signin/utils/post-login-redirect'
 import { validPassword } from '@/config'
-import { useLocale } from '@/context/i18n'
 import useDocumentTitle from '@/hooks/use-document-title'
 import { useRouter, useSearchParams } from '@/next/navigation'
-import { consoleQuery } from '@/service/client'
+import { consoleQuery } from '@/service/console'
 import { useMailRegister } from '@/service/use-common'
 import { rememberCreateAppExternalAttribution } from '@/utils/create-app-tracking'
 import { sendGAEvent } from '@/utils/gtag'
@@ -48,7 +47,7 @@ const parseUtmInfo = () => {
 }
 
 const ChangePasswordForm = () => {
-  const { t } = useTranslation()
+  const { t } = useTranslation(['common', 'login', 'accountSettings'])
   const router = useRouter()
   const queryClient = useQueryClient()
   const searchParams = useSearchParams()
@@ -90,7 +89,6 @@ const ChangePasswordForm = () => {
           )
           Cookies.remove('utm_info') // Clean up: remove utm_info cookie
 
-          toast.success(t(($) => $['api.actionSuccess'], { ns: 'common' }))
           await queryClient.resetQueries({ queryKey: consoleQuery.account.profile.get.key() })
           replaceLoginRedirect(resolvePostLoginRedirect(searchParams), router.replace, basePath)
         }
@@ -98,7 +96,7 @@ const ChangePasswordForm = () => {
         console.error(error)
       }
     },
-    [token, register, locale, queryClient, router, searchParams, t, isPending],
+    [token, register, locale, queryClient, router, searchParams, isPending],
   )
 
   return (
@@ -130,7 +128,9 @@ const ChangePasswordForm = () => {
               }}
               className="mb-5"
             >
-              <FieldLabel>{t(($) => $['account.newPassword'], { ns: 'common' })}</FieldLabel>
+              <FieldLabel>
+                {t(($) => $['account.newPassword'], { ns: 'accountSettings' })}
+              </FieldLabel>
               <Input
                 type="password"
                 required
@@ -169,11 +169,13 @@ const ChangePasswordForm = () => {
                 const confirmationValue = String(value)
                 return !confirmationValue || confirmationValue === formValues.password
                   ? null
-                  : t(($) => $['account.notEqual'], { ns: 'common' })
+                  : t(($) => $['account.notEqual'], { ns: 'accountSettings' })
               }}
               className="mb-5"
             >
-              <FieldLabel>{t(($) => $['account.confirmPassword'], { ns: 'common' })}</FieldLabel>
+              <FieldLabel>
+                {t(($) => $['account.confirmPassword'], { ns: 'accountSettings' })}
+              </FieldLabel>
               <Input
                 type="password"
                 required
@@ -182,7 +184,7 @@ const ChangePasswordForm = () => {
                 ref={confirmPasswordRef}
                 placeholder={t(($) => $.confirmPasswordPlaceholder, { ns: 'login' }) || ''}
               />
-              <FieldError>{t(($) => $['account.notEqual'], { ns: 'common' })}</FieldError>
+              <FieldError>{t(($) => $['account.notEqual'], { ns: 'accountSettings' })}</FieldError>
             </Field>
             <Button type="submit" variant="primary" className="w-full" loading={isPending}>
               {t(($) => $.changePasswordBtn, { ns: 'login' })}

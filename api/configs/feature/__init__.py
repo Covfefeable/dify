@@ -76,6 +76,15 @@ class SecurityConfig(BaseSettings):
         default=None,
     )
 
+    PASSWORD_PEPPER: str = Field(
+        description="Server-side secret mixed into account password hashes. "
+        "Leave empty to keep the legacy unpeppered hashing. "
+        "Use a high-entropy random value, e.g. `openssl rand -base64 32`. "
+        "WARNING: setting, changing, or removing this value changes every password hash, "
+        "so existing passwords will no longer verify. Do not change it casually.",
+        default="",
+    )
+
 
 class AppExecutionConfig(BaseSettings):
     """
@@ -481,6 +490,36 @@ class FileUploadConfig(BaseSettings):
         default=50,
     )
 
+    SKILL_PACKAGE_MAX_UNCOMPRESSED_BYTES: PositiveInt = Field(
+        description="Maximum total uncompressed size of a Skill package in bytes",
+        default=200 * 1024 * 1024,
+    )
+
+    SKILL_PACKAGE_MAX_ENTRIES: PositiveInt = Field(
+        description="Maximum number of entries in a Skill package",
+        default=5000,
+    )
+
+    SKILL_PACKAGE_MAX_SKILL_MD_BYTES: PositiveInt = Field(
+        description="Maximum allowed SKILL.md size in bytes",
+        default=1 * 1024 * 1024,
+    )
+
+    AGENT_PACKAGE_MAX_BYTES: PositiveInt = Field(
+        description="Maximum allowed Agent package size in bytes",
+        default=512 * 1024 * 1024,
+    )
+
+    AGENT_PACKAGE_MAX_MANIFEST_BYTES: PositiveInt = Field(
+        description="Maximum allowed size of each Agent package YAML document in bytes",
+        default=5 * 1024 * 1024,
+    )
+
+    AGENT_PACKAGE_MAX_ENTRIES: PositiveInt = Field(
+        description="Maximum number of entries in an Agent package",
+        default=5000,
+    )
+
     BATCH_UPLOAD_LIMIT: NonNegativeInt = Field(
         description="Maximum number of files allowed in a batch upload operation",
         default=20,
@@ -735,7 +774,8 @@ class HttpConfig(BaseSettings):
 
     RESPECT_XFORWARD_HEADERS_ENABLED: bool = Field(
         description="Enable handling of X-Forwarded-For, X-Forwarded-Proto, and X-Forwarded-Port headers"
-        " when the app is behind a single trusted reverse proxy.",
+        " when the app is behind a single trusted reverse proxy. Restrict API access to trusted callers"
+        " and have the proxy overwrite X-Forwarded-For with the verified client IP.",
         default=False,
     )
 
@@ -1352,17 +1392,6 @@ class MultiModalTransferConfig(BaseSettings):
     )
 
 
-class NewAgentBetaConfig(BaseSettings):
-    NEW_AGENT_BETA_ACTIVITY_START_AT: datetime | None = Field(
-        description="New Agent Beta Publish window start in RFC3339 UTC (inclusive)",
-        default=None,
-    )
-    NEW_AGENT_BETA_ACTIVITY_END_AT: datetime | None = Field(
-        description="New Agent Beta Publish window end in RFC3339 UTC (exclusive)",
-        default=None,
-    )
-
-
 class OpsTraceConfig(BaseSettings):
     OPS_TRACE_UNIFIED_ENABLED: bool = Field(
         description="Enable unified ops tracing for providers registered in the unified registry.",
@@ -1652,7 +1681,7 @@ class AccountConfig(BaseSettings):
     )
 
     EDUCATION_ENABLED: bool = Field(
-        description="whether to enable education identity",
+        description="whether to enable education identity (CLOUD deployments only)",
         default=False,
     )
 
@@ -1733,7 +1762,6 @@ class FeatureConfig(
     ModelLoadBalanceConfig,
     ModerationConfig,
     MultiModalTransferConfig,
-    NewAgentBetaConfig,
     OpsTraceConfig,
     PositionConfig,
     RagEtlConfig,

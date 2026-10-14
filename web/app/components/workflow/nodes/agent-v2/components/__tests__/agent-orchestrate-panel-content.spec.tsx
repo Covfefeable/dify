@@ -8,6 +8,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useStore as useAppStore } from '@/app/components/app/store'
 import { AgentScope } from '@/features/agent-v2/analytics'
+import { createHttpError } from '@/service/http-error'
 import { renderWithConsoleQuery as render } from '@/test/console/query-data'
 import { AppModeEnum } from '@/types/app'
 import { FlowType } from '@/types/common'
@@ -32,10 +33,10 @@ const mocks = vi.hoisted(() => ({
   uploadWorkflowSandboxFile: vi.fn(),
 }))
 
-const permission = vi.hoisted(() => ({ canManageAgents: true }))
+const permission = vi.hoisted(() => ({ canCreateAgents: true }))
 
 vi.mock('@/features/agent-v2/permissions', () => ({
-  useCanManageAgents: () => permission.canManageAgents,
+  useCanCreateAgents: () => permission.canCreateAgents,
 }))
 
 vi.mock('@/app/components/base/amplitude', () => ({
@@ -203,7 +204,7 @@ vi.mock('@/app/components/workflow/nodes/agent-v2/agent-soul-config', () => ({
   }),
 }))
 
-vi.mock('@/service/client', async () => {
+vi.mock('@/service/console', async () => {
   const { createSystemFeaturesFixture } = await import('@/test/console/system-features')
   return {
     consoleClient: {
@@ -496,8 +497,8 @@ describe('WorkflowInlineAgentConfigureWorkspace', () => {
     vi.clearAllMocks()
     useAppStore.getState().setAppDetail({ mode: AppModeEnum.WORKFLOW } as never)
     mocks.completeBuildConversation = undefined
-    permission.canManageAgents = true
-    mocks.loadBuildDraft.mockRejectedValue(new Response(null, { status: 404 }))
+    permission.canCreateAgents = true
+    mocks.loadBuildDraft.mockRejectedValue(createHttpError(new Response(null, { status: 404 })))
     mocks.checkoutBuildDraft.mockResolvedValue({
       agent_soul: {},
       draft: {
@@ -579,7 +580,7 @@ describe('WorkflowInlineAgentConfigureWorkspace', () => {
       />,
     )
 
-    expect(screen.getByRole('status', { name: 'appApi.loading' })).toBeInTheDocument()
+    expect(screen.getByRole('progressbar', { name: 'common.loading' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'orchestrate-panel' })).not.toBeInTheDocument()
     await waitFor(() => expect(mocks.loadBuildDraft).toHaveBeenCalledTimes(1))
   })
@@ -904,8 +905,8 @@ describe('WorkflowInlineAgentConfigureWorkspace', () => {
       ).not.toBeInTheDocument()
     })
 
-    it('should hide the save-to-roster menu when the user cannot manage agents', async () => {
-      permission.canManageAgents = false
+    it('should hide the save-to-roster menu when the user cannot create agents', async () => {
+      permission.canCreateAgents = false
 
       renderWorkspace({
         onSaveInlineToRoster: vi.fn(),
@@ -1049,7 +1050,7 @@ describe('WorkflowInlineAgentConfigureWorkspace', () => {
 
     it('should enter build draft mode without resetting the current inline build chat', async () => {
       mocks.loadBuildDraft
-        .mockRejectedValueOnce(new Response(null, { status: 404 }))
+        .mockRejectedValueOnce(createHttpError(new Response(null, { status: 404 })))
         .mockResolvedValue({
           agent_soul: {
             schema_version: 1,
@@ -1202,7 +1203,7 @@ describe('WorkflowInlineAgentConfigureWorkspace', () => {
 
     it('should re-enable inline build draft actions when build chat fails', async () => {
       mocks.loadBuildDraft
-        .mockRejectedValueOnce(new Response(null, { status: 404 }))
+        .mockRejectedValueOnce(createHttpError(new Response(null, { status: 404 })))
         .mockResolvedValue({
           agent_soul: {
             schema_version: 1,
@@ -1280,7 +1281,7 @@ describe('WorkflowInlineAgentConfigureWorkspace', () => {
 
     it('should refresh the inline build debug conversation when restarting after a build send', async () => {
       mocks.loadBuildDraft
-        .mockRejectedValueOnce(new Response(null, { status: 404 }))
+        .mockRejectedValueOnce(createHttpError(new Response(null, { status: 404 })))
         .mockResolvedValue({
           agent_soul: {
             schema_version: 1,

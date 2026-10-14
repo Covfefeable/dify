@@ -21,7 +21,7 @@ const createHookState = (
   isCustomConfigUnavailable: false,
   uploadDisabled: false,
   workspaceLogo: 'https://example.com/workspace-logo.png',
-  isSandbox: false,
+  canReplaceLogo: true,
   canManageCustomBrand: true,
   handleApply: vi.fn(),
   handleCancel: vi.fn(),
@@ -67,6 +67,13 @@ describe('CustomWebAppBrand', () => {
       expect(screen.getByRole('button', { name: 'custom.upload' })).toBeDisabled()
     })
 
+    it('should prevent replacing the deployment branding logo', () => {
+      const { container } = renderComponent()
+
+      expect(screen.getByRole('button', { name: 'custom.change' })).toBeDisabled()
+      expect(container.querySelector('input[type="file"]')).toBeDisabled()
+    })
+
     it('should show the uploading button and failure message when upload state requires it', () => {
       renderComponent({
         uploading: true,
@@ -88,7 +95,7 @@ describe('CustomWebAppBrand', () => {
 
     it('should disable the switch when sandbox restrictions are active', () => {
       renderComponent({
-        isSandbox: true,
+        canReplaceLogo: false,
       })
 
       expect(screen.getByRole('switch')).toHaveAttribute('aria-disabled', 'true')
@@ -141,16 +148,8 @@ describe('CustomWebAppBrand', () => {
 
   // User interactions delegated to the hook callbacks.
   describe('Interactions', () => {
-    it('should delegate switch changes to the hook handler', () => {
-      const { hookState } = renderComponent()
-
-      fireEvent.click(screen.getByRole('switch'))
-
-      expect(hookState.handleSwitch).toHaveBeenCalledWith(true)
-    })
-
     it('should delegate file input changes and reset the native input value on click', () => {
-      const { container, hookState } = renderComponent()
+      const { container, hookState } = renderComponent({ workspaceLogo: '' })
       const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
       const file = new File(['logo'], 'logo.png', { type: 'image/png' })
 

@@ -1,17 +1,19 @@
-import type { ReactElement } from 'react'
 import type { Role } from '@/models/access-control'
 import type { Member } from '@/models/common'
+import type { ConsoleQueryTestOptions } from '@/test/console/query-data'
 import type { ConsoleStateFixture } from '@/test/console/state-fixture'
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { vi } from 'vite-plus/test'
-import { createMockProviderContextValue } from '@/__mocks__/provider-context'
-import { useProviderContext } from '@/context/provider-context'
 import { useFormatTimeFromNow } from '@/hooks/use-format-time-from-now'
 import { useUpdateRolesOfMember } from '@/service/access-control/use-member-roles'
+import { useWorkspaceRoleList } from '@/service/access-control/use-workspace-roles'
 import { useMembers } from '@/service/use-common'
 import { renderWithConsoleQuery } from '@/test/console/query-data'
 import MembersPage from '../index'
+
+let deploymentEdition: 'CLOUD' | 'COMMUNITY' = 'COMMUNITY'
+let memberFeatures: ConsoleQueryTestOptions['features'] = {}
 
 const mockConsoleState = vi.hoisted(() => ({
   current: {} as Partial<ConsoleStateFixture>,
@@ -27,20 +29,49 @@ vi.mock('@/context/permission-state', async () => {
   return createPermissionStateModuleMock(() => mockConsoleState.current)
 })
 
-vi.mock('@/context/provider-context')
 vi.mock('@/hooks/use-format-time-from-now')
 vi.mock('@/service/access-control/use-member-roles')
 vi.mock('@/service/use-common')
+vi.mock('@/service/access-control/use-workspace-roles')
+const { inviteMember } = vi.hoisted(() => ({ inviteMember: vi.fn() }))
+vi.mock('@/service/console', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/service/console')>()
+  return {
+    ...actual,
+    consoleQuery: new Proxy(actual.consoleQuery, {
+      get(target, key) {
+        if (key !== 'workspaces') return Reflect.get(target, key)
+        return {
+          current: {
+            summary: target.workspaces.current.summary,
+            members: {
+              inviteEmail: {
+                post: {
+                  mutationOptions: (
+                    options: Parameters<
+                      typeof actual.consoleQuery.workspaces.current.members.inviteEmail.post.mutationOptions
+                    >[0],
+                  ) => ({ ...options, mutationFn: inviteMember }),
+                },
+              },
+            },
+          },
+        }
+      },
+    }),
+  }
+})
 
 const renderMembersPage = () =>
   renderWithConsoleQuery(<MembersPage />, {
+    features: memberFeatures,
     accountProfile: mockConsoleState.current.userProfile,
-    systemFeatures: { is_email_setup: true },
+    systemFeatures: { deployment_edition: deploymentEdition, is_email_setup: true },
   })
 
 const getMemberDetailsButton = (memberId: string) =>
   within(screen.getByTestId(`member-row-${memberId}`)).getByRole('button', {
-    name: /members\.memberDetails\.openAria/i,
+    name: memberId === '1' ? 'Owner User' : 'Admin User',
   })
 
 const createRole = (overrides: Partial<Role>): Role => ({
@@ -66,47 +97,6 @@ vi.mock('../edit-workspace-modal', () => ({
     <div>
       <div>Edit Workspace Modal</div>
       <button onClick={onCancel}>Close Edit Workspace</button>
-    </div>
-  ),
-}))
-vi.mock('../invite-modal', () => ({
-  InviteModal: ({
-    open,
-    trigger,
-    onOpenChange,
-    onSend,
-  }: {
-    open: boolean
-    trigger: ReactElement<{ disabled?: boolean }>
-    onOpenChange: (open: boolean) => void
-    onSend: (results: Array<{ email: string; status: 'success'; url: string }>) => void
-  }) => (
-    <div>
-      <button disabled={trigger.props.disabled} onClick={() => onOpenChange(true)}>
-        Invite
-      </button>
-      {open && (
-        <div>
-          <div>Invite Modal</div>
-          <button onClick={() => onOpenChange(false)}>Close Invite Modal</button>
-          <button
-            onClick={() => {
-              onOpenChange(false)
-              onSend([{ email: 'sent@example.com', status: 'success', url: 'http://invite/link' }])
-            }}
-          >
-            Send Invite Results
-          </button>
-        </div>
-      )}
-    </div>
-  ),
-}))
-vi.mock('../invited-modal', () => ({
-  default: ({ onCancel }: { onCancel: () => void }) => (
-    <div>
-      <div>Invited Modal</div>
-      <button onClick={onCancel}>Close Invited Modal</button>
     </div>
   ),
 }))
@@ -241,12 +231,23 @@ describe('MembersPage', () => {
       mutateAsync: mockUpdateRolesOfMember,
     } as unknown as ReturnType<typeof useUpdateRolesOfMember>)
 
-    vi.mocked(useProviderContext).mockReturnValue(
-      createMockProviderContextValue({
-        enableBilling: false,
-        isAllowTransferWorkspace: true,
-      }),
-    )
+    inviteMember.mockResolvedValue({
+      result: 'success',
+      tenant_id: 'tenant-id',
+      invitation_results: [
+        { email: 'sent@example.com', status: 'success', url: 'http://invite/link' },
+      ],
+    })
+    vi.mocked(useWorkspaceRoleList).mockReturnValue({
+      data: { pages: [{ data: [createRole({ id: 'admin', name: 'Admin' })] }] },
+      isLoading: false,
+      error: null,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: vi.fn(),
+    } as unknown as ReturnType<typeof useWorkspaceRoleList>)
+    deploymentEdition = 'COMMUNITY'
+    memberFeatures = { ...memberFeatures, is_allow_transfer_workspace: true }
 
     vi.mocked(useFormatTimeFromNow).mockReturnValue({
       formatTimeFromNow: mockFormatTimeFromNow,
@@ -261,32 +262,44 @@ describe('MembersPage', () => {
     expect(screen.getByText('Admin User'))!.toBeInTheDocument()
   })
 
-  it('should render fixed name column and flexible role column layout', () => {
+  it('should expose member columns and keep row data separate from the details button', () => {
     renderMembersPage()
 
+    const table = screen.getByRole('table')
     expect(
-      screen.getByText('common.members.name', { selector: '.system-xs-medium-uppercase' }),
-    )!.toHaveClass('w-65', 'shrink-0')
+      within(table).getByRole('columnheader', { name: 'workspaceMembers.members.name' }),
+    ).toBeInTheDocument()
     expect(
-      screen.getByText('common.members.role', { selector: '.system-xs-medium-uppercase' }),
-    )!.toHaveClass('min-w-0', 'grow')
-    expect(getMemberDetailsButton('1').children[0])!.toHaveClass('w-65', 'shrink-0')
-    expect(getMemberDetailsButton('1').children[2])!.toHaveClass('min-w-0', 'grow')
+      within(table).getByRole('columnheader', { name: 'workspaceMembers.members.lastActive' }),
+    ).toBeInTheDocument()
+    expect(
+      within(table).getByRole('columnheader', { name: 'workspaceMembers.members.role' }),
+    ).toBeInTheDocument()
+    const row = within(table).getByRole('row', { name: /owner@example.com/ })
+    expect(within(row).getByRole('cell', { name: 'just now' })).toBeInTheDocument()
+    expect(within(row).getByRole('cell', { name: 'Owner' })).toBeInTheDocument()
+    expect(within(row).getByRole('button', { name: 'Owner User' })).not.toHaveTextContent(
+      'owner@example.com',
+    )
   })
 
   it('should render plural roles column header when RBAC is enabled', () => {
     renderWithConsoleQuery(<MembersPage />, {
+      features: memberFeatures,
       systemFeatures: {
+        deployment_edition: deploymentEdition,
         is_email_setup: true,
         rbac_enabled: true,
       },
     })
 
     expect(
-      screen.getByText('common.members.roles', { selector: '.system-xs-medium-uppercase' }),
-    )!.toHaveClass('min-w-0', 'grow')
+      screen.getByRole('columnheader', { name: 'workspaceMembers.members.roles' }),
+    ).toBeInTheDocument()
     expect(
-      screen.queryByText('common.members.role', { selector: '.system-xs-medium-uppercase' }),
+      screen.queryByText('workspaceMembers.members.role', {
+        selector: '.system-xs-medium-uppercase',
+      }),
     ).not.toBeInTheDocument()
   })
 
@@ -296,24 +309,33 @@ describe('MembersPage', () => {
     renderMembersPage()
 
     await user.click(screen.getByRole('button', { name: /invite/i }))
-    expect(screen.getByText('Invite Modal'))!.toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: /members\.inviteTeamMember$/ })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Close Invite Modal' }))
-    expect(screen.queryByText('Invite Modal')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /operation\.close$/ }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('should open invited modal after invite results are sent', async () => {
     const user = userEvent.setup()
 
-    renderMembersPage()
+    const { queryClient } = renderMembersPage()
+    vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue()
 
-    await user.click(screen.getByRole('button', { name: /invite/i }))
-    await user.click(screen.getByRole('button', { name: 'Send Invite Results' }))
+    await user.click(screen.getByRole('button', { name: /members\.invite$/ }))
+    await user.type(
+      screen.getByRole('textbox', { name: /members\.emailRecipients/ }),
+      'sent@example.com',
+    )
+    await user.click(screen.getByRole('combobox', { name: /members\.role/ }))
+    await user.click(screen.getByRole('option', { name: /Admin/ }))
+    await user.click(screen.getByRole('button', { name: /members\.sendInvite/ }))
 
-    expect(screen.getByText('Invited Modal'))!.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Close Invited Modal' }))
-    expect(screen.queryByText('Invited Modal')).not.toBeInTheDocument()
+    expect(
+      await screen.findByRole('dialog', { name: /members\.invitationSent$/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'http://invite/link' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /members\.ok$/ }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('should open transfer ownership modal when transfer action is used', async () => {
@@ -326,12 +348,8 @@ describe('MembersPage', () => {
   })
 
   it('should show non-interactive owner role when transfer ownership is not allowed', () => {
-    vi.mocked(useProviderContext).mockReturnValue(
-      createMockProviderContextValue({
-        enableBilling: false,
-        isAllowTransferWorkspace: false,
-      }),
-    )
+    deploymentEdition = 'COMMUNITY'
+    memberFeatures = { ...memberFeatures, is_allow_transfer_workspace: false }
 
     renderMembersPage()
 
@@ -394,17 +412,11 @@ describe('MembersPage', () => {
   })
 
   it('should show billing information for limited plan', () => {
-    vi.mocked(useProviderContext).mockReturnValue(
-      createMockProviderContextValue({
-        enableBilling: true,
-        plan: {
-          type: 'sandbox',
-          total: { teamMembers: 5 } as unknown as ReturnType<
-            typeof useProviderContext
-          >['plan']['total'],
-        } as unknown as ReturnType<typeof useProviderContext>['plan'],
-      }),
-    )
+    deploymentEdition = 'CLOUD'
+    memberFeatures = {
+      billing: { subscription: { plan: 'sandbox' } },
+      members: { size: 2, limit: 5 },
+    }
 
     renderMembersPage()
 
@@ -415,17 +427,11 @@ describe('MembersPage', () => {
   })
 
   it('should show unlimited billing information', () => {
-    vi.mocked(useProviderContext).mockReturnValue(
-      createMockProviderContextValue({
-        enableBilling: true,
-        plan: {
-          type: 'sandbox',
-          total: { teamMembers: -1 } as unknown as ReturnType<
-            typeof useProviderContext
-          >['plan']['total'],
-        } as unknown as ReturnType<typeof useProviderContext>['plan'],
-      }),
-    )
+    deploymentEdition = 'CLOUD'
+    memberFeatures = {
+      billing: { subscription: { plan: 'sandbox' } },
+      members: { size: 2, limit: 0 },
+    }
 
     renderMembersPage()
 
@@ -433,17 +439,11 @@ describe('MembersPage', () => {
   })
 
   it('should show non-billing member format for team plan even when billing is enabled', () => {
-    vi.mocked(useProviderContext).mockReturnValue(
-      createMockProviderContextValue({
-        enableBilling: true,
-        plan: {
-          type: 'team',
-          total: { teamMembers: 50 } as unknown as ReturnType<
-            typeof useProviderContext
-          >['plan']['total'],
-        } as unknown as ReturnType<typeof useProviderContext>['plan'],
-      }),
-    )
+    deploymentEdition = 'CLOUD'
+    memberFeatures = {
+      billing: { subscription: { plan: 'team' } },
+      members: { size: 2, limit: 50 },
+    }
 
     renderMembersPage()
 
@@ -543,17 +543,11 @@ describe('MembersPage', () => {
       data: { accounts: [mockAccounts[0]] },
       refetch: mockRefetch,
     } as unknown as ReturnType<typeof useMembers>)
-    vi.mocked(useProviderContext).mockReturnValue(
-      createMockProviderContextValue({
-        enableBilling: true,
-        plan: {
-          type: 'sandbox',
-          total: { teamMembers: 5 } as unknown as ReturnType<
-            typeof useProviderContext
-          >['plan']['total'],
-        } as unknown as ReturnType<typeof useProviderContext>['plan'],
-      }),
-    )
+    deploymentEdition = 'CLOUD'
+    memberFeatures = {
+      billing: { subscription: { plan: 'sandbox' } },
+      members: { size: 2, limit: 5 },
+    }
 
     renderMembersPage()
 
@@ -590,7 +584,7 @@ describe('MembersPage', () => {
     expect(screen.getByText('Admin'))!.toBeInTheDocument()
   })
 
-  it('should expose member details as a native row button without nesting member actions', () => {
+  it('should expose a member details button without nesting member actions', () => {
     renderMembersPage()
 
     const row = screen.getByTestId('member-row-2')
@@ -598,16 +592,11 @@ describe('MembersPage', () => {
     const memberMenu = within(row).getByTestId('member-menu')
 
     expect(row).not.toHaveAttribute('role', 'button')
-    expect(row).not.toHaveClass('hover:bg-state-base-hover')
     expect(detailsButton).toHaveAttribute('type', 'button')
-    expect(detailsButton).toHaveClass(
-      'hover:bg-state-base-hover',
-      'focus-visible:bg-state-base-hover',
-    )
     expect(detailsButton).not.toContainElement(memberMenu)
   })
 
-  it('should open member details modal when a member row is clicked', async () => {
+  it('should open member details modal when a member name is clicked', async () => {
     const user = userEvent.setup()
 
     renderMembersPage()
@@ -684,7 +673,9 @@ describe('MembersPage', () => {
     const user = userEvent.setup()
 
     renderWithConsoleQuery(<MembersPage />, {
+      features: memberFeatures,
       systemFeatures: {
+        deployment_edition: deploymentEdition,
         is_email_setup: true,
         rbac_enabled: true,
       },
@@ -714,22 +705,16 @@ describe('MembersPage', () => {
 
   it('should show the upgrade action without blocking the backend-authoritative invite flow', async () => {
     const user = userEvent.setup()
-    vi.mocked(useProviderContext).mockReturnValue(
-      createMockProviderContextValue({
-        enableBilling: true,
-        plan: {
-          type: 'sandbox',
-          total: { teamMembers: 2 } as unknown as ReturnType<
-            typeof useProviderContext
-          >['plan']['total'],
-        } as unknown as ReturnType<typeof useProviderContext>['plan'],
-      }),
-    )
+    deploymentEdition = 'CLOUD'
+    memberFeatures = {
+      billing: { subscription: { plan: 'sandbox' } },
+      members: { size: 2, limit: 2 },
+    }
 
     renderMembersPage()
 
     expect(screen.getByText('Upgrade Button'))!.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Invite' }))
-    expect(screen.getByText('Invite Modal')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /members\.invite$/ }))
+    expect(screen.getByRole('dialog', { name: /members\.inviteTeamMember$/ })).toBeInTheDocument()
   })
 })

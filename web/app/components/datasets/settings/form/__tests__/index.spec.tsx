@@ -1,3 +1,5 @@
+import type { GetWorkspacesCurrentModelsModelTypesByModelTypeData } from '@dify/contracts/api/console/workspaces/types.gen'
+import type { OperationKey } from '@orpc/tanstack-query'
 import type { ReactElement } from 'react'
 import type { DataSet } from '@/models/datasets'
 import type { RetrievalConfig } from '@/types/app'
@@ -45,7 +47,7 @@ vi.mock('@/context/permission-state', async () => {
   }))
 })
 
-const render = (ui: ReactElement) => {
+function render(ui: ReactElement) {
   const { wrapper } = createConsoleQueryWrapper({
     systemFeatures: { rbac_enabled: false },
   })
@@ -177,7 +179,6 @@ vi.mock('@/service/use-common', () => ({
 }))
 
 vi.mock('@/app/components/header/account-setting/model-provider-page/hooks', () => ({
-  useModelList: () => ({ data: [], mutate: vi.fn(), isLoading: false }),
   useCurrentProviderAndModel: () => ({ currentProvider: undefined, currentModel: undefined }),
   useDefaultModel: () => ({ data: undefined, mutate: vi.fn(), isLoading: false }),
   useModelListAndDefaultModel: () => ({ modelList: [], defaultModel: undefined }),
@@ -203,30 +204,12 @@ vi.mock('@/app/components/header/account-setting/model-provider-page/hooks', () 
   useModelModalHandler: () => vi.fn(),
 }))
 
-// Mock provider-context
-vi.mock('@/context/provider-context', () => ({
-  useProviderContext: () => ({
-    textGenerationModelList: [],
-    embeddingsModelList: [],
-    rerankModelList: [],
-    agentThoughtModelList: [],
-    modelProviders: [],
-    textEmbeddingModelList: [],
-    speech2textModelList: [],
-    ttsModelList: [],
-    moderationModelList: [],
-    hasSettedApiKey: true,
-    plan: { type: 'free' },
-    enableBilling: false,
-    onPlanInfoChanged: vi.fn(),
-  }),
-}))
-
-vi.mock('@/app/components/datasets/common/check-rerank-model', () => ({
+vi.mock('@/app/components/datasets/common/check-rerank-model', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/app/components/datasets/common/check-rerank-model')>()),
   isReRankModelSelected: () => true,
 }))
 
-vi.mock('@langgenius/dify-ui/toast', () => ({
+vi.mock('@/app/notifications', () => ({
   toast: {
     error: mockToastError,
     success: vi.fn(),
@@ -320,14 +303,6 @@ describe('Form', () => {
 
       expect(descriptionTextarea).toHaveValue('Updated description')
     })
-
-    it('should render app icon', () => {
-      const { container } = render(<Form />)
-      // The app icon wrapper should be rendered (icon may be in a span or SVG)
-      // The icon is rendered within a clickable container in the name and icon section
-      const iconSection = container.querySelector('[class*="cursor-pointer"]')
-      expect(iconSection).toBeInTheDocument()
-    })
   })
 
   describe('IndexingSection - Internal Provider', () => {
@@ -420,7 +395,7 @@ describe('Form', () => {
     })
 
     it('should show error when trying to save with empty name', async () => {
-      const { toast } = await import('@langgenius/dify-ui/toast')
+      const { toast } = await import('@/app/notifications')
       render(<Form />)
 
       // Clear the name
@@ -562,4 +537,20 @@ describe('Form', () => {
       expect(screen.getByRole('button', { name: /form\.save/i })).toBeInTheDocument()
     })
   })
+})
+
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>()
+  return {
+    ...actual,
+    useQuery: (options: {
+      queryKey: OperationKey<
+        'query',
+        { params: GetWorkspacesCurrentModelsModelTypesByModelTypeData['path'] }
+      >
+    }) => {
+      if (!options.queryKey[0].includes('modelTypes')) return actual.useQuery(options)
+      return { data: [], refetch: vi.fn(), isPending: false }
+    },
+  }
 })

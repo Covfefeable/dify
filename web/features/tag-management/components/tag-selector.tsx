@@ -10,13 +10,13 @@ import {
   ComboboxTrigger,
   createComboboxItems,
 } from '@langgenius/dify-ui/combobox'
-import { toast } from '@langgenius/dify-ui/toast'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useAtomValue } from 'jotai'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from '@/app/notifications'
 import { workspacePermissionKeysAtom } from '@/context/permission-state'
-import { consoleQuery } from '@/service/client'
+import { consoleQuery } from '@/service/console'
 import { hasPermission } from '@/utils/permission'
 import { useApplyTagBindingsMutation } from '../hooks/use-tag-mutations'
 import { getTagManagePermissionKey } from '../utils'
@@ -72,7 +72,7 @@ export const TagSelector = ({
   onTagsChange,
   ...rootProps
 }: TagSelectorProps) => {
-  const { t } = useTranslation()
+  const { t } = useTranslation(['common'])
   const [open, setOpen] = useState(false)
   const [draftTagIds, setDraftTagIds] = useState(() => value.map((tag) => tag.id))
   const [inputValue, setInputValue] = useState('')
@@ -268,10 +268,9 @@ export const TagSelector = ({
         disabled={!canManageTags && !canBindOrUnbindTags}
         aria-label={accessibleTriggerLabel}
         className={cn(
-          'group/tag-area relative h-auto w-full cursor-pointer rounded-lg border-0 bg-transparent p-1 hover:bg-state-base-hover focus-visible:bg-transparent data-disabled:bg-transparent data-disabled:opacity-50 data-disabled:hover:bg-transparent data-popup-open:bg-state-base-hover data-popup-open:hover:bg-state-base-hover',
+          'group/tag-area relative flex w-full min-w-0 cursor-pointer items-center gap-0.5 rounded-lg p-1 text-start transition-colors hover:bg-state-base-hover data-disabled:cursor-not-allowed data-disabled:opacity-50 data-disabled:hover:bg-transparent data-popup-open:bg-state-base-hover motion-reduce:transition-none',
           className,
         )}
-        icon={false}
         onClick={onClick}
       >
         <TagTriggerContent tags={tagNames} emptyLabel={emptyTriggerLabel} />
@@ -283,13 +282,12 @@ export const TagSelector = ({
       <ComboboxPortal>
         <ComboboxPositioner placement="bottom-start" sideOffset={4}>
           <ComboboxPopup
+            onClick={(event) => event.stopPropagation()}
             aria-label={accessibleTriggerLabel}
             className="w-(--anchor-width) min-w-60 rounded-lg border-[0.5px] border-components-panel-border bg-components-panel-bg-blur p-0 shadow-lg backdrop-blur-[5px]"
           >
             <TagSearchContent
               type={type}
-              inputValue={inputValue}
-              onInputValueChange={setInputValue}
               canBindOrUnbindTags={canBindOrUnbindTags}
               onOpenTagManagement={onOpenTagManagement}
               onClose={() => handleOpenChange(false)}

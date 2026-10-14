@@ -12,6 +12,16 @@ export type AppPagination = {
   total: number
 }
 
+export type ErrorResponse = {
+  code: string
+  details?: {
+    [key: string]: unknown
+  }
+  message: string
+  params?: string
+  status: number
+}
+
 export type CreateAppPayload = {
   description?: string | null
   icon?: string | null
@@ -22,34 +32,34 @@ export type CreateAppPayload = {
 }
 
 export type AppDetailWithSite = {
-  access_mode?: string | null
-  api_base_url?: string | null
-  app_id?: string | null
-  bound_agent_id?: string | null
-  created_at?: number | null
-  created_by?: string | null
-  deleted_tools?: Array<DeletedTool>
-  description?: string | null
+  access_mode: WebAppAccessMode | null
+  api_base_url: string
+  app_id: string | null
+  bound_agent_id: string | null
+  created_at: number
+  created_by: string | null
+  deleted_tools: Array<DeletedTool>
+  description: string
   enable_api: boolean
   enable_site: boolean
-  icon?: string | null
-  icon_background?: string | null
-  icon_type?: string | null
+  icon: string | null
+  icon_background: string | null
+  icon_type: IconType | null
   readonly icon_url: string | null
   id: string
-  maintainer?: string | null
-  max_active_requests?: number | null
-  mode: string
-  model_config?: AppModelConfigResponse | null
+  maintainer: string | null
+  max_active_requests: number | null
+  mode: AppMode
+  model_config: AppModelConfigResponse | null
   name: string
-  permission_keys?: Array<string>
-  site?: AppDetailSiteResponse | null
-  tags?: Array<Tag>
-  tracing?: unknown | null
-  updated_at?: number | null
-  updated_by?: string | null
-  use_icon_as_answer_icon?: boolean | null
-  workflow?: WorkflowPartial | null
+  permission_keys: Array<string>
+  site: AppDetailSiteResponse | null
+  tags: Array<Tag>
+  tracing: string | null
+  updated_at: number
+  updated_by: string | null
+  use_icon_as_answer_icon: boolean
+  workflow: WorkflowPartial | null
 }
 
 export type AppImportPayload = {
@@ -60,13 +70,16 @@ export type AppImportPayload = {
   icon_type?: string | null
   mode: string
   name?: string | null
+  package_url?: string | null
+  template_id?: string | null
+  version_id?: string | null
   yaml_content?: string | null
   yaml_url?: string | null
 }
 
 export type Import = {
   app_id?: string | null
-  app_mode?: string | null
+  app_mode?: AppMode | null
   current_dsl_version?: string
   error?: string
   id: string
@@ -76,8 +89,43 @@ export type Import = {
   warnings?: Array<DslImportWarning>
 }
 
+export type InvalidRosterAgentPackageError = ErrorResponse & {
+  code: 'invalid_roster_agent_package'
+  status: 400
+}
+
+export type RecommendedAppNotFoundError = ErrorResponse & {
+  code: 'recommended_app_not_found'
+  status: 404
+}
+
+export type AgentNameConflictError = ErrorResponse & {
+  code: 'agent_name_conflict_error'
+  status: 409
+}
+
+export type RosterAgentPackageTooLargeError = ErrorResponse & {
+  code: 'roster_agent_package_too_large'
+  status: 413
+}
+
+export type RosterAgentPackageImportFailedError = ErrorResponse & {
+  code: 'roster_agent_package_import_failed'
+  status: 500
+}
+
+export type RosterAgentPackageResourceUnavailableError = ErrorResponse & {
+  code: 'roster_agent_package_resource_unavailable'
+  status: 503
+}
+
 export type CheckDependenciesResult = {
   leaked_dependencies?: Array<PluginDependency>
+}
+
+export type AppNotFoundError = ErrorResponse & {
+  code: 'app_not_found'
+  status: 404
 }
 
 export type RecentAppListResponse = {
@@ -182,10 +230,25 @@ export type AdvancedChatWorkflowRunPayload = {
   query?: string
 }
 
+export type RateLimitError = ErrorResponse & {
+  code: 'rate_limit_error'
+  status: 429
+}
+
 export type AgentConfigFileListResponse = {
   agent_id: string
   config_version: AgentConfigVersionResponse
   items?: Array<AgentConfigFileItemResponse>
+}
+
+export type AgentNotBoundError = ErrorResponse & {
+  code: 'agent_not_bound'
+  status: 400
+}
+
+export type AgentNotFoundError = ErrorResponse & {
+  code: 'agent_not_found_error'
+  status: 404
 }
 
 export type AgentConfigFileUploadPayload = {
@@ -325,6 +388,16 @@ export type AnnotationBatchImportResponse = {
   record_count?: number | null
 }
 
+export type NoFileUploadedError = ErrorResponse & {
+  code: 'no_file_uploaded'
+  status: 400
+}
+
+export type TooManyFilesError = ErrorResponse & {
+  code: 'too_many_files'
+  status: 400
+}
+
 export type AnnotationCountResponse = {
   count: number
 }
@@ -355,30 +428,85 @@ export type AppApiStatusPayload = {
 }
 
 export type AppDetail = {
-  access_mode?: string | null
-  created_at?: number | null
-  created_by?: string | null
-  description?: string | null
+  access_mode: WebAppAccessMode | null
+  created_at: number
+  created_by: string | null
+  description: string
   enable_api: boolean
   enable_site: boolean
-  icon?: string | null
-  icon_background?: string | null
+  icon: string | null
+  icon_background: string | null
   id: string
-  maintainer?: string | null
-  mode: string
-  model_config?: AppModelConfigResponse | null
+  maintainer: string | null
+  mode: AppMode
+  model_config: AppModelConfigResponse | null
   name: string
-  permission_keys?: Array<string>
-  tags?: Array<Tag>
-  tracing?: unknown | null
-  updated_at?: number | null
-  updated_by?: string | null
-  use_icon_as_answer_icon?: boolean | null
-  workflow?: WorkflowPartial | null
+  permission_keys: Array<string>
+  tags: Array<Tag>
+  tracing: string | null
+  updated_at: number
+  updated_by: string | null
+  use_icon_as_answer_icon: boolean
+  workflow: WorkflowPartial | null
 }
 
 export type AudioTranscriptResponse = {
   text: string
+}
+
+export type AppUnavailableError = ErrorResponse & {
+  code: 'app_unavailable'
+  status: 400
+}
+
+export type CompletionRequestError = ErrorResponse & {
+  code: 'completion_request_error'
+  status: 400
+}
+
+export type ModelCurrentlyNotSupportError = ErrorResponse & {
+  code: 'model_currently_not_support'
+  status: 400
+}
+
+export type NoAudioUploadedError = ErrorResponse & {
+  code: 'no_audio_uploaded'
+  status: 400
+}
+
+export type ProviderNotInitializeError = ErrorResponse & {
+  code: 'provider_not_initialize'
+  status: 400
+}
+
+export type ProviderNotSupportSpeechToTextError = ErrorResponse & {
+  code: 'provider_not_support_speech_to_text'
+  status: 400
+}
+
+export type ProviderQuotaExceededError = ErrorResponse & {
+  code: 'provider_quota_exceeded'
+  status: 400
+}
+
+export type SpeechToTextDisabledError = ErrorResponse & {
+  code: 'speech_to_text_disabled'
+  status: 400
+}
+
+export type AgentVersionNotFoundError = ErrorResponse & {
+  code: 'agent_version_not_found_error'
+  status: 404
+}
+
+export type AudioTooLargeError = ErrorResponse & {
+  code: 'audio_too_large'
+  status: 413
+}
+
+export type UnsupportedAudioTypeError = ErrorResponse & {
+  code: 'unsupported_audio_type'
+  status: 415
 }
 
 export type ConversationWithSummaryPagination = {
@@ -413,6 +541,11 @@ export type MessageInfiniteScrollPaginationResponse = {
 
 export type SuggestedQuestionsResponse = {
   data: Array<string>
+}
+
+export type AppSuggestedQuestionsAfterAnswerDisabledError = ErrorResponse & {
+  code: 'app_suggested_questions_after_answer_disabled'
+  status: 403
 }
 
 export type SimpleResultResponse = {
@@ -481,7 +614,7 @@ export type CopyAppPayload = {
 
 export type AppImportResponse = {
   app_id?: string | null
-  app_mode?: string | null
+  app_mode?: AppMode | null
   current_dsl_version: string
   error?: string
   id: string
@@ -490,8 +623,22 @@ export type AppImportResponse = {
   warnings?: Array<DslImportWarning>
 }
 
+export type AppCopyToTenantPayload = {
+  description?: string | null
+  icon?: string | null
+  icon_background?: string | null
+  icon_type?: IconType | null
+  name?: string | null
+  target_tenant_id: string
+}
+
 export type AppExportResponse = {
   data: string
+}
+
+export type RosterAgentPackageExportFailedError = ErrorResponse & {
+  code: 'roster_agent_package_export_failed'
+  status: 500
 }
 
 export type MessageFeedbackPayload = {
@@ -499,8 +646,6 @@ export type MessageFeedbackPayload = {
   message_id: string
   rating?: 'dislike' | 'like' | null
 }
-
-export type TextFileResponse = string
 
 export type AppIconPayload = {
   icon?: string | null
@@ -537,35 +682,26 @@ export type MessageDetailResponse = {
   workflow_run_id?: string | null
 }
 
-export type ModelConfigRequest = {
-  agent_mode?: {
-    [key: string]: unknown
-  } | null
-  configs?: {
-    [key: string]: unknown
-  } | null
-  dataset_configs?: {
-    [key: string]: unknown
-  } | null
-  model?: string | null
-  more_like_this?: {
-    [key: string]: unknown
-  } | null
+export type AppModelConfigPayload = {
+  agent_mode?: AppAgentModePayload | null
+  chat_prompt_config?: AppChatPromptPayload | null
+  completion_prompt_config?: AppCompletionPromptPayload | null
+  dataset_configs?: AppDatasetConfigPayload | null
+  dataset_query_variable?: string | null
+  external_data_tools?: Array<AppExternalDataToolPayload> | null
+  file_upload?: AppFileUploadPayload | null
+  model: AppModelSelectionPayload
+  more_like_this?: AppFeaturePayload | null
   opening_statement?: string | null
-  provider?: string | null
-  retrieval_model?: {
-    [key: string]: unknown
-  } | null
-  speech_to_text?: {
-    [key: string]: unknown
-  } | null
+  pre_prompt?: string | null
+  prompt_type?: '' | 'advanced' | 'simple' | null
+  retriever_resource?: AppFeaturePayload | null
+  sensitive_word_avoidance?: AppModerationPayload | null
+  speech_to_text?: AppFeaturePayload | null
   suggested_questions?: Array<string> | null
-  text_to_speech?: {
-    [key: string]: unknown
-  } | null
-  tools?: Array<{
-    [key: string]: unknown
-  }> | null
+  suggested_questions_after_answer?: AppSuggestedQuestionsPayload | null
+  text_to_speech?: AppTextToSpeechPayload | null
+  user_input_form?: Array<AppUserInputFormPayload> | null
 }
 
 export type AppNamePayload = {
@@ -605,7 +741,7 @@ export type McpServerUpdatePayload = {
   parameters: {
     [key: string]: unknown
   }
-  status?: string | null
+  status?: AppMcpServerStatus | null
 }
 
 export type AppSiteUpdatePayload = {
@@ -690,6 +826,11 @@ export type TextToSpeechPayload = {
   voice?: string | null
 }
 
+export type ProviderNotSupportTextToSpeechError = ErrorResponse & {
+  code: 'provider_not_support_text_to_speech'
+  status: 400
+}
+
 export type TextToSpeechVoiceListResponse = Array<TextToSpeechVoiceResponse>
 
 export type AppTraceResponse = {
@@ -700,6 +841,26 @@ export type AppTraceResponse = {
 export type AppTracePayload = {
   enabled: boolean
   tracing_provider?: string | null
+}
+
+export type TracingProviderUnavailableError = ErrorResponse & {
+  code: 'tracing_provider_unavailable'
+  status: 400
+}
+
+export type UnsupportedTracingProviderError = ErrorResponse & {
+  code: 'unsupported_tracing_provider'
+  status: 400
+}
+
+export type TraceConfigNotFoundError = ErrorResponse & {
+  code: 'trace_config_not_found'
+  status: 404
+}
+
+export type TracingConfigProcessingFailedError = ErrorResponse & {
+  code: 'tracing_config_processing_failed'
+  status: 500
 }
 
 export type TraceAppConfigResponse = {
@@ -722,6 +883,21 @@ export type TraceConfigPayload = {
     [key: string]: unknown
   }
   tracing_provider: string
+}
+
+export type InvalidTracingConfigError = ErrorResponse & {
+  code: 'invalid_tracing_config'
+  status: 400
+}
+
+export type TracingConfigVerificationFailedError = ErrorResponse & {
+  code: 'tracing_config_verification_failed'
+  status: 400
+}
+
+export type TraceConfigAlreadyExistsError = ErrorResponse & {
+  code: 'trace_config_already_exists'
+  status: 409
 }
 
 export type ParserEnable = {
@@ -788,6 +964,21 @@ export type SandboxListResponse = {
   truncated?: boolean
 }
 
+export type NoActiveBindingError = ErrorResponse & {
+  code: 'no_active_binding'
+  status: 404
+}
+
+export type AgentBackendUnreachableError = ErrorResponse & {
+  code: 'agent_backend_unreachable'
+  status: 502
+}
+
+export type InspectorUnavailableError = ErrorResponse & {
+  code: 'inspector_unavailable'
+  status: 503
+}
+
 export type WorkflowAgentSandboxDownloadPayload = {
   node_execution_id: string
   path: string
@@ -795,6 +986,11 @@ export type WorkflowAgentSandboxDownloadPayload = {
 
 export type SandboxDownloadResponse = {
   url: string
+}
+
+export type BindingFileDownloadUnavailableError = ErrorResponse & {
+  code: 'binding_file_download_unavailable'
+  status: 502
 }
 
 export type SandboxReadResponse = {
@@ -807,6 +1003,11 @@ export type SandboxReadResponse = {
 
 export type WorkflowCommentBasicList = {
   data: Array<WorkflowCommentBasic>
+}
+
+export type ForbiddenError = ErrorResponse & {
+  code: 'forbidden'
+  status: 403
 }
 
 export type WorkflowCommentCreatePayload = {
@@ -930,6 +1131,11 @@ export type WorkflowResponse = {
   version_number?: number | null
 }
 
+export type DraftWorkflowNotExistError = ErrorResponse & {
+  code: 'draft_workflow_not_exist'
+  status: 404
+}
+
 export type SyncDraftWorkflowPayload = {
   _is_collaborative?: boolean
   conversation_variables?: Array<{
@@ -939,6 +1145,7 @@ export type SyncDraftWorkflowPayload = {
   features: {
     [key: string]: unknown
   }
+  force?: boolean
   graph: {
     [key: string]: unknown
   }
@@ -951,8 +1158,13 @@ export type SyncDraftWorkflowResponse = {
   updated_at: number
 }
 
-export type WorkflowDraftVariableList = {
-  items?: Array<WorkflowDraftVariable>
+export type DraftWorkflowNotSyncError = ErrorResponse & {
+  code: 'draft_workflow_not_sync'
+  status: 409
+}
+
+export type WorkflowDraftVariableListResponse = {
+  items: Array<WorkflowDraftVariableResponse>
 }
 
 export type ConversationVariableUpdatePayload = {
@@ -1025,6 +1237,21 @@ export type ComposerSavePayload = {
   version_note?: string | null
 }
 
+export type AgentSoulLockedError = ErrorResponse & {
+  code: 'agent_soul_locked_error'
+  status: 400
+}
+
+export type InvalidComposerConfigError = ErrorResponse & {
+  code: 'invalid_composer_config_error'
+  status: 400
+}
+
+export type PlaintextSecretNotAllowedError = ErrorResponse & {
+  code: 'plaintext_secret_not_allowed_error'
+  status: 400
+}
+
 export type AgentComposerCandidatesResponse = {
   allowed_node_job_candidates?: AgentComposerNodeJobCandidatesResponse
   allowed_soul_candidates?: AgentComposerSoulCandidatesResponse
@@ -1037,6 +1264,11 @@ export type WorkflowComposerCopyFromRosterPayload = {
   idempotency_key?: string | null
   source_agent_id: string
   source_snapshot_id?: string | null
+}
+
+export type AgentVersionConflictError = ErrorResponse & {
+  code: 'agent_version_conflict_error'
+  status: 409
 }
 
 export type AgentComposerImpactResponse = {
@@ -1088,6 +1320,11 @@ export type DraftWorkflowNodeRunPayload = {
   query?: string
 }
 
+export type WorkflowTriggerRunErrorResponse = {
+  error?: string
+  status: 'error'
+}
+
 export type DraftWorkflowRunPayload = {
   datasource_info_list: Array<{
     [key: string]: unknown
@@ -1105,6 +1342,11 @@ export type WorkflowRunSnapshotView = {
   workflow_run_status: WorkflowExecutionStatus
 }
 
+export type WorkflowRunNotFoundError = ErrorResponse & {
+  code: 'workflow_run_not_found'
+  status: 404
+}
+
 export type EventStreamResponse = string
 
 export type NodeOutputsView = {
@@ -1117,6 +1359,11 @@ export type NodeOutputsView = {
   outputs?: Array<NodeOutputView>
 }
 
+export type NodeNotInWorkflowRunError = ErrorResponse & {
+  code: 'node_not_in_workflow_run'
+  status: 404
+}
+
 export type OutputPreviewView = {
   node_id: string
   output_name: string
@@ -1125,7 +1372,12 @@ export type OutputPreviewView = {
   value?: unknown
 }
 
-export type DraftWorkflowTriggerRunRequest = {
+export type NodeOutputNotDeclaredError = ErrorResponse & {
+  code: 'node_output_not_declared'
+  status: 404
+}
+
+export type DraftWorkflowTriggerRunPayload = {
   node_id: string
 }
 
@@ -1133,34 +1385,23 @@ export type DraftWorkflowTriggerRunAllPayload = {
   node_ids: Array<string>
 }
 
-export type WorkflowDraftVariableListWithoutValue = {
-  items?: Array<WorkflowDraftVariableWithoutValue>
-  total?: number
+export type WorkflowDraftVariableListWithoutValueResponse = {
+  items: Array<WorkflowDraftVariableWithoutValueResponse>
+  total: number | null
 }
 
-export type WorkflowDraftVariable = {
-  description?: string
-  edited?: boolean
-  full_content?: {
-    [key: string]: unknown
-  }
-  id?: string
-  is_truncated?: boolean
-  name?: string
-  selector?: Array<string>
-  type?: string
-  value?:
-    | string
-    | number
-    | number
-    | boolean
-    | {
-        [key: string]: unknown
-      }
-    | Array<unknown>
-    | null
-  value_type?: string
-  visible?: boolean
+export type WorkflowDraftVariableResponse = {
+  description: string
+  edited: boolean
+  full_content: WorkflowDraftVariableFullContentResponse | null
+  id: string
+  is_truncated: boolean
+  name: string
+  selector: Array<string>
+  type: string
+  value: JsonValue
+  value_type: string
+  visible: boolean
 }
 
 export type WorkflowDraftVariableUpdatePayload = {
@@ -1179,6 +1420,7 @@ export type PublishWorkflowPayload = {
 export type WorkflowPublishResponse = {
   created_at: number
   result: string
+  warning?: string | null
 }
 
 export type WebhookTriggerResponse = {
@@ -1214,8 +1456,18 @@ export type ApiKeyItem = {
   type: string
 }
 
+export type MaxKeysExceededError = ErrorResponse & {
+  code: 'max_keys_exceeded'
+  status: 400
+}
+
+export type AgentNotPublishedError = ErrorResponse & {
+  code: 'agent_not_published'
+  status: 409
+}
+
 export type AppPartial = {
-  access_mode?: string | null
+  access_mode?: WebAppAccessMode | null
   app_id?: string | null
   author_name?: string | null
   bound_agent_id?: string | null
@@ -1226,13 +1478,13 @@ export type AppPartial = {
   has_draft_trigger?: boolean | null
   icon?: string | null
   icon_background?: string | null
-  icon_type?: string | null
+  icon_type?: IconType | null
   readonly icon_url: string | null
   id: string
   is_starred?: boolean
   maintainer?: string | null
   max_active_requests?: number | null
-  mode: string
+  mode: AppMode
   model_config?: ModelConfigPartial | null
   name: string
   permission_keys?: Array<string>
@@ -1245,65 +1497,89 @@ export type AppPartial = {
 
 export type IconType = 'emoji' | 'image' | 'link'
 
+export type WebAppAccessMode = 'private' | 'private_all' | 'public' | 'sso_verified'
+
 export type DeletedTool = {
   provider_id: string
   tool_name: string
   type: string
 }
 
+export type AppMode =
+  | 'advanced-chat'
+  | 'agent'
+  | 'agent-chat'
+  | 'channel'
+  | 'chat'
+  | 'completion'
+  | 'rag-pipeline'
+  | 'workflow'
+
 export type AppModelConfigResponse = {
-  agent_mode?: unknown | null
-  annotation_reply?: unknown | null
-  chat_prompt_config?: unknown | null
-  completion_prompt_config?: unknown | null
-  created_at?: number | null
-  created_by?: string | null
-  dataset_configs?: unknown | null
-  dataset_query_variable?: string | null
-  external_data_tools?: unknown | null
-  file_upload?: unknown | null
-  model?: unknown | null
-  more_like_this?: unknown | null
-  opening_statement?: string | null
-  pre_prompt?: string | null
-  prompt_type?: string | null
-  retriever_resource?: unknown | null
-  sensitive_word_avoidance?: unknown | null
-  speech_to_text?: unknown | null
-  suggested_questions?: unknown | null
-  suggested_questions_after_answer?: unknown | null
-  text_to_speech?: unknown | null
-  updated_at?: number | null
-  updated_by?: string | null
-  user_input_form?: unknown | null
+  agent_mode: AppAgentModeResponse
+  annotation_reply: AppAnnotationReplyEnabledResponse | AppAnnotationReplyDisabledResponse
+  chat_prompt_config: AppChatPromptConfigResponse
+  completion_prompt_config: AppCompletionPromptConfigResponse
+  created_at: number
+  created_by: string | null
+  dataset_configs: AppDatasetConfigsResponse
+  dataset_query_variable: string | null
+  external_data_tools: Array<
+    AppEnabledExternalDataToolResponse | AppDisabledExternalDataToolResponse
+  >
+  file_upload: AppFileUploadResponse
+  model: AppModelSelectionResponse
+  more_like_this: AppEnabledConfigResponse
+  opening_statement: string | null
+  pre_prompt: string | null
+  prompt_type: PromptType
+  retriever_resource: AppEnabledConfigResponse
+  sensitive_word_avoidance: AppSensitiveWordAvoidanceResponse
+  speech_to_text: AppEnabledConfigResponse
+  suggested_questions: Array<string>
+  suggested_questions_after_answer: AppSuggestedQuestionsAfterAnswerResponse
+  text_to_speech: AppTextToSpeechResponse
+  updated_at: number
+  updated_by: string | null
+  user_input_form: Array<
+    | AppTextInputFormResponse
+    | AppSelectFormResponse
+    | AppParagraphFormResponse
+    | AppNumberFormResponse
+    | AppCheckboxFormResponse
+    | AppFileFormResponse
+    | AppFileListFormResponse
+    | AppExternalDataToolFormResponse
+    | AppJsonObjectFormResponse
+  >
 }
 
 export type AppDetailSiteResponse = {
-  access_token?: string | null
-  app_base_url?: string | null
-  chat_color_theme?: string | null
-  chat_color_theme_inverted?: boolean | null
-  code?: string | null
-  copyright?: string | null
-  created_at?: number | null
-  created_by?: string | null
-  custom_disclaimer?: string | null
-  customize_domain?: string | null
-  customize_token_strategy?: string | null
-  default_language?: string | null
-  description?: string | null
-  icon?: string | null
-  icon_background?: string | null
-  icon_type?: string | IconType | null
+  access_token: string | null
+  app_base_url: string
+  chat_color_theme: string | null
+  chat_color_theme_inverted: boolean
+  code: string | null
+  copyright: string | null
+  created_at: number
+  created_by: string | null
+  custom_disclaimer: string
+  customize_domain: string | null
+  customize_token_strategy: CustomizeTokenStrategy
+  default_language: string
+  description: string | null
+  icon: string | null
+  icon_background: string | null
+  icon_type: IconType | null
   readonly icon_url: string | null
-  input_placeholder?: string | null
-  privacy_policy?: string | null
-  prompt_public?: boolean | null
-  show_workflow_steps?: boolean | null
-  title?: string | null
-  updated_at?: number | null
-  updated_by?: string | null
-  use_icon_as_answer_icon?: boolean | null
+  input_placeholder: string | null
+  privacy_policy: string | null
+  prompt_public: boolean
+  show_workflow_steps: boolean
+  title: string
+  updated_at: number
+  updated_by: string | null
+  use_icon_as_answer_icon: boolean
 }
 
 export type Tag = {
@@ -1617,6 +1893,200 @@ export type MessageFile = {
   upload_file_id?: string | null
   url?: string | null
 }
+
+export type AppAgentModePayload = {
+  enabled?: boolean | null
+  max_iteration?: number
+  prompt?: AppAgentPromptPayload | string | null
+  strategy?: PlanningStrategy | '' | 'cot' | 'function-calling' | null
+  tools?: Array<AppAgentToolPayload> | null
+  [key: string]:
+    | AppConfigJsonValue
+    | boolean
+    | null
+    | number
+    | AppAgentPromptPayload
+    | string
+    | null
+    | PlanningStrategy
+    | ''
+    | 'cot'
+    | 'function-calling'
+    | null
+    | Array<AppAgentToolPayload>
+    | null
+    | undefined
+}
+
+export type AppChatPromptPayload = {
+  prompt?: Array<AppPromptMessagePayload>
+  [key: string]: AppConfigJsonValue | Array<AppPromptMessagePayload> | undefined
+}
+
+export type AppCompletionPromptPayload = {
+  conversation_histories_role?: AppConversationRolesPayload
+  prompt?: AppCompletionPromptTextPayload
+  [key: string]:
+    | AppConfigJsonValue
+    | AppConversationRolesPayload
+    | AppCompletionPromptTextPayload
+    | undefined
+}
+
+export type AppDatasetConfigPayload = {
+  datasets?: AppDatasetCollectionPayload | AppEmptyDatasetCollectionPayload | null
+  metadata_filtering_conditions?: AppMetadataFilteringPayload | null
+  metadata_filtering_mode?: 'automatic' | 'disabled' | 'manual'
+  metadata_model_config?: AppMetadataModelPayload | null
+  reranking_enable?: boolean
+  reranking_enabled?: boolean
+  reranking_mode?: RerankMode
+  reranking_model?: AppRerankingModelPayload | null
+  retrieval_model?: 'multiple' | 'single'
+  score_threshold?: number | null
+  score_threshold_enabled?: boolean
+  top_k?: number
+  weights?: AppRetrievalWeightsPayload | null
+  [key: string]:
+    | AppConfigJsonValue
+    | AppDatasetCollectionPayload
+    | AppEmptyDatasetCollectionPayload
+    | null
+    | AppMetadataFilteringPayload
+    | null
+    | 'automatic'
+    | 'disabled'
+    | 'manual'
+    | AppMetadataModelPayload
+    | null
+    | boolean
+    | RerankMode
+    | AppRerankingModelPayload
+    | null
+    | 'multiple'
+    | 'single'
+    | number
+    | null
+    | number
+    | AppRetrievalWeightsPayload
+    | null
+    | undefined
+}
+
+export type AppExternalDataToolPayload = {
+  config?: {
+    [key: string]: AppConfigJsonValue
+  }
+  enabled?: boolean | null
+  icon?: string
+  icon_background?: string
+  label?: string
+  type?: string
+  variable?: string
+  [key: string]:
+    | AppConfigJsonValue
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | boolean
+    | null
+    | string
+    | undefined
+}
+
+export type AppFileUploadPayload = {
+  allowed_file_extensions?: Array<string>
+  allowed_file_types?: Array<FileType>
+  allowed_file_upload_methods?: Array<FileTransferMethod>
+  audio?: AppFileTypeUploadPayload | null
+  custom?: AppFileTypeUploadPayload | null
+  document?: AppFileTypeUploadPayload | null
+  enabled?: boolean
+  image?: AppImageUploadPayload
+  image_config?: AppImageConfigPayload | null
+  number_limits?: number
+  preview_config?: AppFilePreviewPayload | null
+  video?: AppFileTypeUploadPayload | null
+  [key: string]:
+    | AppConfigJsonValue
+    | Array<string>
+    | Array<FileType>
+    | Array<FileTransferMethod>
+    | AppFileTypeUploadPayload
+    | null
+    | AppFileTypeUploadPayload
+    | null
+    | AppFileTypeUploadPayload
+    | null
+    | boolean
+    | AppImageUploadPayload
+    | AppImageConfigPayload
+    | null
+    | number
+    | AppFilePreviewPayload
+    | null
+    | AppFileTypeUploadPayload
+    | null
+    | undefined
+}
+
+export type AppModelSelectionPayload = {
+  completion_params: {
+    [key: string]: AppConfigJsonValue
+  }
+  mode?: string | null
+  name: string
+  provider: string
+  [key: string]:
+    | AppConfigJsonValue
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | string
+    | null
+    | string
+    | undefined
+}
+
+export type AppFeaturePayload = {
+  enabled?: boolean | null
+  [key: string]: AppConfigJsonValue | boolean | null | undefined
+}
+
+export type AppModerationPayload = {
+  config?: AppModerationConfigPayload | null
+  enabled?: boolean | null
+  type?: string | null
+}
+
+export type AppSuggestedQuestionsPayload = {
+  enabled?: boolean | null
+  model?: AppSuggestedQuestionsModelPayload
+  prompt?: string
+  [key: string]:
+    | AppConfigJsonValue
+    | boolean
+    | null
+    | AppSuggestedQuestionsModelPayload
+    | string
+    | undefined
+}
+
+export type AppTextToSpeechPayload = {
+  autoPlay?: 'disabled' | 'enabled'
+  enabled?: boolean | null
+  language?: string
+  voice?: string
+  [key: string]: AppConfigJsonValue | 'disabled' | 'enabled' | boolean | null | string | undefined
+}
+
+export type AppUserInputFormPayload =
+  | AppTextInputPayload
+  | AppSelectInputPayload
+  | AppParagraphInputPayload
+  | AppNumberInputPayload
+  | AppCheckboxInputPayload
+  | AppExternalDataInputPayload
 
 export type AppMcpServerStatus = 'active' | 'inactive' | 'normal'
 
@@ -1963,6 +2433,7 @@ export type WorkflowNodeJobConfig = {
   human_contacts?: Array<AgentHumanContactConfig>
   metadata?: WorkflowNodeJobMetadata
   mode?: WorkflowNodeJobMode
+  output_routes?: WorkflowOutputRoutes
   previous_node_output_refs?: Array<WorkflowPreviousNodeOutputRef>
   schema_version?: number
   workflow_prompt?: string
@@ -2069,26 +2540,199 @@ export type NodeOutputStatus =
 
 export type DeclaredOutputType = 'array' | 'boolean' | 'file' | 'number' | 'object' | 'string'
 
-export type WorkflowDraftVariableWithoutValue = {
-  description?: string
-  edited?: boolean
-  id?: string
-  is_truncated?: boolean
-  name?: string
-  selector?: Array<string>
-  type?: string
-  value_type?: string
-  visible?: boolean
+export type WorkflowDraftVariableWithoutValueResponse = {
+  description: string
+  edited: boolean
+  id: string
+  is_truncated: boolean
+  name: string
+  selector: Array<string>
+  type: string
+  value_type: string
+  visible: boolean
+}
+
+export type WorkflowDraftVariableFullContentResponse = {
+  download_url: string
+  length: number | null
+  size_bytes: number | null
+  value_type: string
 }
 
 export type ModelConfigPartial = {
   created_at?: number | null
   created_by?: string | null
-  model?: unknown | null
+  model?: AppModelSelectionResponse | null
   pre_prompt?: string | null
   updated_at?: number | null
   updated_by?: string | null
 }
+
+export type AppAgentModeResponse = {
+  enabled: boolean
+  max_iteration?: number
+  prompt?: AppAgentPromptResponse | string | null
+  strategy?: PlanningStrategy | 'cot' | 'function-calling' | null
+  tools?: Array<
+    | AppProviderAgentToolResponse
+    | AppLegacyDatasetToolResponse
+    | AppLegacyGoogleSearchToolResponse
+    | AppLegacyWebReaderToolResponse
+    | AppLegacyWikipediaToolResponse
+    | AppLegacyCurrentDatetimeToolResponse
+    | AppLegacySensitiveWordToolResponseItem
+  >
+  [key: string]: unknown
+}
+
+export type AppAnnotationReplyEnabledResponse = {
+  embedding_model: AppEmbeddingModelResponse
+  enabled: true
+  id: string
+  score_threshold: number
+}
+
+export type AppAnnotationReplyDisabledResponse = {
+  enabled: false
+}
+
+export type AppChatPromptConfigResponse = {
+  prompt?: Array<AppChatPromptMessageResponse>
+}
+
+export type AppCompletionPromptConfigResponse = {
+  conversation_histories_role?: AppConversationHistoriesRoleResponse
+  prompt?: AppCompletionPromptTextResponse
+}
+
+export type AppDatasetConfigsResponse = {
+  datasets?: AppDatasetListResponse
+  metadata_filtering_conditions?: AppMetadataFilteringConditionsResponse | null
+  metadata_filtering_mode?: 'automatic' | 'disabled' | 'manual'
+  metadata_model_config?: AppModelSelectionResponse | null
+  reranking_enable?: boolean
+  reranking_enabled?: boolean
+  reranking_mode?: RerankMode
+  reranking_model?: AppRerankingModelResponse | null
+  retrieval_model: 'multiple' | 'single'
+  score_threshold?: number | null
+  score_threshold_enabled?: boolean
+  top_k?: number
+  weights?: AppWeightsResponse | null
+  [key: string]: unknown
+}
+
+export type AppEnabledExternalDataToolResponse = {
+  config: {
+    [key: string]: JsonValue2
+  }
+  enabled: true
+  icon?: string
+  icon_background?: string
+  label?: string
+  type: string
+  variable: string
+  [key: string]: unknown
+}
+
+export type AppDisabledExternalDataToolResponse = {
+  config?: {
+    [key: string]: JsonValue2
+  }
+  enabled: false
+  icon?: string
+  icon_background?: string
+  label?: string
+  type?: string
+  variable?: string
+  [key: string]: unknown
+}
+
+export type AppFileUploadResponse = {
+  allowed_file_extensions?: Array<string>
+  allowed_file_types?: Array<FileType>
+  allowed_file_upload_methods?: Array<FileTransferMethod>
+  enabled?: boolean
+  image?: AppImageUploadResponse
+  number_limits?: number
+}
+
+export type AppModelSelectionResponse = {
+  completion_params?: {
+    [key: string]: JsonValue2
+  }
+  mode?: LlmMode | ''
+  name?: string
+  provider?: string
+  [key: string]: unknown
+}
+
+export type AppEnabledConfigResponse = {
+  enabled: boolean
+}
+
+export type PromptType = 'advanced' | 'simple'
+
+export type AppSensitiveWordAvoidanceResponse = {
+  config?: {
+    [key: string]: JsonValue2
+  }
+  configs?: Array<JsonValue2>
+  enabled: boolean
+  type?: string
+  [key: string]: unknown
+}
+
+export type AppSuggestedQuestionsAfterAnswerResponse = {
+  enabled: boolean
+  model?: AppModelSelectionResponse
+  prompt?: string
+}
+
+export type AppTextToSpeechResponse = {
+  autoPlay?: 'disabled' | 'enabled'
+  enabled: boolean
+  language?: string
+  voice?: string
+}
+
+export type AppTextInputFormResponse = {
+  'text-input': AppUserInputFormConfigResponse
+}
+
+export type AppSelectFormResponse = {
+  select: AppUserInputFormConfigResponse
+}
+
+export type AppParagraphFormResponse = {
+  paragraph: AppUserInputFormConfigResponse
+}
+
+export type AppNumberFormResponse = {
+  number: AppUserInputFormConfigResponse
+}
+
+export type AppCheckboxFormResponse = {
+  checkbox: AppUserInputFormConfigResponse
+}
+
+export type AppFileFormResponse = {
+  file: AppUserInputFormConfigResponse
+}
+
+export type AppFileListFormResponse = {
+  'file-list': AppUserInputFormConfigResponse
+}
+
+export type AppExternalDataToolFormResponse = {
+  external_data_tool: AppUserInputFormConfigResponse
+}
+
+export type AppJsonObjectFormResponse = {
+  json_object: AppUserInputFormConfigResponse
+}
+
+export type CustomizeTokenStrategy = 'allow' | 'must' | 'not_allow' | 'uuid'
 
 export type PluginDependencyType = 'github' | 'marketplace' | 'package'
 
@@ -2190,6 +2834,229 @@ export type HumanInputFormSubmissionData = {
 
 export type ExecutionContentType = 'human_input'
 
+export type AppConfigJsonValue =
+  | string
+  | number
+  | number
+  | boolean
+  | Array<AppConfigJsonValue>
+  | {
+      [key: string]: AppConfigJsonValue
+    }
+  | null
+
+export type AppAgentPromptPayload = {
+  first_prompt?: string
+  next_iteration?: string
+  [key: string]: AppConfigJsonValue | string | undefined
+}
+
+export type PlanningStrategy = 'function_call' | 'react' | 'react_router' | 'router'
+
+export type AppAgentToolPayload =
+  | AppProviderAgentToolPayload
+  | AppLegacyDatasetToolPayload
+  | AppLegacyGoogleSearchToolPayload
+  | AppLegacyWebReaderToolPayload
+  | AppLegacyWikipediaToolPayload
+  | AppLegacyCurrentDatetimeToolPayload
+  | AppLegacySensitiveWordToolPayload
+
+export type AppPromptMessagePayload = {
+  role: string
+  text: string
+  [key: string]: AppConfigJsonValue | string
+}
+
+export type AppConversationRolesPayload = {
+  assistant_prefix: string
+  user_prefix: string
+  [key: string]: AppConfigJsonValue | string
+}
+
+export type AppCompletionPromptTextPayload = {
+  text: string
+  [key: string]: AppConfigJsonValue | string
+}
+
+export type AppDatasetCollectionPayload = {
+  datasets: Array<AppDatasetToolPayload>
+  strategy?: string
+  [key: string]: AppConfigJsonValue | Array<AppDatasetToolPayload> | string | undefined
+}
+
+export type AppEmptyDatasetCollectionPayload = {
+  [key: string]: never
+}
+
+export type AppMetadataFilteringPayload = {
+  conditions?: Array<AppMetadataConditionPayload> | null
+  logical_operator?: 'and' | 'or' | null
+  [key: string]:
+    | AppConfigJsonValue
+    | Array<AppMetadataConditionPayload>
+    | null
+    | 'and'
+    | 'or'
+    | null
+    | undefined
+}
+
+export type AppMetadataModelPayload = {
+  completion_params?: {
+    [key: string]: AppConfigJsonValue
+  }
+  mode?: LlmMode | ''
+  name?: string
+  provider?: string
+  [key: string]:
+    | AppConfigJsonValue
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | LlmMode
+    | ''
+    | string
+    | undefined
+}
+
+export type RerankMode = 'reranking_model' | 'weighted_score'
+
+export type AppRerankingModelPayload = {
+  reranking_model_name?: string
+  reranking_provider_name?: string
+  [key: string]: AppConfigJsonValue | string | undefined
+}
+
+export type AppRetrievalWeightsPayload = {
+  keyword_setting: AppKeywordWeightPayload
+  vector_setting: AppVectorWeightPayload
+  weight_type?: 'customized' | 'keyword_first' | 'semantic_first'
+  [key: string]:
+    | AppConfigJsonValue
+    | AppKeywordWeightPayload
+    | AppVectorWeightPayload
+    | 'customized'
+    | 'keyword_first'
+    | 'semantic_first'
+    | undefined
+}
+
+export type FileType = 'audio' | 'custom' | 'document' | 'image' | 'video'
+
+export type FileTransferMethod = 'datasource_file' | 'local_file' | 'remote_url' | 'tool_file'
+
+export type AppFileTypeUploadPayload = {
+  enabled?: boolean | null
+  number_limits?: number | null
+  transfer_methods?: Array<FileTransferMethod> | null
+  [key: string]:
+    | AppConfigJsonValue
+    | boolean
+    | null
+    | number
+    | null
+    | Array<FileTransferMethod>
+    | null
+    | undefined
+}
+
+export type AppImageUploadPayload = {
+  detail?: 'high' | 'low' | null
+  enabled?: boolean
+  number_limits?: number
+  transfer_methods?: Array<FileTransferMethod>
+  [key: string]:
+    | AppConfigJsonValue
+    | 'high'
+    | 'low'
+    | null
+    | boolean
+    | number
+    | Array<FileTransferMethod>
+    | undefined
+}
+
+export type AppImageConfigPayload = {
+  detail?: 'high' | 'low' | null
+  number_limits?: number
+  transfer_methods?: Array<FileTransferMethod>
+  [key: string]:
+    | AppConfigJsonValue
+    | 'high'
+    | 'low'
+    | null
+    | number
+    | Array<FileTransferMethod>
+    | undefined
+}
+
+export type AppFilePreviewPayload = {
+  file_type_list?: Array<string> | null
+  mode?: string | null
+  [key: string]: AppConfigJsonValue | Array<string> | null | string | null | undefined
+}
+
+export type AppModerationConfigPayload = {
+  api_based_extension_id?: string | null
+  inputs_config?: AppModerationContentPayload | null
+  keywords?: string | null
+  outputs_config?: AppModerationContentPayload | null
+  [key: string]:
+    | AppConfigJsonValue
+    | string
+    | null
+    | AppModerationContentPayload
+    | null
+    | string
+    | null
+    | AppModerationContentPayload
+    | null
+    | undefined
+}
+
+export type AppSuggestedQuestionsModelPayload = {
+  completion_params?: {
+    [key: string]: AppConfigJsonValue
+  }
+  mode?: LlmMode | ''
+  name: string
+  provider: string
+  [key: string]:
+    | AppConfigJsonValue
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | LlmMode
+    | ''
+    | string
+    | undefined
+}
+
+export type AppTextInputPayload = {
+  'text-input': AppInputFieldPayload
+}
+
+export type AppSelectInputPayload = {
+  select: AppSelectFieldPayload
+}
+
+export type AppParagraphInputPayload = {
+  paragraph: AppInputFieldPayload
+}
+
+export type AppNumberInputPayload = {
+  number: AppInputFieldPayload
+}
+
+export type AppCheckboxInputPayload = {
+  checkbox: AppInputFieldPayload
+}
+
+export type AppExternalDataInputPayload = {
+  external_data_tool: AppInputFieldPayload
+}
+
 export type WorkflowRunForLogResponse = {
   created_at?: number | null
   elapsed_time?: number | null
@@ -2246,7 +3113,7 @@ export type WorkflowSuggestedQuestionsAfterAnswerPayload = {
 }
 
 export type WorkflowTextToSpeechPayload = {
-  autoPlay?: string | null
+  autoPlay?: 'disabled' | 'enabled' | null
   enabled?: boolean | null
   language?: string | null
   voice?: string | null
@@ -2408,6 +3275,11 @@ export type WorkflowNodeJobMetadata = {
 
 export type WorkflowNodeJobMode = 'let_agent_figure_it_out' | 'tell_agent_what_to_do'
 
+export type WorkflowOutputRoutes = {
+  enabled?: boolean
+  routes?: Array<WorkflowOutputRoute>
+}
+
 export type WorkflowPreviousNodeOutputRef = {
   key?: string | null
   name?: string | null
@@ -2475,6 +3347,148 @@ export type CheckResultView = {
   reason?: string | null
 }
 
+export type AppAgentPromptResponse = {
+  first_prompt?: string
+  next_iteration?: string
+  [key: string]: unknown
+}
+
+export type AppProviderAgentToolResponse = {
+  credential_id?: string | null
+  enabled?: boolean
+  isDeleted?: boolean
+  notAuthor?: boolean
+  plugin_unique_identifier?: string | null
+  provider_id: string
+  provider_name?: string
+  provider_type: ToolProviderType
+  tool_label?: string
+  tool_name: string
+  tool_parameters: {
+    [key: string]: JsonValue2
+  }
+  [key: string]: unknown
+}
+
+export type AppLegacyDatasetToolResponse = {
+  dataset: AppDatasetReferenceResponse
+  [key: string]: unknown
+}
+
+export type AppLegacyGoogleSearchToolResponse = {
+  google_search: {
+    [key: string]: JsonValue2
+  }
+  [key: string]: unknown
+}
+
+export type AppLegacyWebReaderToolResponse = {
+  web_reader: {
+    [key: string]: JsonValue2
+  }
+  [key: string]: unknown
+}
+
+export type AppLegacyWikipediaToolResponse = {
+  wikipedia: {
+    [key: string]: JsonValue2
+  }
+  [key: string]: unknown
+}
+
+export type AppLegacyCurrentDatetimeToolResponse = {
+  current_datetime: {
+    [key: string]: JsonValue2
+  }
+  [key: string]: unknown
+}
+
+export type AppLegacySensitiveWordToolResponseItem = {
+  'sensitive-word-avoidance': AppLegacySensitiveWordToolResponse
+  [key: string]: unknown
+}
+
+export type AppEmbeddingModelResponse = {
+  embedding_model_name: string
+  embedding_provider_name: string
+}
+
+export type AppChatPromptMessageResponse = {
+  role: string
+  text: string
+}
+
+export type AppConversationHistoriesRoleResponse = {
+  assistant_prefix: string
+  user_prefix: string
+}
+
+export type AppCompletionPromptTextResponse = {
+  text: string
+}
+
+export type AppDatasetListResponse = {
+  datasets: Array<AppDatasetItemResponse>
+  strategy?: string
+  [key: string]: unknown
+}
+
+export type AppMetadataFilteringConditionsResponse = {
+  conditions?: Array<AppMetadataConditionResponse> | null
+  logical_operator?: 'and' | 'or' | null
+  [key: string]: unknown
+}
+
+export type AppRerankingModelResponse = {
+  reranking_model_name?: string
+  reranking_provider_name?: string
+  [key: string]: unknown
+}
+
+export type AppWeightsResponse = {
+  keyword_setting: AppKeywordSettingResponse
+  vector_setting: AppVectorSettingResponse
+  weight_type?: 'customized' | 'keyword_first' | 'semantic_first'
+  [key: string]: unknown
+}
+
+export type JsonValue2 = unknown
+
+export type AppImageUploadResponse = {
+  detail?: 'high' | 'low' | null
+  enabled?: boolean
+  number_limits?: number
+  transfer_methods?: Array<FileTransferMethod>
+}
+
+export type AppUserInputFormConfigResponse = {
+  allowed_file_extensions?: Array<string>
+  allowed_file_types?: Array<FileType>
+  allowed_file_upload_methods?: Array<FileTransferMethod>
+  config?: {
+    [key: string]: JsonValue2
+  }
+  default?: JsonValue2
+  description?: string
+  enabled?: boolean
+  hide?: boolean
+  icon?: string | null
+  icon_background?: string | null
+  json_schema?:
+    | string
+    | {
+        [key: string]: JsonValue2
+      }
+    | null
+  label: string
+  max_length?: number | null
+  options?: Array<string>
+  required?: boolean
+  type?: string
+  variable: string
+  [key: string]: unknown
+}
+
 export type UserActionConfig = {
   button_style?: ButtonStyle
   id: string
@@ -2495,7 +3509,235 @@ export type FormInputConfig =
       type: 'file-list'
     } & FileListInputConfig)
 
-export type JsonValue2 = unknown
+export type AppProviderAgentToolPayload = {
+  credential_id?: string | null
+  enabled?: boolean | null
+  isDeleted?: boolean
+  notAuthor?: boolean
+  plugin_unique_identifier?: string | null
+  provider_id: string
+  provider_name?: string
+  provider_type: ToolProviderType
+  tool_label?: string
+  tool_name: string
+  tool_parameters: {
+    [key: string]: AppConfigJsonValue
+  }
+  [key: string]:
+    | AppConfigJsonValue
+    | string
+    | null
+    | boolean
+    | null
+    | boolean
+    | string
+    | null
+    | string
+    | ToolProviderType
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | undefined
+}
+
+export type AppLegacyDatasetToolPayload = {
+  dataset: AppLegacyDatasetSelectionPayload
+  [key: string]: AppConfigJsonValue | AppLegacyDatasetSelectionPayload
+}
+
+export type AppLegacyGoogleSearchToolPayload = {
+  google_search: AppFeaturePayload
+  [key: string]: AppConfigJsonValue | AppFeaturePayload
+}
+
+export type AppLegacyWebReaderToolPayload = {
+  web_reader: AppFeaturePayload
+  [key: string]: AppConfigJsonValue | AppFeaturePayload
+}
+
+export type AppLegacyWikipediaToolPayload = {
+  wikipedia: AppFeaturePayload
+  [key: string]: AppConfigJsonValue | AppFeaturePayload
+}
+
+export type AppLegacyCurrentDatetimeToolPayload = {
+  current_datetime: AppFeaturePayload
+  [key: string]: AppConfigJsonValue | AppFeaturePayload
+}
+
+export type AppLegacySensitiveWordToolPayload = {
+  'sensitive-word-avoidance': AppLegacySensitiveWordConfigPayload
+  [key: string]: AppConfigJsonValue | AppLegacySensitiveWordConfigPayload
+}
+
+export type AppDatasetToolPayload = {
+  dataset: AppDatasetSelectionPayload
+  [key: string]: AppConfigJsonValue | AppDatasetSelectionPayload
+}
+
+export type AppMetadataConditionPayload = {
+  comparison_operator:
+    | '<'
+    | '='
+    | '>'
+    | 'after'
+    | 'before'
+    | 'contains'
+    | 'empty'
+    | 'end with'
+    | 'in'
+    | 'is'
+    | 'is not'
+    | 'not contains'
+    | 'not empty'
+    | 'not in'
+    | 'start with'
+    | '≠'
+    | '≤'
+    | '≥'
+  id?: string
+  metadata_id?: string
+  name: string
+  value?: string | Array<string> | number | number | null
+  [key: string]:
+    | AppConfigJsonValue
+    | '<'
+    | '='
+    | '>'
+    | 'after'
+    | 'before'
+    | 'contains'
+    | 'empty'
+    | 'end with'
+    | 'in'
+    | 'is'
+    | 'is not'
+    | 'not contains'
+    | 'not empty'
+    | 'not in'
+    | 'start with'
+    | '≠'
+    | '≤'
+    | '≥'
+    | string
+    | string
+    | Array<string>
+    | number
+    | number
+    | null
+    | undefined
+}
+
+export type AppKeywordWeightPayload = {
+  keyword_weight: number
+  [key: string]: AppConfigJsonValue | number
+}
+
+export type AppVectorWeightPayload = {
+  embedding_model_name: string
+  embedding_provider_name: string
+  vector_weight: number
+  [key: string]: AppConfigJsonValue | string | number
+}
+
+export type AppModerationContentPayload = {
+  enabled?: boolean | null
+  preset_response?: string | null
+  [key: string]: AppConfigJsonValue | boolean | null | string | null | undefined
+}
+
+export type AppInputFieldPayload = {
+  config?: {
+    [key: string]: AppConfigJsonValue
+  }
+  default?: AppConfigJsonValue
+  description?: string
+  enabled?: boolean
+  hide?: boolean
+  icon?: string | null
+  icon_background?: string | null
+  json_schema?:
+    | string
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | null
+  label: string
+  max_length?: number | null
+  options?: Array<string>
+  required?: boolean | null
+  type?: string
+  variable: string
+  [key: string]:
+    | AppConfigJsonValue
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | string
+    | boolean
+    | string
+    | null
+    | string
+    | null
+    | string
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | null
+    | number
+    | null
+    | Array<string>
+    | boolean
+    | null
+    | undefined
+}
+
+export type AppSelectFieldPayload = {
+  config?: {
+    [key: string]: AppConfigJsonValue
+  }
+  default?: AppConfigJsonValue
+  description?: string
+  enabled?: boolean
+  hide?: boolean
+  icon?: string | null
+  icon_background?: string | null
+  json_schema?:
+    | string
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | null
+  label: string
+  max_length?: number | null
+  options?: Array<string> | null
+  required?: boolean | null
+  type?: string
+  variable: string
+  [key: string]:
+    | AppConfigJsonValue
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | string
+    | boolean
+    | string
+    | null
+    | string
+    | null
+    | string
+    | {
+        [key: string]: AppConfigJsonValue
+      }
+    | null
+    | number
+    | null
+    | Array<string>
+    | null
+    | boolean
+    | null
+    | undefined
+}
 
 export type WorkflowFileUploadTransferPayload = {
   enabled?: boolean | null
@@ -2547,7 +3789,7 @@ export type AgentSuggestedQuestionsAfterAnswerFeatureConfig = {
 }
 
 export type AgentTextToSpeechFeatureConfig = {
-  autoPlay?: string | null
+  autoPlay?: 'disabled' | 'enabled' | null
   enabled?: boolean
   language?: string | null
   voice?: string | null
@@ -2698,6 +3940,12 @@ export type DeclaredOutputRetryConfig = {
   retry_interval_ms?: number
 }
 
+export type WorkflowOutputRoute = {
+  id: string
+  label?: string | null
+  name?: string
+}
+
 export type AgentCliToolAuthorizationStatus =
   | 'allowed'
   | 'authorized'
@@ -2726,6 +3974,72 @@ export type AgentComposerKnowledgeDatasetCandidateResponse = {
   id?: string | null
   missing?: boolean
   name?: string | null
+}
+
+export type ToolProviderType =
+  | 'api'
+  | 'app'
+  | 'builtin'
+  | 'dataset-retrieval'
+  | 'mcp'
+  | 'plugin'
+  | 'workflow'
+
+export type AppDatasetReferenceResponse = {
+  enabled?: boolean
+  id?: string
+  [key: string]: unknown
+}
+
+export type AppLegacySensitiveWordToolResponse = {
+  canned_response: string
+  enabled: boolean
+  words: Array<string>
+  [key: string]: unknown
+}
+
+export type AppDatasetItemResponse = {
+  dataset: AppDatasetReferenceResponse
+  [key: string]: unknown
+}
+
+export type AppMetadataConditionResponse = {
+  comparison_operator:
+    | '<'
+    | '='
+    | '>'
+    | 'after'
+    | 'before'
+    | 'contains'
+    | 'empty'
+    | 'end with'
+    | 'in'
+    | 'is'
+    | 'is not'
+    | 'not contains'
+    | 'not empty'
+    | 'not in'
+    | 'start with'
+    | '≠'
+    | '≤'
+    | '≥'
+  id?: string
+  metadata_id?: string
+  name: string
+  value?: string | Array<string> | number | number | null
+  [key: string]: unknown
+}
+
+export type AppKeywordSettingResponse = {
+  keyword_weight: number
+  [key: string]: unknown
+}
+
+export type AppVectorSettingResponse = {
+  embedding_model_name: string
+  embedding_provider_name: string
+  vector_weight: number
+  [key: string]: unknown
 }
 
 export type ButtonStyle = 'accent' | 'default' | 'ghost' | 'primary'
@@ -2759,9 +4073,24 @@ export type FileListInputConfig = {
   type?: 'file-list'
 }
 
-export type FileType = 'audio' | 'custom' | 'document' | 'image' | 'video'
+export type AppLegacyDatasetSelectionPayload = {
+  enabled?: boolean | null
+  id?: string
+  [key: string]: AppConfigJsonValue | boolean | null | string | undefined
+}
 
-export type FileTransferMethod = 'datasource_file' | 'local_file' | 'remote_url' | 'tool_file'
+export type AppLegacySensitiveWordConfigPayload = {
+  canned_response: string
+  enabled: boolean
+  words: Array<string>
+  [key: string]: AppConfigJsonValue | string | boolean | Array<string>
+}
+
+export type AppDatasetSelectionPayload = {
+  enabled?: boolean
+  id?: string
+  [key: string]: AppConfigJsonValue | boolean | string | undefined
+}
 
 export type AgentFileUploadImageFeatureConfig = {
   enabled?: boolean
@@ -2824,15 +4153,6 @@ export type AgentSoulDifyToolCredentialRef = {
   provider?: string | null
   type?: 'provider' | 'tool'
 }
-
-export type ToolProviderType =
-  | 'api'
-  | 'app'
-  | 'builtin'
-  | 'dataset-retrieval'
-  | 'mcp'
-  | 'plugin'
-  | 'workflow'
 
 export type StringSource = {
   selector?: Array<string>
@@ -2921,33 +4241,33 @@ export type AppPaginationWritable = {
 }
 
 export type AppDetailWithSiteWritable = {
-  access_mode?: string | null
-  api_base_url?: string | null
-  app_id?: string | null
-  bound_agent_id?: string | null
-  created_at?: number | null
-  created_by?: string | null
-  deleted_tools?: Array<DeletedTool>
-  description?: string | null
+  access_mode: WebAppAccessMode | null
+  api_base_url: string
+  app_id: string | null
+  bound_agent_id: string | null
+  created_at: number
+  created_by: string | null
+  deleted_tools: Array<DeletedTool>
+  description: string
   enable_api: boolean
   enable_site: boolean
-  icon?: string | null
-  icon_background?: string | null
-  icon_type?: string | null
+  icon: string | null
+  icon_background: string | null
+  icon_type: IconType | null
   id: string
-  maintainer?: string | null
-  max_active_requests?: number | null
-  mode: string
-  model_config?: AppModelConfigResponse | null
+  maintainer: string | null
+  max_active_requests: number | null
+  mode: AppMode
+  model_config: AppModelConfigResponse | null
   name: string
-  permission_keys?: Array<string>
-  site?: AppDetailSiteResponseWritable | null
-  tags?: Array<Tag>
-  tracing?: unknown | null
-  updated_at?: number | null
-  updated_by?: string | null
-  use_icon_as_answer_icon?: boolean | null
-  workflow?: WorkflowPartial | null
+  permission_keys: Array<string>
+  site: AppDetailSiteResponseWritable | null
+  tags: Array<Tag>
+  tracing: string | null
+  updated_at: number
+  updated_by: string | null
+  use_icon_as_answer_icon: boolean
+  workflow: WorkflowPartial | null
 }
 
 export type RecentAppListResponseWritable = {
@@ -2982,7 +4302,7 @@ export type WorkflowCommentDetailWritable = {
 }
 
 export type AppPartialWritable = {
-  access_mode?: string | null
+  access_mode?: WebAppAccessMode | null
   app_id?: string | null
   author_name?: string | null
   bound_agent_id?: string | null
@@ -2993,12 +4313,12 @@ export type AppPartialWritable = {
   has_draft_trigger?: boolean | null
   icon?: string | null
   icon_background?: string | null
-  icon_type?: string | null
+  icon_type?: IconType | null
   id: string
   is_starred?: boolean
   maintainer?: string | null
   max_active_requests?: number | null
-  mode: string
+  mode: AppMode
   model_config?: ModelConfigPartial | null
   name: string
   permission_keys?: Array<string>
@@ -3010,30 +4330,30 @@ export type AppPartialWritable = {
 }
 
 export type AppDetailSiteResponseWritable = {
-  access_token?: string | null
-  app_base_url?: string | null
-  chat_color_theme?: string | null
-  chat_color_theme_inverted?: boolean | null
-  code?: string | null
-  copyright?: string | null
-  created_at?: number | null
-  created_by?: string | null
-  custom_disclaimer?: string | null
-  customize_domain?: string | null
-  customize_token_strategy?: string | null
-  default_language?: string | null
-  description?: string | null
-  icon?: string | null
-  icon_background?: string | null
-  icon_type?: string | IconType | null
-  input_placeholder?: string | null
-  privacy_policy?: string | null
-  prompt_public?: boolean | null
-  show_workflow_steps?: boolean | null
-  title?: string | null
-  updated_at?: number | null
-  updated_by?: string | null
-  use_icon_as_answer_icon?: boolean | null
+  access_token: string | null
+  app_base_url: string
+  chat_color_theme: string | null
+  chat_color_theme_inverted: boolean
+  code: string | null
+  copyright: string | null
+  created_at: number
+  created_by: string | null
+  custom_disclaimer: string
+  customize_domain: string | null
+  customize_token_strategy: CustomizeTokenStrategy
+  default_language: string
+  description: string | null
+  icon: string | null
+  icon_background: string | null
+  icon_type: IconType | null
+  input_placeholder: string | null
+  privacy_policy: string | null
+  prompt_public: boolean
+  show_workflow_steps: boolean
+  title: string
+  updated_at: number
+  updated_by: string | null
+  use_icon_as_answer_icon: boolean
 }
 
 export type RecentAppResponseWritable = {
@@ -3102,6 +4422,21 @@ export type WorkflowCommentReplyWritable = {
   id: string
 }
 
+export type AppConfigJsonValueWritable =
+  | string
+  | number
+  | number
+  | boolean
+  | Array<AppConfigJsonValueWritable>
+  | {
+      [key: string]: AppConfigJsonValueWritable
+    }
+  | null
+
+export type AppEmptyDatasetCollectionPayloadWritable = {
+  [key: string]: never
+}
+
 export type GetAppsData = {
   body?: never
   path?: never
@@ -3119,12 +4454,19 @@ export type GetAppsData = {
       | 'completion'
       | 'workflow'
     name?: string
+    openapi_visible?: boolean
     page?: number
     sort_by?: 'earliest_created' | 'last_modified' | 'recently_created'
     tag_ids?: Array<string>
   }
   url: '/apps'
 }
+
+export type GetAppsErrors = {
+  default: ErrorResponse
+}
+
+export type GetAppsError = GetAppsErrors[keyof GetAppsErrors]
 
 export type GetAppsResponses = {
   200: AppPagination
@@ -3140,9 +4482,12 @@ export type PostAppsData = {
 }
 
 export type PostAppsErrors = {
-  400: unknown
-  403: unknown
+  400: ErrorResponse
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsError = PostAppsErrors[keyof PostAppsErrors]
 
 export type PostAppsResponses = {
   201: AppDetailWithSite
@@ -3151,14 +4496,31 @@ export type PostAppsResponses = {
 export type PostAppsResponse = PostAppsResponses[keyof PostAppsResponses]
 
 export type PostAppsImportsData = {
-  body: AppImportPayload
+  body:
+    | AppImportPayload
+    | {
+        app_id?: string
+        description?: string
+        file: Blob | File
+        icon?: string
+        icon_background?: string
+        icon_type?: string
+        name?: string
+      }
   path?: never
   query?: never
   url: '/apps/imports'
 }
 
 export type PostAppsImportsErrors = {
-  400: Import
+  400: Import | InvalidRosterAgentPackageError | ErrorResponse
+  403: ErrorResponse
+  404: RecommendedAppNotFoundError | ErrorResponse
+  409: AgentNameConflictError | ErrorResponse
+  413: RosterAgentPackageTooLargeError | ErrorResponse
+  500: RosterAgentPackageImportFailedError | ErrorResponse
+  503: RosterAgentPackageResourceUnavailableError | ErrorResponse
+  default: ErrorResponse
 }
 
 export type PostAppsImportsError = PostAppsImportsErrors[keyof PostAppsImportsErrors]
@@ -3179,6 +4541,14 @@ export type GetAppsImportsByAppIdCheckDependenciesData = {
   url: '/apps/imports/{app_id}/check-dependencies'
 }
 
+export type GetAppsImportsByAppIdCheckDependenciesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsImportsByAppIdCheckDependenciesError =
+  GetAppsImportsByAppIdCheckDependenciesErrors[keyof GetAppsImportsByAppIdCheckDependenciesErrors]
+
 export type GetAppsImportsByAppIdCheckDependenciesResponses = {
   200: CheckDependenciesResult
 }
@@ -3196,7 +4566,8 @@ export type PostAppsImportsByImportIdConfirmData = {
 }
 
 export type PostAppsImportsByImportIdConfirmErrors = {
-  400: Import
+  400: Import | ErrorResponse
+  default: ErrorResponse
 }
 
 export type PostAppsImportsByImportIdConfirmError =
@@ -3217,6 +4588,12 @@ export type GetAppsRecentData = {
   }
   url: '/apps/recent'
 }
+
+export type GetAppsRecentErrors = {
+  default: ErrorResponse
+}
+
+export type GetAppsRecentError = GetAppsRecentErrors[keyof GetAppsRecentErrors]
 
 export type GetAppsRecentResponses = {
   200: RecentAppListResponse
@@ -3241,12 +4618,19 @@ export type GetAppsStarredData = {
       | 'completion'
       | 'workflow'
     name?: string
+    openapi_visible?: boolean
     page?: number
     sort_by?: 'earliest_created' | 'last_modified' | 'recently_created'
     tag_ids?: Array<string>
   }
   url: '/apps/starred'
 }
+
+export type GetAppsStarredErrors = {
+  default: ErrorResponse
+}
+
+export type GetAppsStarredError = GetAppsStarredErrors[keyof GetAppsStarredErrors]
 
 export type GetAppsStarredResponses = {
   200: AppPagination
@@ -3260,6 +4644,13 @@ export type PostAppsWorkflowsOnlineUsersData = {
   query?: never
   url: '/apps/workflows/online-users'
 }
+
+export type PostAppsWorkflowsOnlineUsersErrors = {
+  default: ErrorResponse
+}
+
+export type PostAppsWorkflowsOnlineUsersError =
+  PostAppsWorkflowsOnlineUsersErrors[keyof PostAppsWorkflowsOnlineUsersErrors]
 
 export type PostAppsWorkflowsOnlineUsersResponses = {
   200: WorkflowOnlineUsersResponse
@@ -3278,8 +4669,11 @@ export type DeleteAppsByAppIdData = {
 }
 
 export type DeleteAppsByAppIdErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type DeleteAppsByAppIdError = DeleteAppsByAppIdErrors[keyof DeleteAppsByAppIdErrors]
 
 export type DeleteAppsByAppIdResponses = {
   204: void
@@ -3295,6 +4689,12 @@ export type GetAppsByAppIdData = {
   query?: never
   url: '/apps/{app_id}'
 }
+
+export type GetAppsByAppIdErrors = {
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdError = GetAppsByAppIdErrors[keyof GetAppsByAppIdErrors]
 
 export type GetAppsByAppIdResponses = {
   200: AppDetailWithSite
@@ -3312,9 +4712,12 @@ export type PutAppsByAppIdData = {
 }
 
 export type PutAppsByAppIdErrors = {
-  400: unknown
-  403: unknown
+  400: ErrorResponse
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PutAppsByAppIdError = PutAppsByAppIdErrors[keyof PutAppsByAppIdErrors]
 
 export type PutAppsByAppIdResponses = {
   200: AppDetailWithSite
@@ -3336,6 +4739,14 @@ export type GetAppsByAppIdAdvancedChatWorkflowRunsData = {
   url: '/apps/{app_id}/advanced-chat/workflow-runs'
 }
 
+export type GetAppsByAppIdAdvancedChatWorkflowRunsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAdvancedChatWorkflowRunsError =
+  GetAppsByAppIdAdvancedChatWorkflowRunsErrors[keyof GetAppsByAppIdAdvancedChatWorkflowRunsErrors]
+
 export type GetAppsByAppIdAdvancedChatWorkflowRunsResponses = {
   200: AdvancedChatWorkflowRunPaginationResponse
 }
@@ -3356,6 +4767,14 @@ export type GetAppsByAppIdAdvancedChatWorkflowRunsCountData = {
   url: '/apps/{app_id}/advanced-chat/workflow-runs/count'
 }
 
+export type GetAppsByAppIdAdvancedChatWorkflowRunsCountErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAdvancedChatWorkflowRunsCountError =
+  GetAppsByAppIdAdvancedChatWorkflowRunsCountErrors[keyof GetAppsByAppIdAdvancedChatWorkflowRunsCountErrors]
+
 export type GetAppsByAppIdAdvancedChatWorkflowRunsCountResponses = {
   200: WorkflowRunCountResponse
 }
@@ -3373,6 +4792,14 @@ export type PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdForm
   url: '/apps/{app_id}/advanced-chat/workflows/draft/human-input/nodes/{node_id}/form/preview'
 }
 
+export type PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdFormPreviewErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdFormPreviewError =
+  PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdFormPreviewErrors[keyof PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdFormPreviewErrors]
+
 export type PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdFormPreviewResponses = {
   200: HumanInputFormPreviewResponse
 }
@@ -3389,6 +4816,14 @@ export type PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdForm
   query?: never
   url: '/apps/{app_id}/advanced-chat/workflows/draft/human-input/nodes/{node_id}/form/run'
 }
+
+export type PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdFormRunErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdFormRunError =
+  PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdFormRunErrors[keyof PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdFormRunErrors]
 
 export type PostAppsByAppIdAdvancedChatWorkflowsDraftHumanInputNodesByNodeIdFormRunResponses = {
   200: HumanInputFormSubmitResponse
@@ -3408,9 +4843,13 @@ export type PostAppsByAppIdAdvancedChatWorkflowsDraftIterationNodesByNodeIdRunDa
 }
 
 export type PostAppsByAppIdAdvancedChatWorkflowsDraftIterationNodesByNodeIdRunErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdAdvancedChatWorkflowsDraftIterationNodesByNodeIdRunError =
+  PostAppsByAppIdAdvancedChatWorkflowsDraftIterationNodesByNodeIdRunErrors[keyof PostAppsByAppIdAdvancedChatWorkflowsDraftIterationNodesByNodeIdRunErrors]
 
 export type PostAppsByAppIdAdvancedChatWorkflowsDraftIterationNodesByNodeIdRunResponses = {
   200: GeneratedAppResponse
@@ -3430,9 +4869,13 @@ export type PostAppsByAppIdAdvancedChatWorkflowsDraftLoopNodesByNodeIdRunData = 
 }
 
 export type PostAppsByAppIdAdvancedChatWorkflowsDraftLoopNodesByNodeIdRunErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdAdvancedChatWorkflowsDraftLoopNodesByNodeIdRunError =
+  PostAppsByAppIdAdvancedChatWorkflowsDraftLoopNodesByNodeIdRunErrors[keyof PostAppsByAppIdAdvancedChatWorkflowsDraftLoopNodesByNodeIdRunErrors]
 
 export type PostAppsByAppIdAdvancedChatWorkflowsDraftLoopNodesByNodeIdRunResponses = {
   200: GeneratedAppResponse
@@ -3451,9 +4894,15 @@ export type PostAppsByAppIdAdvancedChatWorkflowsDraftRunData = {
 }
 
 export type PostAppsByAppIdAdvancedChatWorkflowsDraftRunErrors = {
-  400: unknown
-  403: unknown
+  400: ErrorResponse
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  429: RateLimitError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdAdvancedChatWorkflowsDraftRunError =
+  PostAppsByAppIdAdvancedChatWorkflowsDraftRunErrors[keyof PostAppsByAppIdAdvancedChatWorkflowsDraftRunErrors]
 
 export type PostAppsByAppIdAdvancedChatWorkflowsDraftRunResponses = {
   200: GeneratedAppResponse
@@ -3475,6 +4924,15 @@ export type GetAppsByAppIdAgentConfigFilesData = {
   url: '/apps/{app_id}/agent/config/files'
 }
 
+export type GetAppsByAppIdAgentConfigFilesErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAgentConfigFilesError =
+  GetAppsByAppIdAgentConfigFilesErrors[keyof GetAppsByAppIdAgentConfigFilesErrors]
+
 export type GetAppsByAppIdAgentConfigFilesResponses = {
   200: AgentConfigFileListResponse
 }
@@ -3494,6 +4952,15 @@ export type PostAppsByAppIdAgentConfigFilesData = {
   }
   url: '/apps/{app_id}/agent/config/files'
 }
+
+export type PostAppsByAppIdAgentConfigFilesErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdAgentConfigFilesError =
+  PostAppsByAppIdAgentConfigFilesErrors[keyof PostAppsByAppIdAgentConfigFilesErrors]
 
 export type PostAppsByAppIdAgentConfigFilesResponses = {
   201: AgentConfigFileUploadResponse
@@ -3516,6 +4983,15 @@ export type DeleteAppsByAppIdAgentConfigFilesByNameData = {
   url: '/apps/{app_id}/agent/config/files/{name}'
 }
 
+export type DeleteAppsByAppIdAgentConfigFilesByNameErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type DeleteAppsByAppIdAgentConfigFilesByNameError =
+  DeleteAppsByAppIdAgentConfigFilesByNameErrors[keyof DeleteAppsByAppIdAgentConfigFilesByNameErrors]
+
 export type DeleteAppsByAppIdAgentConfigFilesByNameResponses = {
   200: AgentConfigDeleteResponse
 }
@@ -3536,6 +5012,15 @@ export type GetAppsByAppIdAgentConfigFilesByNameDownloadData = {
   }
   url: '/apps/{app_id}/agent/config/files/{name}/download'
 }
+
+export type GetAppsByAppIdAgentConfigFilesByNameDownloadErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAgentConfigFilesByNameDownloadError =
+  GetAppsByAppIdAgentConfigFilesByNameDownloadErrors[keyof GetAppsByAppIdAgentConfigFilesByNameDownloadErrors]
 
 export type GetAppsByAppIdAgentConfigFilesByNameDownloadResponses = {
   200: AgentConfigDownloadResponse
@@ -3558,6 +5043,15 @@ export type GetAppsByAppIdAgentConfigFilesByNamePreviewData = {
   url: '/apps/{app_id}/agent/config/files/{name}/preview'
 }
 
+export type GetAppsByAppIdAgentConfigFilesByNamePreviewErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAgentConfigFilesByNamePreviewError =
+  GetAppsByAppIdAgentConfigFilesByNamePreviewErrors[keyof GetAppsByAppIdAgentConfigFilesByNamePreviewErrors]
+
 export type GetAppsByAppIdAgentConfigFilesByNamePreviewResponses = {
   200: AgentConfigFilePreviewResponse
 }
@@ -3578,6 +5072,15 @@ export type GetAppsByAppIdAgentConfigManifestData = {
   url: '/apps/{app_id}/agent/config/manifest'
 }
 
+export type GetAppsByAppIdAgentConfigManifestErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAgentConfigManifestError =
+  GetAppsByAppIdAgentConfigManifestErrors[keyof GetAppsByAppIdAgentConfigManifestErrors]
+
 export type GetAppsByAppIdAgentConfigManifestResponses = {
   200: AgentConfigManifestResponse
 }
@@ -3597,6 +5100,15 @@ export type GetAppsByAppIdAgentConfigSkillsData = {
   }
   url: '/apps/{app_id}/agent/config/skills'
 }
+
+export type GetAppsByAppIdAgentConfigSkillsErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAgentConfigSkillsError =
+  GetAppsByAppIdAgentConfigSkillsErrors[keyof GetAppsByAppIdAgentConfigSkillsErrors]
 
 export type GetAppsByAppIdAgentConfigSkillsResponses = {
   200: AgentConfigSkillListResponse
@@ -3620,6 +5132,15 @@ export type PostAppsByAppIdAgentConfigSkillsUploadData = {
   url: '/apps/{app_id}/agent/config/skills/upload'
 }
 
+export type PostAppsByAppIdAgentConfigSkillsUploadErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdAgentConfigSkillsUploadError =
+  PostAppsByAppIdAgentConfigSkillsUploadErrors[keyof PostAppsByAppIdAgentConfigSkillsUploadErrors]
+
 export type PostAppsByAppIdAgentConfigSkillsUploadResponses = {
   201: AgentConfigSkillUploadResponse
 }
@@ -3640,6 +5161,15 @@ export type DeleteAppsByAppIdAgentConfigSkillsByNameData = {
   }
   url: '/apps/{app_id}/agent/config/skills/{name}'
 }
+
+export type DeleteAppsByAppIdAgentConfigSkillsByNameErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type DeleteAppsByAppIdAgentConfigSkillsByNameError =
+  DeleteAppsByAppIdAgentConfigSkillsByNameErrors[keyof DeleteAppsByAppIdAgentConfigSkillsByNameErrors]
 
 export type DeleteAppsByAppIdAgentConfigSkillsByNameResponses = {
   200: AgentConfigDeleteResponse
@@ -3662,6 +5192,15 @@ export type GetAppsByAppIdAgentConfigSkillsByNameDownloadData = {
   url: '/apps/{app_id}/agent/config/skills/{name}/download'
 }
 
+export type GetAppsByAppIdAgentConfigSkillsByNameDownloadErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAgentConfigSkillsByNameDownloadError =
+  GetAppsByAppIdAgentConfigSkillsByNameDownloadErrors[keyof GetAppsByAppIdAgentConfigSkillsByNameDownloadErrors]
+
 export type GetAppsByAppIdAgentConfigSkillsByNameDownloadResponses = {
   200: AgentConfigDownloadResponse
 }
@@ -3678,6 +5217,15 @@ export type GetAppsByAppIdAgentConfigSkillsByNameFilesContentData = {
   query?: never
   url: '/apps/{app_id}/agent/config/skills/{name}/files/content'
 }
+
+export type GetAppsByAppIdAgentConfigSkillsByNameFilesContentErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAgentConfigSkillsByNameFilesContentError =
+  GetAppsByAppIdAgentConfigSkillsByNameFilesContentErrors[keyof GetAppsByAppIdAgentConfigSkillsByNameFilesContentErrors]
 
 export type GetAppsByAppIdAgentConfigSkillsByNameFilesContentResponses = {
   200: {
@@ -3703,6 +5251,15 @@ export type GetAppsByAppIdAgentConfigSkillsByNameFilesDownloadData = {
   url: '/apps/{app_id}/agent/config/skills/{name}/files/download'
 }
 
+export type GetAppsByAppIdAgentConfigSkillsByNameFilesDownloadErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAgentConfigSkillsByNameFilesDownloadError =
+  GetAppsByAppIdAgentConfigSkillsByNameFilesDownloadErrors[keyof GetAppsByAppIdAgentConfigSkillsByNameFilesDownloadErrors]
+
 export type GetAppsByAppIdAgentConfigSkillsByNameFilesDownloadResponses = {
   200: AgentConfigDownloadResponse
 }
@@ -3725,6 +5282,15 @@ export type GetAppsByAppIdAgentConfigSkillsByNameFilesPreviewData = {
   url: '/apps/{app_id}/agent/config/skills/{name}/files/preview'
 }
 
+export type GetAppsByAppIdAgentConfigSkillsByNameFilesPreviewErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAgentConfigSkillsByNameFilesPreviewError =
+  GetAppsByAppIdAgentConfigSkillsByNameFilesPreviewErrors[keyof GetAppsByAppIdAgentConfigSkillsByNameFilesPreviewErrors]
+
 export type GetAppsByAppIdAgentConfigSkillsByNameFilesPreviewResponses = {
   200: AgentConfigSkillFilePreviewResponse
 }
@@ -3746,6 +5312,15 @@ export type GetAppsByAppIdAgentConfigSkillsByNameInspectData = {
   url: '/apps/{app_id}/agent/config/skills/{name}/inspect'
 }
 
+export type GetAppsByAppIdAgentConfigSkillsByNameInspectErrors = {
+  400: AgentNotBoundError | ErrorResponse
+  404: AgentNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAgentConfigSkillsByNameInspectError =
+  GetAppsByAppIdAgentConfigSkillsByNameInspectErrors[keyof GetAppsByAppIdAgentConfigSkillsByNameInspectErrors]
+
 export type GetAppsByAppIdAgentConfigSkillsByNameInspectResponses = {
   200: AgentConfigSkillInspectResponse
 }
@@ -3766,8 +5341,13 @@ export type GetAppsByAppIdAgentLogsData = {
 }
 
 export type GetAppsByAppIdAgentLogsErrors = {
-  400: unknown
+  400: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdAgentLogsError =
+  GetAppsByAppIdAgentLogsErrors[keyof GetAppsByAppIdAgentLogsErrors]
 
 export type GetAppsByAppIdAgentLogsResponses = {
   200: AgentLogResponse
@@ -3787,8 +5367,12 @@ export type PostAppsByAppIdAnnotationReplyByActionData = {
 }
 
 export type PostAppsByAppIdAnnotationReplyByActionErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdAnnotationReplyByActionError =
+  PostAppsByAppIdAnnotationReplyByActionErrors[keyof PostAppsByAppIdAnnotationReplyByActionErrors]
 
 export type PostAppsByAppIdAnnotationReplyByActionResponses = {
   200: AnnotationJobStatusResponse
@@ -3809,8 +5393,12 @@ export type GetAppsByAppIdAnnotationReplyByActionStatusByJobIdData = {
 }
 
 export type GetAppsByAppIdAnnotationReplyByActionStatusByJobIdErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdAnnotationReplyByActionStatusByJobIdError =
+  GetAppsByAppIdAnnotationReplyByActionStatusByJobIdErrors[keyof GetAppsByAppIdAnnotationReplyByActionStatusByJobIdErrors]
 
 export type GetAppsByAppIdAnnotationReplyByActionStatusByJobIdResponses = {
   200: AnnotationJobStatusDetailResponse
@@ -3829,8 +5417,12 @@ export type GetAppsByAppIdAnnotationSettingData = {
 }
 
 export type GetAppsByAppIdAnnotationSettingErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdAnnotationSettingError =
+  GetAppsByAppIdAnnotationSettingErrors[keyof GetAppsByAppIdAnnotationSettingErrors]
 
 export type GetAppsByAppIdAnnotationSettingResponses = {
   200: AnnotationSettingResponse
@@ -3850,8 +5442,12 @@ export type PostAppsByAppIdAnnotationSettingsByAnnotationSettingIdData = {
 }
 
 export type PostAppsByAppIdAnnotationSettingsByAnnotationSettingIdErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdAnnotationSettingsByAnnotationSettingIdError =
+  PostAppsByAppIdAnnotationSettingsByAnnotationSettingIdErrors[keyof PostAppsByAppIdAnnotationSettingsByAnnotationSettingIdErrors]
 
 export type PostAppsByAppIdAnnotationSettingsByAnnotationSettingIdResponses = {
   200: AnnotationSettingResponse
@@ -3868,6 +5464,13 @@ export type DeleteAppsByAppIdAnnotationsData = {
   query?: never
   url: '/apps/{app_id}/annotations'
 }
+
+export type DeleteAppsByAppIdAnnotationsErrors = {
+  default: ErrorResponse
+}
+
+export type DeleteAppsByAppIdAnnotationsError =
+  DeleteAppsByAppIdAnnotationsErrors[keyof DeleteAppsByAppIdAnnotationsErrors]
 
 export type DeleteAppsByAppIdAnnotationsResponses = {
   204: void
@@ -3890,8 +5493,12 @@ export type GetAppsByAppIdAnnotationsData = {
 }
 
 export type GetAppsByAppIdAnnotationsErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdAnnotationsError =
+  GetAppsByAppIdAnnotationsErrors[keyof GetAppsByAppIdAnnotationsErrors]
 
 export type GetAppsByAppIdAnnotationsResponses = {
   200: AnnotationList
@@ -3910,8 +5517,12 @@ export type PostAppsByAppIdAnnotationsData = {
 }
 
 export type PostAppsByAppIdAnnotationsErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdAnnotationsError =
+  PostAppsByAppIdAnnotationsErrors[keyof PostAppsByAppIdAnnotationsErrors]
 
 export type PostAppsByAppIdAnnotationsResponses = {
   201: Annotation
@@ -3930,11 +5541,15 @@ export type PostAppsByAppIdAnnotationsBatchImportData = {
 }
 
 export type PostAppsByAppIdAnnotationsBatchImportErrors = {
-  400: unknown
-  403: unknown
-  413: unknown
-  429: unknown
+  400: NoFileUploadedError | TooManyFilesError | ErrorResponse
+  403: ErrorResponse
+  413: ErrorResponse
+  429: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdAnnotationsBatchImportError =
+  PostAppsByAppIdAnnotationsBatchImportErrors[keyof PostAppsByAppIdAnnotationsBatchImportErrors]
 
 export type PostAppsByAppIdAnnotationsBatchImportResponses = {
   200: AnnotationBatchImportResponse
@@ -3954,8 +5569,12 @@ export type GetAppsByAppIdAnnotationsBatchImportStatusByJobIdData = {
 }
 
 export type GetAppsByAppIdAnnotationsBatchImportStatusByJobIdErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdAnnotationsBatchImportStatusByJobIdError =
+  GetAppsByAppIdAnnotationsBatchImportStatusByJobIdErrors[keyof GetAppsByAppIdAnnotationsBatchImportStatusByJobIdErrors]
 
 export type GetAppsByAppIdAnnotationsBatchImportStatusByJobIdResponses = {
   200: AnnotationJobStatusDetailResponse
@@ -3972,6 +5591,14 @@ export type GetAppsByAppIdAnnotationsCountData = {
   query?: never
   url: '/apps/{app_id}/annotations/count'
 }
+
+export type GetAppsByAppIdAnnotationsCountErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdAnnotationsCountError =
+  GetAppsByAppIdAnnotationsCountErrors[keyof GetAppsByAppIdAnnotationsCountErrors]
 
 export type GetAppsByAppIdAnnotationsCountResponses = {
   200: AnnotationCountResponse
@@ -3990,8 +5617,12 @@ export type GetAppsByAppIdAnnotationsExportData = {
 }
 
 export type GetAppsByAppIdAnnotationsExportErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdAnnotationsExportError =
+  GetAppsByAppIdAnnotationsExportErrors[keyof GetAppsByAppIdAnnotationsExportErrors]
 
 export type GetAppsByAppIdAnnotationsExportResponses = {
   200: AnnotationExportList
@@ -4009,6 +5640,13 @@ export type DeleteAppsByAppIdAnnotationsByAnnotationIdData = {
   query?: never
   url: '/apps/{app_id}/annotations/{annotation_id}'
 }
+
+export type DeleteAppsByAppIdAnnotationsByAnnotationIdErrors = {
+  default: ErrorResponse
+}
+
+export type DeleteAppsByAppIdAnnotationsByAnnotationIdError =
+  DeleteAppsByAppIdAnnotationsByAnnotationIdErrors[keyof DeleteAppsByAppIdAnnotationsByAnnotationIdErrors]
 
 export type DeleteAppsByAppIdAnnotationsByAnnotationIdResponses = {
   204: void
@@ -4028,8 +5666,12 @@ export type PostAppsByAppIdAnnotationsByAnnotationIdData = {
 }
 
 export type PostAppsByAppIdAnnotationsByAnnotationIdErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdAnnotationsByAnnotationIdError =
+  PostAppsByAppIdAnnotationsByAnnotationIdErrors[keyof PostAppsByAppIdAnnotationsByAnnotationIdErrors]
 
 export type PostAppsByAppIdAnnotationsByAnnotationIdResponses = {
   200: Annotation
@@ -4053,8 +5695,12 @@ export type GetAppsByAppIdAnnotationsByAnnotationIdHitHistoriesData = {
 }
 
 export type GetAppsByAppIdAnnotationsByAnnotationIdHitHistoriesErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdAnnotationsByAnnotationIdHitHistoriesError =
+  GetAppsByAppIdAnnotationsByAnnotationIdHitHistoriesErrors[keyof GetAppsByAppIdAnnotationsByAnnotationIdHitHistoriesErrors]
 
 export type GetAppsByAppIdAnnotationsByAnnotationIdHitHistoriesResponses = {
   200: AnnotationHitHistoryList
@@ -4073,8 +5719,12 @@ export type PostAppsByAppIdApiEnableData = {
 }
 
 export type PostAppsByAppIdApiEnableErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdApiEnableError =
+  PostAppsByAppIdApiEnableErrors[keyof PostAppsByAppIdApiEnableErrors]
 
 export type PostAppsByAppIdApiEnableResponses = {
   200: AppDetail
@@ -4095,9 +5745,24 @@ export type PostAppsByAppIdAudioToTextData = {
 }
 
 export type PostAppsByAppIdAudioToTextErrors = {
-  400: unknown
-  413: unknown
+  400:
+    | AppUnavailableError
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | NoAudioUploadedError
+    | ProviderNotInitializeError
+    | ProviderNotSupportSpeechToTextError
+    | ProviderQuotaExceededError
+    | SpeechToTextDisabledError
+    | ErrorResponse
+  404: AgentVersionNotFoundError | AppNotFoundError | ErrorResponse
+  413: AudioTooLargeError | ErrorResponse
+  415: UnsupportedAudioTypeError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdAudioToTextError =
+  PostAppsByAppIdAudioToTextErrors[keyof PostAppsByAppIdAudioToTextErrors]
 
 export type PostAppsByAppIdAudioToTextResponses = {
   200: AudioTranscriptResponse
@@ -4124,8 +5789,13 @@ export type GetAppsByAppIdChatConversationsData = {
 }
 
 export type GetAppsByAppIdChatConversationsErrors = {
-  403: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdChatConversationsError =
+  GetAppsByAppIdChatConversationsErrors[keyof GetAppsByAppIdChatConversationsErrors]
 
 export type GetAppsByAppIdChatConversationsResponses = {
   200: ConversationWithSummaryPagination
@@ -4145,9 +5815,13 @@ export type DeleteAppsByAppIdChatConversationsByConversationIdData = {
 }
 
 export type DeleteAppsByAppIdChatConversationsByConversationIdErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type DeleteAppsByAppIdChatConversationsByConversationIdError =
+  DeleteAppsByAppIdChatConversationsByConversationIdErrors[keyof DeleteAppsByAppIdChatConversationsByConversationIdErrors]
 
 export type DeleteAppsByAppIdChatConversationsByConversationIdResponses = {
   204: void
@@ -4167,9 +5841,13 @@ export type GetAppsByAppIdChatConversationsByConversationIdData = {
 }
 
 export type GetAppsByAppIdChatConversationsByConversationIdErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdChatConversationsByConversationIdError =
+  GetAppsByAppIdChatConversationsByConversationIdErrors[keyof GetAppsByAppIdChatConversationsByConversationIdErrors]
 
 export type GetAppsByAppIdChatConversationsByConversationIdResponses = {
   200: ConversationDetail
@@ -4192,8 +5870,12 @@ export type GetAppsByAppIdChatMessagesData = {
 }
 
 export type GetAppsByAppIdChatMessagesErrors = {
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdChatMessagesError =
+  GetAppsByAppIdChatMessagesErrors[keyof GetAppsByAppIdChatMessagesErrors]
 
 export type GetAppsByAppIdChatMessagesResponses = {
   200: MessageInfiniteScrollPaginationResponse
@@ -4213,8 +5895,22 @@ export type GetAppsByAppIdChatMessagesByMessageIdSuggestedQuestionsData = {
 }
 
 export type GetAppsByAppIdChatMessagesByMessageIdSuggestedQuestionsErrors = {
-  404: unknown
+  400:
+    | AppUnavailableError
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | ProviderNotInitializeError
+    | ProviderQuotaExceededError
+    | ErrorResponse
+  401: ErrorResponse
+  403: AppSuggestedQuestionsAfterAnswerDisabledError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdChatMessagesByMessageIdSuggestedQuestionsError =
+  GetAppsByAppIdChatMessagesByMessageIdSuggestedQuestionsErrors[keyof GetAppsByAppIdChatMessagesByMessageIdSuggestedQuestionsErrors]
 
 export type GetAppsByAppIdChatMessagesByMessageIdSuggestedQuestionsResponses = {
   200: SuggestedQuestionsResponse
@@ -4232,6 +5928,14 @@ export type PostAppsByAppIdChatMessagesByTaskIdStopData = {
   query?: never
   url: '/apps/{app_id}/chat-messages/{task_id}/stop'
 }
+
+export type PostAppsByAppIdChatMessagesByTaskIdStopErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdChatMessagesByTaskIdStopError =
+  PostAppsByAppIdChatMessagesByTaskIdStopErrors[keyof PostAppsByAppIdChatMessagesByTaskIdStopErrors]
 
 export type PostAppsByAppIdChatMessagesByTaskIdStopResponses = {
   200: SimpleResultResponse
@@ -4257,8 +5961,13 @@ export type GetAppsByAppIdCompletionConversationsData = {
 }
 
 export type GetAppsByAppIdCompletionConversationsErrors = {
-  403: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdCompletionConversationsError =
+  GetAppsByAppIdCompletionConversationsErrors[keyof GetAppsByAppIdCompletionConversationsErrors]
 
 export type GetAppsByAppIdCompletionConversationsResponses = {
   200: ConversationPagination
@@ -4278,9 +5987,13 @@ export type DeleteAppsByAppIdCompletionConversationsByConversationIdData = {
 }
 
 export type DeleteAppsByAppIdCompletionConversationsByConversationIdErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type DeleteAppsByAppIdCompletionConversationsByConversationIdError =
+  DeleteAppsByAppIdCompletionConversationsByConversationIdErrors[keyof DeleteAppsByAppIdCompletionConversationsByConversationIdErrors]
 
 export type DeleteAppsByAppIdCompletionConversationsByConversationIdResponses = {
   204: void
@@ -4300,9 +6013,13 @@ export type GetAppsByAppIdCompletionConversationsByConversationIdData = {
 }
 
 export type GetAppsByAppIdCompletionConversationsByConversationIdErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdCompletionConversationsByConversationIdError =
+  GetAppsByAppIdCompletionConversationsByConversationIdErrors[keyof GetAppsByAppIdCompletionConversationsByConversationIdErrors]
 
 export type GetAppsByAppIdCompletionConversationsByConversationIdResponses = {
   200: ConversationMessageDetail
@@ -4321,9 +6038,19 @@ export type PostAppsByAppIdCompletionMessagesData = {
 }
 
 export type PostAppsByAppIdCompletionMessagesErrors = {
-  400: unknown
-  404: unknown
+  400:
+    | AppUnavailableError
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | ProviderNotInitializeError
+    | ProviderQuotaExceededError
+    | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdCompletionMessagesError =
+  PostAppsByAppIdCompletionMessagesErrors[keyof PostAppsByAppIdCompletionMessagesErrors]
 
 export type PostAppsByAppIdCompletionMessagesResponses = {
   200: {
@@ -4344,6 +6071,14 @@ export type PostAppsByAppIdCompletionMessagesByTaskIdStopData = {
   url: '/apps/{app_id}/completion-messages/{task_id}/stop'
 }
 
+export type PostAppsByAppIdCompletionMessagesByTaskIdStopErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdCompletionMessagesByTaskIdStopError =
+  PostAppsByAppIdCompletionMessagesByTaskIdStopErrors[keyof PostAppsByAppIdCompletionMessagesByTaskIdStopErrors]
+
 export type PostAppsByAppIdCompletionMessagesByTaskIdStopResponses = {
   200: SimpleResultResponse
 }
@@ -4362,6 +6097,14 @@ export type GetAppsByAppIdConversationVariablesData = {
   url: '/apps/{app_id}/conversation-variables'
 }
 
+export type GetAppsByAppIdConversationVariablesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdConversationVariablesError =
+  GetAppsByAppIdConversationVariablesErrors[keyof GetAppsByAppIdConversationVariablesErrors]
+
 export type GetAppsByAppIdConversationVariablesResponses = {
   200: PaginatedConversationVariableResponse
 }
@@ -4379,9 +6122,14 @@ export type PostAppsByAppIdConvertToWorkflowData = {
 }
 
 export type PostAppsByAppIdConvertToWorkflowErrors = {
-  400: unknown
-  403: unknown
+  400: ErrorResponse
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdConvertToWorkflowError =
+  PostAppsByAppIdConvertToWorkflowErrors[keyof PostAppsByAppIdConvertToWorkflowErrors]
 
 export type PostAppsByAppIdConvertToWorkflowResponses = {
   200: NewAppResponse
@@ -4400,8 +6148,12 @@ export type PostAppsByAppIdCopyData = {
 }
 
 export type PostAppsByAppIdCopyErrors = {
-  403: unknown
+  400: AppImportResponse | ErrorResponse
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdCopyError = PostAppsByAppIdCopyErrors[keyof PostAppsByAppIdCopyErrors]
 
 export type PostAppsByAppIdCopyResponses = {
   201: AppDetailWithSite
@@ -4411,24 +6163,54 @@ export type PostAppsByAppIdCopyResponses = {
 export type PostAppsByAppIdCopyResponse =
   PostAppsByAppIdCopyResponses[keyof PostAppsByAppIdCopyResponses]
 
+export type PostAppsByAppIdCopyToTenantData = {
+  body: AppCopyToTenantPayload
+  path: {
+    app_id: string
+  }
+  query?: never
+  url: '/apps/{app_id}/copy-to-tenant'
+}
+
+export type PostAppsByAppIdCopyToTenantErrors = {
+  403: ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdCopyToTenantError =
+  PostAppsByAppIdCopyToTenantErrors[keyof PostAppsByAppIdCopyToTenantErrors]
+
+export type PostAppsByAppIdCopyToTenantResponses = {
+  201: AppDetailWithSite
+}
+
+export type PostAppsByAppIdCopyToTenantResponse =
+  PostAppsByAppIdCopyToTenantResponses[keyof PostAppsByAppIdCopyToTenantResponses]
+
 export type GetAppsByAppIdExportData = {
   body?: never
   path: {
     app_id: string
   }
   query?: {
+    format?: 'ifpkg' | 'yaml'
     include_secret?: boolean
+    version_id?: string
     workflow_id?: string
   }
   url: '/apps/{app_id}/export'
 }
 
 export type GetAppsByAppIdExportErrors = {
-  403: unknown
+  403: ErrorResponse
+  500: RosterAgentPackageExportFailedError | ErrorResponse
+  default: ErrorResponse
 }
 
+export type GetAppsByAppIdExportError = GetAppsByAppIdExportErrors[keyof GetAppsByAppIdExportErrors]
+
 export type GetAppsByAppIdExportResponses = {
-  200: AppExportResponse
+  200: AppExportResponse | Blob | File
 }
 
 export type GetAppsByAppIdExportResponse =
@@ -4444,9 +6226,12 @@ export type PostAppsByAppIdFeedbacksData = {
 }
 
 export type PostAppsByAppIdFeedbacksErrors = {
-  403: unknown
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdFeedbacksError =
+  PostAppsByAppIdFeedbacksErrors[keyof PostAppsByAppIdFeedbacksErrors]
 
 export type PostAppsByAppIdFeedbacksResponses = {
   200: SimpleResultResponse
@@ -4454,34 +6239,6 @@ export type PostAppsByAppIdFeedbacksResponses = {
 
 export type PostAppsByAppIdFeedbacksResponse =
   PostAppsByAppIdFeedbacksResponses[keyof PostAppsByAppIdFeedbacksResponses]
-
-export type GetAppsByAppIdFeedbacksExportData = {
-  body?: never
-  path: {
-    app_id: string
-  }
-  query?: {
-    end_date?: string
-    format?: 'csv' | 'json'
-    from_source?: 'admin' | 'user'
-    has_comment?: boolean
-    rating?: 'dislike' | 'like'
-    start_date?: string
-  }
-  url: '/apps/{app_id}/feedbacks/export'
-}
-
-export type GetAppsByAppIdFeedbacksExportErrors = {
-  400: unknown
-  500: unknown
-}
-
-export type GetAppsByAppIdFeedbacksExportResponses = {
-  200: TextFileResponse
-}
-
-export type GetAppsByAppIdFeedbacksExportResponse =
-  GetAppsByAppIdFeedbacksExportResponses[keyof GetAppsByAppIdFeedbacksExportResponses]
 
 export type PostAppsByAppIdIconData = {
   body: AppIconPayload
@@ -4493,8 +6250,11 @@ export type PostAppsByAppIdIconData = {
 }
 
 export type PostAppsByAppIdIconErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdIconError = PostAppsByAppIdIconErrors[keyof PostAppsByAppIdIconErrors]
 
 export type PostAppsByAppIdIconResponses = {
   200: AppDetail
@@ -4514,8 +6274,12 @@ export type GetAppsByAppIdMessagesByMessageIdData = {
 }
 
 export type GetAppsByAppIdMessagesByMessageIdErrors = {
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdMessagesByMessageIdError =
+  GetAppsByAppIdMessagesByMessageIdErrors[keyof GetAppsByAppIdMessagesByMessageIdErrors]
 
 export type GetAppsByAppIdMessagesByMessageIdResponses = {
   200: MessageDetailResponse
@@ -4525,7 +6289,7 @@ export type GetAppsByAppIdMessagesByMessageIdResponse =
   GetAppsByAppIdMessagesByMessageIdResponses[keyof GetAppsByAppIdMessagesByMessageIdResponses]
 
 export type PostAppsByAppIdModelConfigData = {
-  body: ModelConfigRequest
+  body: AppModelConfigPayload
   path: {
     app_id: string
   }
@@ -4534,9 +6298,13 @@ export type PostAppsByAppIdModelConfigData = {
 }
 
 export type PostAppsByAppIdModelConfigErrors = {
-  400: unknown
-  404: unknown
+  400: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdModelConfigError =
+  PostAppsByAppIdModelConfigErrors[keyof PostAppsByAppIdModelConfigErrors]
 
 export type PostAppsByAppIdModelConfigResponses = {
   200: SimpleResultResponse
@@ -4554,6 +6322,12 @@ export type PostAppsByAppIdNameData = {
   url: '/apps/{app_id}/name'
 }
 
+export type PostAppsByAppIdNameErrors = {
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdNameError = PostAppsByAppIdNameErrors[keyof PostAppsByAppIdNameErrors]
+
 export type PostAppsByAppIdNameResponses = {
   200: AppDetail
 }
@@ -4570,6 +6344,13 @@ export type PostAppsByAppIdPublishToCreatorsPlatformData = {
   url: '/apps/{app_id}/publish-to-creators-platform'
 }
 
+export type PostAppsByAppIdPublishToCreatorsPlatformErrors = {
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdPublishToCreatorsPlatformError =
+  PostAppsByAppIdPublishToCreatorsPlatformErrors[keyof PostAppsByAppIdPublishToCreatorsPlatformErrors]
+
 export type PostAppsByAppIdPublishToCreatorsPlatformResponses = {
   200: RedirectUrlResponse
 }
@@ -4585,6 +6366,13 @@ export type GetAppsByAppIdServerData = {
   query?: never
   url: '/apps/{app_id}/server'
 }
+
+export type GetAppsByAppIdServerErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdServerError = GetAppsByAppIdServerErrors[keyof GetAppsByAppIdServerErrors]
 
 export type GetAppsByAppIdServerResponses = {
   200: AppMcpServerResponse
@@ -4603,8 +6391,14 @@ export type PostAppsByAppIdServerData = {
 }
 
 export type PostAppsByAppIdServerErrors = {
-  403: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  409: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdServerError =
+  PostAppsByAppIdServerErrors[keyof PostAppsByAppIdServerErrors]
 
 export type PostAppsByAppIdServerResponses = {
   201: AppMcpServerResponse
@@ -4623,9 +6417,12 @@ export type PutAppsByAppIdServerData = {
 }
 
 export type PutAppsByAppIdServerErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PutAppsByAppIdServerError = PutAppsByAppIdServerErrors[keyof PutAppsByAppIdServerErrors]
 
 export type PutAppsByAppIdServerResponses = {
   200: AppMcpServerResponse
@@ -4644,9 +6441,13 @@ export type PostAppsByAppIdServerRefreshData = {
 }
 
 export type PostAppsByAppIdServerRefreshErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdServerRefreshError =
+  PostAppsByAppIdServerRefreshErrors[keyof PostAppsByAppIdServerRefreshErrors]
 
 export type PostAppsByAppIdServerRefreshResponses = {
   200: AppMcpServerResponse
@@ -4665,9 +6466,12 @@ export type PostAppsByAppIdSiteData = {
 }
 
 export type PostAppsByAppIdSiteErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdSiteError = PostAppsByAppIdSiteErrors[keyof PostAppsByAppIdSiteErrors]
 
 export type PostAppsByAppIdSiteResponses = {
   200: AppSiteResponse
@@ -4686,8 +6490,12 @@ export type PostAppsByAppIdSiteEnableData = {
 }
 
 export type PostAppsByAppIdSiteEnableErrors = {
-  403: unknown
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdSiteEnableError =
+  PostAppsByAppIdSiteEnableErrors[keyof PostAppsByAppIdSiteEnableErrors]
 
 export type PostAppsByAppIdSiteEnableResponses = {
   200: AppDetail
@@ -4706,9 +6514,13 @@ export type PostAppsByAppIdSiteAccessTokenResetData = {
 }
 
 export type PostAppsByAppIdSiteAccessTokenResetErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdSiteAccessTokenResetError =
+  PostAppsByAppIdSiteAccessTokenResetErrors[keyof PostAppsByAppIdSiteAccessTokenResetErrors]
 
 export type PostAppsByAppIdSiteAccessTokenResetResponses = {
   200: AppSiteResponse
@@ -4727,8 +6539,12 @@ export type DeleteAppsByAppIdStarData = {
 }
 
 export type DeleteAppsByAppIdStarErrors = {
-  404: unknown
+  404: ErrorResponse
+  default: ErrorResponse
 }
+
+export type DeleteAppsByAppIdStarError =
+  DeleteAppsByAppIdStarErrors[keyof DeleteAppsByAppIdStarErrors]
 
 export type DeleteAppsByAppIdStarResponses = {
   200: SimpleResultResponse
@@ -4747,8 +6563,11 @@ export type PostAppsByAppIdStarData = {
 }
 
 export type PostAppsByAppIdStarErrors = {
-  404: unknown
+  404: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdStarError = PostAppsByAppIdStarErrors[keyof PostAppsByAppIdStarErrors]
 
 export type PostAppsByAppIdStarResponses = {
   200: SimpleResultResponse
@@ -4769,6 +6588,14 @@ export type GetAppsByAppIdStatisticsAverageResponseTimeData = {
   url: '/apps/{app_id}/statistics/average-response-time'
 }
 
+export type GetAppsByAppIdStatisticsAverageResponseTimeErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdStatisticsAverageResponseTimeError =
+  GetAppsByAppIdStatisticsAverageResponseTimeErrors[keyof GetAppsByAppIdStatisticsAverageResponseTimeErrors]
+
 export type GetAppsByAppIdStatisticsAverageResponseTimeResponses = {
   200: AverageResponseTimeStatisticResponse
 }
@@ -4787,6 +6614,14 @@ export type GetAppsByAppIdStatisticsAverageSessionInteractionsData = {
   }
   url: '/apps/{app_id}/statistics/average-session-interactions'
 }
+
+export type GetAppsByAppIdStatisticsAverageSessionInteractionsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdStatisticsAverageSessionInteractionsError =
+  GetAppsByAppIdStatisticsAverageSessionInteractionsErrors[keyof GetAppsByAppIdStatisticsAverageSessionInteractionsErrors]
 
 export type GetAppsByAppIdStatisticsAverageSessionInteractionsResponses = {
   200: AverageSessionInteractionStatisticResponse
@@ -4807,6 +6642,14 @@ export type GetAppsByAppIdStatisticsDailyConversationsData = {
   url: '/apps/{app_id}/statistics/daily-conversations'
 }
 
+export type GetAppsByAppIdStatisticsDailyConversationsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdStatisticsDailyConversationsError =
+  GetAppsByAppIdStatisticsDailyConversationsErrors[keyof GetAppsByAppIdStatisticsDailyConversationsErrors]
+
 export type GetAppsByAppIdStatisticsDailyConversationsResponses = {
   200: DailyConversationStatisticResponse
 }
@@ -4825,6 +6668,14 @@ export type GetAppsByAppIdStatisticsDailyEndUsersData = {
   }
   url: '/apps/{app_id}/statistics/daily-end-users'
 }
+
+export type GetAppsByAppIdStatisticsDailyEndUsersErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdStatisticsDailyEndUsersError =
+  GetAppsByAppIdStatisticsDailyEndUsersErrors[keyof GetAppsByAppIdStatisticsDailyEndUsersErrors]
 
 export type GetAppsByAppIdStatisticsDailyEndUsersResponses = {
   200: DailyTerminalStatisticResponse
@@ -4845,6 +6696,14 @@ export type GetAppsByAppIdStatisticsDailyMessagesData = {
   url: '/apps/{app_id}/statistics/daily-messages'
 }
 
+export type GetAppsByAppIdStatisticsDailyMessagesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdStatisticsDailyMessagesError =
+  GetAppsByAppIdStatisticsDailyMessagesErrors[keyof GetAppsByAppIdStatisticsDailyMessagesErrors]
+
 export type GetAppsByAppIdStatisticsDailyMessagesResponses = {
   200: DailyMessageStatisticResponse
 }
@@ -4863,6 +6722,14 @@ export type GetAppsByAppIdStatisticsTokenCostsData = {
   }
   url: '/apps/{app_id}/statistics/token-costs'
 }
+
+export type GetAppsByAppIdStatisticsTokenCostsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdStatisticsTokenCostsError =
+  GetAppsByAppIdStatisticsTokenCostsErrors[keyof GetAppsByAppIdStatisticsTokenCostsErrors]
 
 export type GetAppsByAppIdStatisticsTokenCostsResponses = {
   200: DailyTokenCostStatisticResponse
@@ -4883,6 +6750,14 @@ export type GetAppsByAppIdStatisticsTokensPerSecondData = {
   url: '/apps/{app_id}/statistics/tokens-per-second'
 }
 
+export type GetAppsByAppIdStatisticsTokensPerSecondErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdStatisticsTokensPerSecondError =
+  GetAppsByAppIdStatisticsTokensPerSecondErrors[keyof GetAppsByAppIdStatisticsTokensPerSecondErrors]
+
 export type GetAppsByAppIdStatisticsTokensPerSecondResponses = {
   200: TokensPerSecondStatisticResponse
 }
@@ -4902,6 +6777,14 @@ export type GetAppsByAppIdStatisticsUserSatisfactionRateData = {
   url: '/apps/{app_id}/statistics/user-satisfaction-rate'
 }
 
+export type GetAppsByAppIdStatisticsUserSatisfactionRateErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdStatisticsUserSatisfactionRateError =
+  GetAppsByAppIdStatisticsUserSatisfactionRateErrors[keyof GetAppsByAppIdStatisticsUserSatisfactionRateErrors]
+
 export type GetAppsByAppIdStatisticsUserSatisfactionRateResponses = {
   200: UserSatisfactionRateStatisticResponse
 }
@@ -4919,8 +6802,20 @@ export type PostAppsByAppIdTextToAudioData = {
 }
 
 export type PostAppsByAppIdTextToAudioErrors = {
-  400: unknown
+  400:
+    | AppUnavailableError
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | ProviderNotInitializeError
+    | ProviderNotSupportTextToSpeechError
+    | ProviderQuotaExceededError
+    | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdTextToAudioError =
+  PostAppsByAppIdTextToAudioErrors[keyof PostAppsByAppIdTextToAudioErrors]
 
 export type PostAppsByAppIdTextToAudioResponses = {
   200: {
@@ -4943,8 +6838,18 @@ export type GetAppsByAppIdTextToAudioVoicesData = {
 }
 
 export type GetAppsByAppIdTextToAudioVoicesErrors = {
-  400: unknown
+  400:
+    | CompletionRequestError
+    | ModelCurrentlyNotSupportError
+    | ProviderNotInitializeError
+    | ProviderQuotaExceededError
+    | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdTextToAudioVoicesError =
+  GetAppsByAppIdTextToAudioVoicesErrors[keyof GetAppsByAppIdTextToAudioVoicesErrors]
 
 export type GetAppsByAppIdTextToAudioVoicesResponses = {
   200: TextToSpeechVoiceListResponse
@@ -4961,6 +6866,12 @@ export type GetAppsByAppIdTraceData = {
   query?: never
   url: '/apps/{app_id}/trace'
 }
+
+export type GetAppsByAppIdTraceErrors = {
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdTraceError = GetAppsByAppIdTraceErrors[keyof GetAppsByAppIdTraceErrors]
 
 export type GetAppsByAppIdTraceResponses = {
   200: AppTraceResponse
@@ -4979,8 +6890,12 @@ export type PostAppsByAppIdTraceData = {
 }
 
 export type PostAppsByAppIdTraceErrors = {
-  403: unknown
+  400: TracingProviderUnavailableError | ErrorResponse
+  403: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdTraceError = PostAppsByAppIdTraceErrors[keyof PostAppsByAppIdTraceErrors]
 
 export type PostAppsByAppIdTraceResponses = {
   200: SimpleResultResponse
@@ -5001,9 +6916,15 @@ export type DeleteAppsByAppIdTraceConfigData = {
 }
 
 export type DeleteAppsByAppIdTraceConfigErrors = {
-  400: unknown
-  403: unknown
+  400: UnsupportedTracingProviderError | ErrorResponse
+  403: ErrorResponse
+  404: AppNotFoundError | TraceConfigNotFoundError | ErrorResponse
+  500: TracingConfigProcessingFailedError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type DeleteAppsByAppIdTraceConfigError =
+  DeleteAppsByAppIdTraceConfigErrors[keyof DeleteAppsByAppIdTraceConfigErrors]
 
 export type DeleteAppsByAppIdTraceConfigResponses = {
   204: void
@@ -5024,8 +6945,14 @@ export type GetAppsByAppIdTraceConfigData = {
 }
 
 export type GetAppsByAppIdTraceConfigErrors = {
-  400: unknown
+  400: TracingProviderUnavailableError | UnsupportedTracingProviderError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  500: TracingConfigProcessingFailedError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdTraceConfigError =
+  GetAppsByAppIdTraceConfigErrors[keyof GetAppsByAppIdTraceConfigErrors]
 
 export type GetAppsByAppIdTraceConfigResponses = {
   200: TraceAppConfigResponse
@@ -5044,9 +6971,20 @@ export type PatchAppsByAppIdTraceConfigData = {
 }
 
 export type PatchAppsByAppIdTraceConfigErrors = {
-  400: unknown
-  403: unknown
+  400:
+    | InvalidTracingConfigError
+    | TracingConfigVerificationFailedError
+    | TracingProviderUnavailableError
+    | UnsupportedTracingProviderError
+    | ErrorResponse
+  403: ErrorResponse
+  404: AppNotFoundError | TraceConfigNotFoundError | ErrorResponse
+  500: TracingConfigProcessingFailedError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PatchAppsByAppIdTraceConfigError =
+  PatchAppsByAppIdTraceConfigErrors[keyof PatchAppsByAppIdTraceConfigErrors]
 
 export type PatchAppsByAppIdTraceConfigResponses = {
   200: TraceAppConfigResponse
@@ -5065,9 +7003,21 @@ export type PostAppsByAppIdTraceConfigData = {
 }
 
 export type PostAppsByAppIdTraceConfigErrors = {
-  400: unknown
-  403: unknown
+  400:
+    | InvalidTracingConfigError
+    | TracingConfigVerificationFailedError
+    | TracingProviderUnavailableError
+    | UnsupportedTracingProviderError
+    | ErrorResponse
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  409: TraceConfigAlreadyExistsError | ErrorResponse
+  500: TracingConfigProcessingFailedError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdTraceConfigError =
+  PostAppsByAppIdTraceConfigErrors[keyof PostAppsByAppIdTraceConfigErrors]
 
 export type PostAppsByAppIdTraceConfigResponses = {
   201: TraceAppConfigResponse
@@ -5085,6 +7035,14 @@ export type PostAppsByAppIdTriggerEnableData = {
   url: '/apps/{app_id}/trigger-enable'
 }
 
+export type PostAppsByAppIdTriggerEnableErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdTriggerEnableError =
+  PostAppsByAppIdTriggerEnableErrors[keyof PostAppsByAppIdTriggerEnableErrors]
+
 export type PostAppsByAppIdTriggerEnableResponses = {
   200: WorkflowTriggerResponse
 }
@@ -5100,6 +7058,14 @@ export type GetAppsByAppIdTriggersData = {
   query?: never
   url: '/apps/{app_id}/triggers'
 }
+
+export type GetAppsByAppIdTriggersErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdTriggersError =
+  GetAppsByAppIdTriggersErrors[keyof GetAppsByAppIdTriggersErrors]
 
 export type GetAppsByAppIdTriggersResponses = {
   200: WorkflowTriggerListResponse
@@ -5134,6 +7100,14 @@ export type GetAppsByAppIdWorkflowAppLogsData = {
   url: '/apps/{app_id}/workflow-app-logs'
 }
 
+export type GetAppsByAppIdWorkflowAppLogsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowAppLogsError =
+  GetAppsByAppIdWorkflowAppLogsErrors[keyof GetAppsByAppIdWorkflowAppLogsErrors]
+
 export type GetAppsByAppIdWorkflowAppLogsResponses = {
   200: WorkflowAppLogPaginationResponse
 }
@@ -5155,6 +7129,14 @@ export type GetAppsByAppIdWorkflowRunsData = {
   url: '/apps/{app_id}/workflow-runs'
 }
 
+export type GetAppsByAppIdWorkflowRunsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowRunsError =
+  GetAppsByAppIdWorkflowRunsErrors[keyof GetAppsByAppIdWorkflowRunsErrors]
+
 export type GetAppsByAppIdWorkflowRunsResponses = {
   200: WorkflowRunPaginationResponse
 }
@@ -5175,6 +7157,14 @@ export type GetAppsByAppIdWorkflowRunsCountData = {
   url: '/apps/{app_id}/workflow-runs/count'
 }
 
+export type GetAppsByAppIdWorkflowRunsCountErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowRunsCountError =
+  GetAppsByAppIdWorkflowRunsCountErrors[keyof GetAppsByAppIdWorkflowRunsCountErrors]
+
 export type GetAppsByAppIdWorkflowRunsCountResponses = {
   200: WorkflowRunCountResponse
 }
@@ -5193,9 +7183,13 @@ export type PostAppsByAppIdWorkflowRunsTasksByTaskIdStopData = {
 }
 
 export type PostAppsByAppIdWorkflowRunsTasksByTaskIdStopErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdWorkflowRunsTasksByTaskIdStopError =
+  PostAppsByAppIdWorkflowRunsTasksByTaskIdStopErrors[keyof PostAppsByAppIdWorkflowRunsTasksByTaskIdStopErrors]
 
 export type PostAppsByAppIdWorkflowRunsTasksByTaskIdStopResponses = {
   200: SimpleResultResponse
@@ -5215,8 +7209,12 @@ export type GetAppsByAppIdWorkflowRunsByRunIdData = {
 }
 
 export type GetAppsByAppIdWorkflowRunsByRunIdErrors = {
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowRunsByRunIdError =
+  GetAppsByAppIdWorkflowRunsByRunIdErrors[keyof GetAppsByAppIdWorkflowRunsByRunIdErrors]
 
 export type GetAppsByAppIdWorkflowRunsByRunIdResponses = {
   200: WorkflowRunDetailResponse
@@ -5236,8 +7234,12 @@ export type GetAppsByAppIdWorkflowRunsByRunIdNodeExecutionsData = {
 }
 
 export type GetAppsByAppIdWorkflowRunsByRunIdNodeExecutionsErrors = {
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowRunsByRunIdNodeExecutionsError =
+  GetAppsByAppIdWorkflowRunsByRunIdNodeExecutionsErrors[keyof GetAppsByAppIdWorkflowRunsByRunIdNodeExecutionsErrors]
 
 export type GetAppsByAppIdWorkflowRunsByRunIdNodeExecutionsResponses = {
   200: WorkflowRunNodeExecutionListResponse
@@ -5260,6 +7262,16 @@ export type GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFi
   url: '/apps/{app_id}/workflow-runs/{workflow_run_id}/agent-nodes/{node_id}/sandbox/files'
 }
 
+export type GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesErrors = {
+  404: AppNotFoundError | NoActiveBindingError | ErrorResponse
+  502: AgentBackendUnreachableError | ErrorResponse
+  503: InspectorUnavailableError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesError =
+  GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesErrors[keyof GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesErrors]
+
 export type GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesResponses = {
   200: SandboxListResponse
 }
@@ -5277,6 +7289,17 @@ export type PostAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxF
   query?: never
   url: '/apps/{app_id}/workflow-runs/{workflow_run_id}/agent-nodes/{node_id}/sandbox/files/download'
 }
+
+export type PostAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesDownloadErrors =
+  {
+    404: AppNotFoundError | NoActiveBindingError | ErrorResponse
+    502: AgentBackendUnreachableError | BindingFileDownloadUnavailableError | ErrorResponse
+    503: InspectorUnavailableError | ErrorResponse
+    default: ErrorResponse
+  }
+
+export type PostAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesDownloadError =
+  PostAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesDownloadErrors[keyof PostAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesDownloadErrors]
 
 export type PostAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesDownloadResponses =
   {
@@ -5300,6 +7323,16 @@ export type GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFi
   url: '/apps/{app_id}/workflow-runs/{workflow_run_id}/agent-nodes/{node_id}/sandbox/files/read'
 }
 
+export type GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesReadErrors = {
+  404: AppNotFoundError | NoActiveBindingError | ErrorResponse
+  502: AgentBackendUnreachableError | ErrorResponse
+  503: InspectorUnavailableError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesReadError =
+  GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesReadErrors[keyof GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesReadErrors]
+
 export type GetAppsByAppIdWorkflowRunsByWorkflowRunIdAgentNodesByNodeIdSandboxFilesReadResponses = {
   200: SandboxReadResponse
 }
@@ -5315,6 +7348,15 @@ export type GetAppsByAppIdWorkflowCommentsData = {
   query?: never
   url: '/apps/{app_id}/workflow/comments'
 }
+
+export type GetAppsByAppIdWorkflowCommentsErrors = {
+  403: ForbiddenError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowCommentsError =
+  GetAppsByAppIdWorkflowCommentsErrors[keyof GetAppsByAppIdWorkflowCommentsErrors]
 
 export type GetAppsByAppIdWorkflowCommentsResponses = {
   200: WorkflowCommentBasicList
@@ -5332,6 +7374,15 @@ export type PostAppsByAppIdWorkflowCommentsData = {
   url: '/apps/{app_id}/workflow/comments'
 }
 
+export type PostAppsByAppIdWorkflowCommentsErrors = {
+  403: ForbiddenError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowCommentsError =
+  PostAppsByAppIdWorkflowCommentsErrors[keyof PostAppsByAppIdWorkflowCommentsErrors]
+
 export type PostAppsByAppIdWorkflowCommentsResponses = {
   201: WorkflowCommentCreate
 }
@@ -5347,6 +7398,15 @@ export type GetAppsByAppIdWorkflowCommentsMentionUsersData = {
   query?: never
   url: '/apps/{app_id}/workflow/comments/mention-users'
 }
+
+export type GetAppsByAppIdWorkflowCommentsMentionUsersErrors = {
+  403: ForbiddenError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowCommentsMentionUsersError =
+  GetAppsByAppIdWorkflowCommentsMentionUsersErrors[keyof GetAppsByAppIdWorkflowCommentsMentionUsersErrors]
 
 export type GetAppsByAppIdWorkflowCommentsMentionUsersResponses = {
   200: WorkflowCommentMentionUsersPayload
@@ -5365,6 +7425,15 @@ export type DeleteAppsByAppIdWorkflowCommentsByCommentIdData = {
   url: '/apps/{app_id}/workflow/comments/{comment_id}'
 }
 
+export type DeleteAppsByAppIdWorkflowCommentsByCommentIdErrors = {
+  403: ForbiddenError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type DeleteAppsByAppIdWorkflowCommentsByCommentIdError =
+  DeleteAppsByAppIdWorkflowCommentsByCommentIdErrors[keyof DeleteAppsByAppIdWorkflowCommentsByCommentIdErrors]
+
 export type DeleteAppsByAppIdWorkflowCommentsByCommentIdResponses = {
   204: void
 }
@@ -5381,6 +7450,15 @@ export type GetAppsByAppIdWorkflowCommentsByCommentIdData = {
   query?: never
   url: '/apps/{app_id}/workflow/comments/{comment_id}'
 }
+
+export type GetAppsByAppIdWorkflowCommentsByCommentIdErrors = {
+  403: ForbiddenError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowCommentsByCommentIdError =
+  GetAppsByAppIdWorkflowCommentsByCommentIdErrors[keyof GetAppsByAppIdWorkflowCommentsByCommentIdErrors]
 
 export type GetAppsByAppIdWorkflowCommentsByCommentIdResponses = {
   200: WorkflowCommentDetail
@@ -5399,6 +7477,15 @@ export type PutAppsByAppIdWorkflowCommentsByCommentIdData = {
   url: '/apps/{app_id}/workflow/comments/{comment_id}'
 }
 
+export type PutAppsByAppIdWorkflowCommentsByCommentIdErrors = {
+  403: ForbiddenError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PutAppsByAppIdWorkflowCommentsByCommentIdError =
+  PutAppsByAppIdWorkflowCommentsByCommentIdErrors[keyof PutAppsByAppIdWorkflowCommentsByCommentIdErrors]
+
 export type PutAppsByAppIdWorkflowCommentsByCommentIdResponses = {
   200: WorkflowCommentUpdate
 }
@@ -5415,6 +7502,15 @@ export type PostAppsByAppIdWorkflowCommentsByCommentIdRepliesData = {
   query?: never
   url: '/apps/{app_id}/workflow/comments/{comment_id}/replies'
 }
+
+export type PostAppsByAppIdWorkflowCommentsByCommentIdRepliesErrors = {
+  403: ForbiddenError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowCommentsByCommentIdRepliesError =
+  PostAppsByAppIdWorkflowCommentsByCommentIdRepliesErrors[keyof PostAppsByAppIdWorkflowCommentsByCommentIdRepliesErrors]
 
 export type PostAppsByAppIdWorkflowCommentsByCommentIdRepliesResponses = {
   201: WorkflowCommentReplyCreate
@@ -5434,6 +7530,15 @@ export type DeleteAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdData = {
   url: '/apps/{app_id}/workflow/comments/{comment_id}/replies/{reply_id}'
 }
 
+export type DeleteAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdErrors = {
+  403: ForbiddenError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type DeleteAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdError =
+  DeleteAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdErrors[keyof DeleteAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdErrors]
+
 export type DeleteAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdResponses = {
   204: void
 }
@@ -5452,6 +7557,15 @@ export type PutAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdData = {
   url: '/apps/{app_id}/workflow/comments/{comment_id}/replies/{reply_id}'
 }
 
+export type PutAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdErrors = {
+  403: ForbiddenError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PutAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdError =
+  PutAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdErrors[keyof PutAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdErrors]
+
 export type PutAppsByAppIdWorkflowCommentsByCommentIdRepliesByReplyIdResponses = {
   200: WorkflowCommentReplyUpdate
 }
@@ -5468,6 +7582,15 @@ export type PostAppsByAppIdWorkflowCommentsByCommentIdResolveData = {
   query?: never
   url: '/apps/{app_id}/workflow/comments/{comment_id}/resolve'
 }
+
+export type PostAppsByAppIdWorkflowCommentsByCommentIdResolveErrors = {
+  403: ForbiddenError | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowCommentsByCommentIdResolveError =
+  PostAppsByAppIdWorkflowCommentsByCommentIdResolveErrors[keyof PostAppsByAppIdWorkflowCommentsByCommentIdResolveErrors]
 
 export type PostAppsByAppIdWorkflowCommentsByCommentIdResolveResponses = {
   200: WorkflowCommentResolve
@@ -5488,6 +7611,14 @@ export type GetAppsByAppIdWorkflowStatisticsAverageAppInteractionsData = {
   url: '/apps/{app_id}/workflow/statistics/average-app-interactions'
 }
 
+export type GetAppsByAppIdWorkflowStatisticsAverageAppInteractionsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowStatisticsAverageAppInteractionsError =
+  GetAppsByAppIdWorkflowStatisticsAverageAppInteractionsErrors[keyof GetAppsByAppIdWorkflowStatisticsAverageAppInteractionsErrors]
+
 export type GetAppsByAppIdWorkflowStatisticsAverageAppInteractionsResponses = {
   200: WorkflowAverageAppInteractionStatisticResponse
 }
@@ -5506,6 +7637,14 @@ export type GetAppsByAppIdWorkflowStatisticsDailyConversationsData = {
   }
   url: '/apps/{app_id}/workflow/statistics/daily-conversations'
 }
+
+export type GetAppsByAppIdWorkflowStatisticsDailyConversationsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowStatisticsDailyConversationsError =
+  GetAppsByAppIdWorkflowStatisticsDailyConversationsErrors[keyof GetAppsByAppIdWorkflowStatisticsDailyConversationsErrors]
 
 export type GetAppsByAppIdWorkflowStatisticsDailyConversationsResponses = {
   200: WorkflowDailyRunsStatisticResponse
@@ -5526,6 +7665,14 @@ export type GetAppsByAppIdWorkflowStatisticsDailyTerminalsData = {
   url: '/apps/{app_id}/workflow/statistics/daily-terminals'
 }
 
+export type GetAppsByAppIdWorkflowStatisticsDailyTerminalsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowStatisticsDailyTerminalsError =
+  GetAppsByAppIdWorkflowStatisticsDailyTerminalsErrors[keyof GetAppsByAppIdWorkflowStatisticsDailyTerminalsErrors]
+
 export type GetAppsByAppIdWorkflowStatisticsDailyTerminalsResponses = {
   200: WorkflowDailyTerminalsStatisticResponse
 }
@@ -5544,6 +7691,14 @@ export type GetAppsByAppIdWorkflowStatisticsTokenCostsData = {
   }
   url: '/apps/{app_id}/workflow/statistics/token-costs'
 }
+
+export type GetAppsByAppIdWorkflowStatisticsTokenCostsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowStatisticsTokenCostsError =
+  GetAppsByAppIdWorkflowStatisticsTokenCostsErrors[keyof GetAppsByAppIdWorkflowStatisticsTokenCostsErrors]
 
 export type GetAppsByAppIdWorkflowStatisticsTokenCostsResponses = {
   200: WorkflowDailyTokenCostStatisticResponse
@@ -5566,6 +7721,14 @@ export type GetAppsByAppIdWorkflowsData = {
   url: '/apps/{app_id}/workflows'
 }
 
+export type GetAppsByAppIdWorkflowsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowsError =
+  GetAppsByAppIdWorkflowsErrors[keyof GetAppsByAppIdWorkflowsErrors]
+
 export type GetAppsByAppIdWorkflowsResponses = {
   200: WorkflowPaginationResponse
 }
@@ -5581,6 +7744,14 @@ export type GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsData = {
   query?: never
   url: '/apps/{app_id}/workflows/default-workflow-block-configs'
 }
+
+export type GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsError =
+  GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsErrors[keyof GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsErrors]
 
 export type GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsResponses = {
   200: DefaultBlockConfigsResponse
@@ -5602,8 +7773,12 @@ export type GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsByBlockTypeData = 
 }
 
 export type GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsByBlockTypeErrors = {
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsByBlockTypeError =
+  GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsByBlockTypeErrors[keyof GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsByBlockTypeErrors]
 
 export type GetAppsByAppIdWorkflowsDefaultWorkflowBlockConfigsByBlockTypeResponses = {
   200: DefaultBlockConfigResponse
@@ -5622,8 +7797,12 @@ export type GetAppsByAppIdWorkflowsDraftData = {
 }
 
 export type GetAppsByAppIdWorkflowsDraftErrors = {
-  404: unknown
+  404: AppNotFoundError | DraftWorkflowNotExistError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsDraftError =
+  GetAppsByAppIdWorkflowsDraftErrors[keyof GetAppsByAppIdWorkflowsDraftErrors]
 
 export type GetAppsByAppIdWorkflowsDraftResponses = {
   200: WorkflowResponse
@@ -5642,9 +7821,15 @@ export type PostAppsByAppIdWorkflowsDraftData = {
 }
 
 export type PostAppsByAppIdWorkflowsDraftErrors = {
-  400: unknown
-  403: unknown
+  400: ErrorResponse
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  409: DraftWorkflowNotSyncError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdWorkflowsDraftError =
+  PostAppsByAppIdWorkflowsDraftErrors[keyof PostAppsByAppIdWorkflowsDraftErrors]
 
 export type PostAppsByAppIdWorkflowsDraftResponses = {
   200: SyncDraftWorkflowResponse
@@ -5663,11 +7848,15 @@ export type GetAppsByAppIdWorkflowsDraftConversationVariablesData = {
 }
 
 export type GetAppsByAppIdWorkflowsDraftConversationVariablesErrors = {
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
 
+export type GetAppsByAppIdWorkflowsDraftConversationVariablesError =
+  GetAppsByAppIdWorkflowsDraftConversationVariablesErrors[keyof GetAppsByAppIdWorkflowsDraftConversationVariablesErrors]
+
 export type GetAppsByAppIdWorkflowsDraftConversationVariablesResponses = {
-  200: WorkflowDraftVariableList
+  200: WorkflowDraftVariableListResponse
 }
 
 export type GetAppsByAppIdWorkflowsDraftConversationVariablesResponse =
@@ -5681,6 +7870,14 @@ export type PostAppsByAppIdWorkflowsDraftConversationVariablesData = {
   query?: never
   url: '/apps/{app_id}/workflows/draft/conversation-variables'
 }
+
+export type PostAppsByAppIdWorkflowsDraftConversationVariablesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsDraftConversationVariablesError =
+  PostAppsByAppIdWorkflowsDraftConversationVariablesErrors[keyof PostAppsByAppIdWorkflowsDraftConversationVariablesErrors]
 
 export type PostAppsByAppIdWorkflowsDraftConversationVariablesResponses = {
   200: SimpleResultResponse
@@ -5699,8 +7896,12 @@ export type GetAppsByAppIdWorkflowsDraftEnvironmentVariablesData = {
 }
 
 export type GetAppsByAppIdWorkflowsDraftEnvironmentVariablesErrors = {
-  404: unknown
+  404: AppNotFoundError | DraftWorkflowNotExistError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsDraftEnvironmentVariablesError =
+  GetAppsByAppIdWorkflowsDraftEnvironmentVariablesErrors[keyof GetAppsByAppIdWorkflowsDraftEnvironmentVariablesErrors]
 
 export type GetAppsByAppIdWorkflowsDraftEnvironmentVariablesResponses = {
   200: EnvironmentVariableListResponse
@@ -5718,6 +7919,14 @@ export type PostAppsByAppIdWorkflowsDraftEnvironmentVariablesData = {
   url: '/apps/{app_id}/workflows/draft/environment-variables'
 }
 
+export type PostAppsByAppIdWorkflowsDraftEnvironmentVariablesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsDraftEnvironmentVariablesError =
+  PostAppsByAppIdWorkflowsDraftEnvironmentVariablesErrors[keyof PostAppsByAppIdWorkflowsDraftEnvironmentVariablesErrors]
+
 export type PostAppsByAppIdWorkflowsDraftEnvironmentVariablesResponses = {
   200: SimpleResultResponse
 }
@@ -5733,6 +7942,14 @@ export type PostAppsByAppIdWorkflowsDraftFeaturesData = {
   query?: never
   url: '/apps/{app_id}/workflows/draft/features'
 }
+
+export type PostAppsByAppIdWorkflowsDraftFeaturesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsDraftFeaturesError =
+  PostAppsByAppIdWorkflowsDraftFeaturesErrors[keyof PostAppsByAppIdWorkflowsDraftFeaturesErrors]
 
 export type PostAppsByAppIdWorkflowsDraftFeaturesResponses = {
   200: SimpleResultResponse
@@ -5751,6 +7968,14 @@ export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdDeliveryTestData
   url: '/apps/{app_id}/workflows/draft/human-input/nodes/{node_id}/delivery-test'
 }
 
+export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdDeliveryTestErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdDeliveryTestError =
+  PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdDeliveryTestErrors[keyof PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdDeliveryTestErrors]
+
 export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdDeliveryTestResponses = {
   200: EmptyObjectResponse
 }
@@ -5768,6 +7993,14 @@ export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormPreviewData 
   url: '/apps/{app_id}/workflows/draft/human-input/nodes/{node_id}/form/preview'
 }
 
+export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormPreviewErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormPreviewError =
+  PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormPreviewErrors[keyof PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormPreviewErrors]
+
 export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormPreviewResponses = {
   200: HumanInputFormPreviewResponse
 }
@@ -5784,6 +8017,14 @@ export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormRunData = {
   query?: never
   url: '/apps/{app_id}/workflows/draft/human-input/nodes/{node_id}/form/run'
 }
+
+export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormRunErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormRunError =
+  PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormRunErrors[keyof PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormRunErrors]
 
 export type PostAppsByAppIdWorkflowsDraftHumanInputNodesByNodeIdFormRunResponses = {
   200: HumanInputFormSubmitResponse
@@ -5803,9 +8044,13 @@ export type PostAppsByAppIdWorkflowsDraftIterationNodesByNodeIdRunData = {
 }
 
 export type PostAppsByAppIdWorkflowsDraftIterationNodesByNodeIdRunErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdWorkflowsDraftIterationNodesByNodeIdRunError =
+  PostAppsByAppIdWorkflowsDraftIterationNodesByNodeIdRunErrors[keyof PostAppsByAppIdWorkflowsDraftIterationNodesByNodeIdRunErrors]
 
 export type PostAppsByAppIdWorkflowsDraftIterationNodesByNodeIdRunResponses = {
   200: GeneratedAppResponse
@@ -5825,9 +8070,13 @@ export type PostAppsByAppIdWorkflowsDraftLoopNodesByNodeIdRunData = {
 }
 
 export type PostAppsByAppIdWorkflowsDraftLoopNodesByNodeIdRunErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdWorkflowsDraftLoopNodesByNodeIdRunError =
+  PostAppsByAppIdWorkflowsDraftLoopNodesByNodeIdRunErrors[keyof PostAppsByAppIdWorkflowsDraftLoopNodesByNodeIdRunErrors]
 
 export type PostAppsByAppIdWorkflowsDraftLoopNodesByNodeIdRunResponses = {
   200: GeneratedAppResponse
@@ -5848,6 +8097,14 @@ export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerData = {
   url: '/apps/{app_id}/workflows/draft/nodes/{node_id}/agent-composer'
 }
 
+export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerErrors = {
+  404: AgentNotFoundError | AgentVersionNotFoundError | AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerError =
+  GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerErrors[keyof GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerErrors]
+
 export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerResponses = {
   200: WorkflowAgentComposerResponse
 }
@@ -5864,6 +8121,20 @@ export type PutAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerData = {
   query?: never
   url: '/apps/{app_id}/workflows/draft/nodes/{node_id}/agent-composer'
 }
+
+export type PutAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerErrors = {
+  400:
+    | AgentSoulLockedError
+    | InvalidComposerConfigError
+    | PlaintextSecretNotAllowedError
+    | ErrorResponse
+  404: AgentNotFoundError | AgentVersionNotFoundError | AppNotFoundError | ErrorResponse
+  409: AgentNameConflictError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PutAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerError =
+  PutAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerErrors[keyof PutAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerErrors]
 
 export type PutAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerResponses = {
   200: WorkflowAgentComposerResponse
@@ -5882,6 +8153,14 @@ export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesData
   url: '/apps/{app_id}/workflows/draft/nodes/{node_id}/agent-composer/candidates'
 }
 
+export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesError =
+  GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesErrors[keyof GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesErrors]
+
 export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCandidatesResponses = {
   200: AgentComposerCandidatesResponse
 }
@@ -5898,6 +8177,16 @@ export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCopyFromRoste
   query?: never
   url: '/apps/{app_id}/workflows/draft/nodes/{node_id}/agent-composer/copy-from-roster'
 }
+
+export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCopyFromRosterErrors = {
+  400: InvalidComposerConfigError | ErrorResponse
+  404: AgentNotFoundError | AgentVersionNotFoundError | AppNotFoundError | ErrorResponse
+  409: AgentVersionConflictError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCopyFromRosterError =
+  PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCopyFromRosterErrors[keyof PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCopyFromRosterErrors]
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerCopyFromRosterResponses = {
   200: WorkflowAgentComposerResponse
@@ -5916,6 +8205,14 @@ export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerImpactData = 
   url: '/apps/{app_id}/workflows/draft/nodes/{node_id}/agent-composer/impact'
 }
 
+export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerImpactErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerImpactError =
+  PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerImpactErrors[keyof PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerImpactErrors]
+
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerImpactResponses = {
   200: AgentComposerImpactResponse
 }
@@ -5933,6 +8230,20 @@ export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerSaveToRosterD
   url: '/apps/{app_id}/workflows/draft/nodes/{node_id}/agent-composer/save-to-roster'
 }
 
+export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerSaveToRosterErrors = {
+  400:
+    | AgentSoulLockedError
+    | InvalidComposerConfigError
+    | PlaintextSecretNotAllowedError
+    | ErrorResponse
+  404: AgentNotFoundError | AgentVersionNotFoundError | AppNotFoundError | ErrorResponse
+  409: AgentNameConflictError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerSaveToRosterError =
+  PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerSaveToRosterErrors[keyof PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerSaveToRosterErrors]
+
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerSaveToRosterResponses = {
   200: WorkflowAgentComposerResponse
 }
@@ -5949,6 +8260,19 @@ export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerValidateData 
   query?: never
   url: '/apps/{app_id}/workflows/draft/nodes/{node_id}/agent-composer/validate'
 }
+
+export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerValidateErrors = {
+  400:
+    | AgentSoulLockedError
+    | InvalidComposerConfigError
+    | PlaintextSecretNotAllowedError
+    | ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerValidateError =
+  PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerValidateErrors[keyof PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerValidateErrors]
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdAgentComposerValidateResponses = {
   200: AgentComposerValidateResponse
@@ -5968,9 +8292,13 @@ export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdLastRunData = {
 }
 
 export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdLastRunErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdLastRunError =
+  GetAppsByAppIdWorkflowsDraftNodesByNodeIdLastRunErrors[keyof GetAppsByAppIdWorkflowsDraftNodesByNodeIdLastRunErrors]
 
 export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdLastRunResponses = {
   200: WorkflowRunNodeExecutionResponse
@@ -5990,9 +8318,13 @@ export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdRunData = {
 }
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdRunErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdRunError =
+  PostAppsByAppIdWorkflowsDraftNodesByNodeIdRunErrors[keyof PostAppsByAppIdWorkflowsDraftNodesByNodeIdRunErrors]
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdRunResponses = {
   200: WorkflowRunNodeExecutionResponse
@@ -6012,9 +8344,15 @@ export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdTriggerRunData = {
 }
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdTriggerRunErrors = {
-  403: unknown
-  500: unknown
+  400: WorkflowTriggerRunErrorResponse | ErrorResponse
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdTriggerRunError =
+  PostAppsByAppIdWorkflowsDraftNodesByNodeIdTriggerRunErrors[keyof PostAppsByAppIdWorkflowsDraftNodesByNodeIdTriggerRunErrors]
 
 export type PostAppsByAppIdWorkflowsDraftNodesByNodeIdTriggerRunResponses = {
   200: GeneratedAppResponse
@@ -6033,6 +8371,14 @@ export type DeleteAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesData = {
   url: '/apps/{app_id}/workflows/draft/nodes/{node_id}/variables'
 }
 
+export type DeleteAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type DeleteAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesError =
+  DeleteAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesErrors[keyof DeleteAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesErrors]
+
 export type DeleteAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesResponses = {
   204: void
 }
@@ -6050,8 +8396,16 @@ export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesData = {
   url: '/apps/{app_id}/workflows/draft/nodes/{node_id}/variables'
 }
 
+export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesError =
+  GetAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesErrors[keyof GetAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesErrors]
+
 export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesResponses = {
-  200: WorkflowDraftVariableList
+  200: WorkflowDraftVariableListResponse
 }
 
 export type GetAppsByAppIdWorkflowsDraftNodesByNodeIdVariablesResponse =
@@ -6067,8 +8421,14 @@ export type PostAppsByAppIdWorkflowsDraftRunData = {
 }
 
 export type PostAppsByAppIdWorkflowsDraftRunErrors = {
-  403: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  429: RateLimitError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdWorkflowsDraftRunError =
+  PostAppsByAppIdWorkflowsDraftRunErrors[keyof PostAppsByAppIdWorkflowsDraftRunErrors]
 
 export type PostAppsByAppIdWorkflowsDraftRunResponses = {
   200: GeneratedAppResponse
@@ -6088,8 +8448,12 @@ export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsData = {
 }
 
 export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsErrors = {
-  404: unknown
+  404: AppNotFoundError | WorkflowRunNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsError =
+  GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsErrors[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsErrors]
 
 export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsResponses = {
   200: WorkflowRunSnapshotView
@@ -6109,8 +8473,12 @@ export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsData = {
 }
 
 export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsErrors = {
-  404: unknown
+  404: AppNotFoundError | WorkflowRunNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsError =
+  GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsErrors[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsErrors]
 
 export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsEventsResponses = {
   200: EventStreamResponse
@@ -6131,8 +8499,12 @@ export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdData = {
 }
 
 export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdErrors = {
-  404: unknown
+  404: AppNotFoundError | NodeNotInWorkflowRunError | WorkflowRunNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdError =
+  GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdErrors[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdErrors]
 
 export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdResponses = {
   200: NodeOutputsView
@@ -6154,8 +8526,17 @@ export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNa
 }
 
 export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors = {
-  404: unknown
+  404:
+    | AppNotFoundError
+    | NodeNotInWorkflowRunError
+    | NodeOutputNotDeclaredError
+    | WorkflowRunNotFoundError
+    | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewError =
+  GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors[keyof GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors]
 
 export type GetAppsByAppIdWorkflowsDraftRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewResponses =
   {
@@ -6174,15 +8555,23 @@ export type GetAppsByAppIdWorkflowsDraftSystemVariablesData = {
   url: '/apps/{app_id}/workflows/draft/system-variables'
 }
 
+export type GetAppsByAppIdWorkflowsDraftSystemVariablesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowsDraftSystemVariablesError =
+  GetAppsByAppIdWorkflowsDraftSystemVariablesErrors[keyof GetAppsByAppIdWorkflowsDraftSystemVariablesErrors]
+
 export type GetAppsByAppIdWorkflowsDraftSystemVariablesResponses = {
-  200: WorkflowDraftVariableList
+  200: WorkflowDraftVariableListResponse
 }
 
 export type GetAppsByAppIdWorkflowsDraftSystemVariablesResponse =
   GetAppsByAppIdWorkflowsDraftSystemVariablesResponses[keyof GetAppsByAppIdWorkflowsDraftSystemVariablesResponses]
 
 export type PostAppsByAppIdWorkflowsDraftTriggerRunData = {
-  body: DraftWorkflowTriggerRunRequest
+  body: DraftWorkflowTriggerRunPayload
   path: {
     app_id: string
   }
@@ -6191,9 +8580,16 @@ export type PostAppsByAppIdWorkflowsDraftTriggerRunData = {
 }
 
 export type PostAppsByAppIdWorkflowsDraftTriggerRunErrors = {
-  403: unknown
-  500: unknown
+  400: WorkflowTriggerRunErrorResponse | ErrorResponse
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  429: RateLimitError | ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdWorkflowsDraftTriggerRunError =
+  PostAppsByAppIdWorkflowsDraftTriggerRunErrors[keyof PostAppsByAppIdWorkflowsDraftTriggerRunErrors]
 
 export type PostAppsByAppIdWorkflowsDraftTriggerRunResponses = {
   200: GeneratedAppResponse
@@ -6212,9 +8608,16 @@ export type PostAppsByAppIdWorkflowsDraftTriggerRunAllData = {
 }
 
 export type PostAppsByAppIdWorkflowsDraftTriggerRunAllErrors = {
-  403: unknown
-  500: unknown
+  400: WorkflowTriggerRunErrorResponse | ErrorResponse
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  429: RateLimitError | ErrorResponse
+  500: ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdWorkflowsDraftTriggerRunAllError =
+  PostAppsByAppIdWorkflowsDraftTriggerRunAllErrors[keyof PostAppsByAppIdWorkflowsDraftTriggerRunAllErrors]
 
 export type PostAppsByAppIdWorkflowsDraftTriggerRunAllResponses = {
   200: GeneratedAppResponse
@@ -6231,6 +8634,14 @@ export type DeleteAppsByAppIdWorkflowsDraftVariablesData = {
   query?: never
   url: '/apps/{app_id}/workflows/draft/variables'
 }
+
+export type DeleteAppsByAppIdWorkflowsDraftVariablesErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type DeleteAppsByAppIdWorkflowsDraftVariablesError =
+  DeleteAppsByAppIdWorkflowsDraftVariablesErrors[keyof DeleteAppsByAppIdWorkflowsDraftVariablesErrors]
 
 export type DeleteAppsByAppIdWorkflowsDraftVariablesResponses = {
   204: void
@@ -6251,8 +8662,16 @@ export type GetAppsByAppIdWorkflowsDraftVariablesData = {
   url: '/apps/{app_id}/workflows/draft/variables'
 }
 
+export type GetAppsByAppIdWorkflowsDraftVariablesErrors = {
+  404: AppNotFoundError | DraftWorkflowNotExistError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowsDraftVariablesError =
+  GetAppsByAppIdWorkflowsDraftVariablesErrors[keyof GetAppsByAppIdWorkflowsDraftVariablesErrors]
+
 export type GetAppsByAppIdWorkflowsDraftVariablesResponses = {
-  200: WorkflowDraftVariableListWithoutValue
+  200: WorkflowDraftVariableListWithoutValueResponse
 }
 
 export type GetAppsByAppIdWorkflowsDraftVariablesResponse =
@@ -6269,8 +8688,12 @@ export type DeleteAppsByAppIdWorkflowsDraftVariablesByVariableIdData = {
 }
 
 export type DeleteAppsByAppIdWorkflowsDraftVariablesByVariableIdErrors = {
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type DeleteAppsByAppIdWorkflowsDraftVariablesByVariableIdError =
+  DeleteAppsByAppIdWorkflowsDraftVariablesByVariableIdErrors[keyof DeleteAppsByAppIdWorkflowsDraftVariablesByVariableIdErrors]
 
 export type DeleteAppsByAppIdWorkflowsDraftVariablesByVariableIdResponses = {
   204: void
@@ -6290,11 +8713,15 @@ export type GetAppsByAppIdWorkflowsDraftVariablesByVariableIdData = {
 }
 
 export type GetAppsByAppIdWorkflowsDraftVariablesByVariableIdErrors = {
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
 
+export type GetAppsByAppIdWorkflowsDraftVariablesByVariableIdError =
+  GetAppsByAppIdWorkflowsDraftVariablesByVariableIdErrors[keyof GetAppsByAppIdWorkflowsDraftVariablesByVariableIdErrors]
+
 export type GetAppsByAppIdWorkflowsDraftVariablesByVariableIdResponses = {
-  200: WorkflowDraftVariable
+  200: WorkflowDraftVariableResponse
 }
 
 export type GetAppsByAppIdWorkflowsDraftVariablesByVariableIdResponse =
@@ -6311,11 +8738,15 @@ export type PatchAppsByAppIdWorkflowsDraftVariablesByVariableIdData = {
 }
 
 export type PatchAppsByAppIdWorkflowsDraftVariablesByVariableIdErrors = {
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
 
+export type PatchAppsByAppIdWorkflowsDraftVariablesByVariableIdError =
+  PatchAppsByAppIdWorkflowsDraftVariablesByVariableIdErrors[keyof PatchAppsByAppIdWorkflowsDraftVariablesByVariableIdErrors]
+
 export type PatchAppsByAppIdWorkflowsDraftVariablesByVariableIdResponses = {
-  200: WorkflowDraftVariable
+  200: WorkflowDraftVariableResponse
 }
 
 export type PatchAppsByAppIdWorkflowsDraftVariablesByVariableIdResponse =
@@ -6332,11 +8763,15 @@ export type PutAppsByAppIdWorkflowsDraftVariablesByVariableIdResetData = {
 }
 
 export type PutAppsByAppIdWorkflowsDraftVariablesByVariableIdResetErrors = {
-  404: unknown
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
 
+export type PutAppsByAppIdWorkflowsDraftVariablesByVariableIdResetError =
+  PutAppsByAppIdWorkflowsDraftVariablesByVariableIdResetErrors[keyof PutAppsByAppIdWorkflowsDraftVariablesByVariableIdResetErrors]
+
 export type PutAppsByAppIdWorkflowsDraftVariablesByVariableIdResetResponses = {
-  200: WorkflowDraftVariable
+  200: WorkflowDraftVariableResponse
   204: void
 }
 
@@ -6351,6 +8786,14 @@ export type GetAppsByAppIdWorkflowsPublishData = {
   query?: never
   url: '/apps/{app_id}/workflows/publish'
 }
+
+export type GetAppsByAppIdWorkflowsPublishErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowsPublishError =
+  GetAppsByAppIdWorkflowsPublishErrors[keyof GetAppsByAppIdWorkflowsPublishErrors]
 
 export type GetAppsByAppIdWorkflowsPublishResponses = {
   200: WorkflowResponse
@@ -6367,6 +8810,14 @@ export type PostAppsByAppIdWorkflowsPublishData = {
   query?: never
   url: '/apps/{app_id}/workflows/publish'
 }
+
+export type PostAppsByAppIdWorkflowsPublishErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type PostAppsByAppIdWorkflowsPublishError =
+  PostAppsByAppIdWorkflowsPublishErrors[keyof PostAppsByAppIdWorkflowsPublishErrors]
 
 export type PostAppsByAppIdWorkflowsPublishResponses = {
   200: WorkflowPublishResponse
@@ -6386,8 +8837,12 @@ export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsData = {
 }
 
 export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsErrors = {
-  404: unknown
+  404: AppNotFoundError | WorkflowRunNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsError =
+  GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsErrors[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsErrors]
 
 export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsResponses = {
   200: WorkflowRunSnapshotView
@@ -6407,8 +8862,12 @@ export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsData = {
 }
 
 export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsErrors = {
-  404: unknown
+  404: AppNotFoundError | WorkflowRunNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsError =
+  GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsErrors[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsErrors]
 
 export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsEventsResponses = {
   200: EventStreamResponse
@@ -6429,8 +8888,12 @@ export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdData =
 }
 
 export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdErrors = {
-  404: unknown
+  404: AppNotFoundError | NodeNotInWorkflowRunError | WorkflowRunNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdError =
+  GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdErrors[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdErrors]
 
 export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdResponses = {
   200: NodeOutputsView
@@ -6454,8 +8917,17 @@ export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutp
 
 export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors =
   {
-    404: unknown
+    404:
+      | AppNotFoundError
+      | NodeNotInWorkflowRunError
+      | NodeOutputNotDeclaredError
+      | WorkflowRunNotFoundError
+      | ErrorResponse
+    default: ErrorResponse
   }
+
+export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewError =
+  GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors[keyof GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewErrors]
 
 export type GetAppsByAppIdWorkflowsPublishedRunsByRunIdNodeOutputsByNodeIdByOutputNamePreviewResponses =
   {
@@ -6476,6 +8948,14 @@ export type GetAppsByAppIdWorkflowsTriggersWebhookData = {
   url: '/apps/{app_id}/workflows/triggers/webhook'
 }
 
+export type GetAppsByAppIdWorkflowsTriggersWebhookErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type GetAppsByAppIdWorkflowsTriggersWebhookError =
+  GetAppsByAppIdWorkflowsTriggersWebhookErrors[keyof GetAppsByAppIdWorkflowsTriggersWebhookErrors]
+
 export type GetAppsByAppIdWorkflowsTriggersWebhookResponses = {
   200: WebhookTriggerResponse
 }
@@ -6492,6 +8972,14 @@ export type DeleteAppsByAppIdWorkflowsByWorkflowIdData = {
   query?: never
   url: '/apps/{app_id}/workflows/{workflow_id}'
 }
+
+export type DeleteAppsByAppIdWorkflowsByWorkflowIdErrors = {
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
+}
+
+export type DeleteAppsByAppIdWorkflowsByWorkflowIdError =
+  DeleteAppsByAppIdWorkflowsByWorkflowIdErrors[keyof DeleteAppsByAppIdWorkflowsByWorkflowIdErrors]
 
 export type DeleteAppsByAppIdWorkflowsByWorkflowIdResponses = {
   204: void
@@ -6511,9 +8999,13 @@ export type PatchAppsByAppIdWorkflowsByWorkflowIdData = {
 }
 
 export type PatchAppsByAppIdWorkflowsByWorkflowIdErrors = {
-  403: unknown
-  404: unknown
+  403: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PatchAppsByAppIdWorkflowsByWorkflowIdError =
+  PatchAppsByAppIdWorkflowsByWorkflowIdErrors[keyof PatchAppsByAppIdWorkflowsByWorkflowIdErrors]
 
 export type PatchAppsByAppIdWorkflowsByWorkflowIdResponses = {
   200: WorkflowResponse
@@ -6533,9 +9025,13 @@ export type PostAppsByAppIdWorkflowsByWorkflowIdRestoreData = {
 }
 
 export type PostAppsByAppIdWorkflowsByWorkflowIdRestoreErrors = {
-  400: unknown
-  404: unknown
+  400: ErrorResponse
+  404: AppNotFoundError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByAppIdWorkflowsByWorkflowIdRestoreError =
+  PostAppsByAppIdWorkflowsByWorkflowIdRestoreErrors[keyof PostAppsByAppIdWorkflowsByWorkflowIdRestoreErrors]
 
 export type PostAppsByAppIdWorkflowsByWorkflowIdRestoreResponses = {
   200: WorkflowRestoreResponse
@@ -6552,6 +9048,13 @@ export type GetAppsByResourceIdApiKeysData = {
   query?: never
   url: '/apps/{resource_id}/api-keys'
 }
+
+export type GetAppsByResourceIdApiKeysErrors = {
+  default: ErrorResponse
+}
+
+export type GetAppsByResourceIdApiKeysError =
+  GetAppsByResourceIdApiKeysErrors[keyof GetAppsByResourceIdApiKeysErrors]
 
 export type GetAppsByResourceIdApiKeysResponses = {
   200: ApiKeyList
@@ -6570,8 +9073,13 @@ export type PostAppsByResourceIdApiKeysData = {
 }
 
 export type PostAppsByResourceIdApiKeysErrors = {
-  400: unknown
+  400: MaxKeysExceededError | ErrorResponse
+  409: AgentNotPublishedError | ErrorResponse
+  default: ErrorResponse
 }
+
+export type PostAppsByResourceIdApiKeysError =
+  PostAppsByResourceIdApiKeysErrors[keyof PostAppsByResourceIdApiKeysErrors]
 
 export type PostAppsByResourceIdApiKeysResponses = {
   201: ApiKeyItem
@@ -6589,6 +9097,13 @@ export type DeleteAppsByResourceIdApiKeysByApiKeyIdData = {
   query?: never
   url: '/apps/{resource_id}/api-keys/{api_key_id}'
 }
+
+export type DeleteAppsByResourceIdApiKeysByApiKeyIdErrors = {
+  default: ErrorResponse
+}
+
+export type DeleteAppsByResourceIdApiKeysByApiKeyIdError =
+  DeleteAppsByResourceIdApiKeysByApiKeyIdErrors[keyof DeleteAppsByResourceIdApiKeysByApiKeyIdErrors]
 
 export type DeleteAppsByResourceIdApiKeysByApiKeyIdResponses = {
   204: void

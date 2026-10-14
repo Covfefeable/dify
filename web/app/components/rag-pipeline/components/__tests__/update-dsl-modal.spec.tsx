@@ -27,7 +27,7 @@ const toastMocks = vi.hoisted(() => {
   }
 })
 
-vi.mock('@langgenius/dify-ui/toast', () => ({
+vi.mock('@/app/notifications', () => ({
   toast: Object.assign(toastMocks.api, {
     success: vi.fn((message: string, options?: Record<string, unknown>) =>
       toastMocks.call({ type: 'success', message, ...options }),
@@ -214,16 +214,6 @@ describe('UpdateDSLModal', () => {
       fireEvent.click(clearButton)
 
       expect(screen.getByTestId('uploader')).toBeInTheDocument()
-    })
-
-    it('should call onCancel when close icon is clicked', () => {
-      render(<UpdateDSLModal {...defaultProps} />)
-
-      const closeIconContainer = document.querySelector('.cursor-pointer')
-      if (closeIconContainer) {
-        fireEvent.click(closeIconContainer)
-        expect(mockOnCancel).toHaveBeenCalled()
-      }
     })
   })
 

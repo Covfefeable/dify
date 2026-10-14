@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, buttonVariants } from '@langgenius/dify-ui/button'
-import { toast } from '@langgenius/dify-ui/toast'
+import { ORPCError } from '@orpc/client'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useAtomValue } from 'jotai'
 import { useState } from 'react'
@@ -9,9 +9,10 @@ import { useTranslation } from 'react-i18next'
 import { SearchInput } from '@/app/components/base/search-input'
 import ExternalAPIPanel from '@/app/components/datasets/external-api/external-api-panel'
 import { ServiceApi } from '@/app/components/datasets/extra-info/service-api'
+import { toast } from '@/app/notifications'
 import { workspacePermissionKeysAtom } from '@/context/permission-state'
 import Link from '@/next/link'
-import { consoleQuery } from '@/service/client'
+import { consoleQuery } from '@/service/console'
 import { useDatasetApiBaseUrl } from '@/service/knowledge/use-dataset'
 import { hasPermission } from '@/utils/permission'
 import { KnowledgeSpaceCard } from './components/knowledge-space-card'
@@ -26,14 +27,7 @@ import {
 const PAGE_SIZE = 30
 
 function isUnavailableError(error: unknown) {
-  if (!error || typeof error !== 'object') return false
-  const status = 'status' in error ? error.status : undefined
-  if (status === 404 || status === 503) return true
-
-  const data = 'data' in error ? error.data : undefined
-  if (!data || typeof data !== 'object') return false
-  const dataStatus = 'status' in data ? data.status : undefined
-  return dataStatus === 404 || dataStatus === 503
+  return error instanceof ORPCError && (error.status === 404 || error.status === 503)
 }
 
 function MetadataFilter({ label, onClick }: { label: string; onClick: () => void }) {
@@ -56,8 +50,8 @@ export function NewKnowledgeList({
   view: 'legacy' | 'new'
   onViewChange: (value: 'legacy' | 'new') => void
 }) {
-  const { t } = useTranslation('dataset')
-  const { t: tCommon } = useTranslation('common')
+  const { t } = useTranslation(['dataset'])
+  const { t: tCommon } = useTranslation(['common'])
   const { data: apiBaseInfo } = useDatasetApiBaseUrl()
   const [showExternalApiPanel, setShowExternalApiPanel] = useState(false)
   const workspacePermissionKeys = useAtomValue(workspacePermissionKeysAtom)

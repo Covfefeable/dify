@@ -1,6 +1,7 @@
 import { waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { BlockEnum } from '@/app/components/workflow/types'
+import { createHttpError } from '@/service/http-error'
 import { createAccountProfileQueryWrapper } from '@/test/console/account-profile'
 import { renderHook as renderHookWithConsoleState } from '@/test/console/render'
 import { AppACLPermission } from '@/utils/permission'
@@ -92,10 +93,12 @@ vi.mock('@/service/workflow', () => ({
   fetchNodesDefaultConfigs: (...args: unknown[]) => mockFetchNodesDefaultConfigs(...args),
 }))
 
-const notExistError = () => ({
-  json: vi.fn().mockResolvedValue({ code: 'draft_workflow_not_exist' }),
-  bodyUsed: false,
-})
+const notExistError = () =>
+  createHttpError(new Response(null, { status: 404 }), {
+    code: 'draft_workflow_not_exist',
+    message: 'Draft workflow not exist.',
+    status: 404,
+  })
 
 const draftResponse = {
   id: 'draft-id',
@@ -142,6 +145,22 @@ describe('useWorkflowInit', () => {
     mockSyncWorkflowDraft.mockReset()
   })
 
+  it.each([undefined, { x: 120, y: -80, zoom: 0.75 }])(
+    'should preserve the initial draft viewport as %j',
+    async (viewport) => {
+      mockFetchWorkflowDraft.mockReset().mockResolvedValue({
+        ...draftResponse,
+        graph: { ...draftResponse.graph, viewport },
+      })
+
+      const { result } = renderHook(() => useWorkflowInit())
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+      expect(result.current.data?.graph.viewport).toEqual(viewport)
+    },
+  )
+
   it('should create an empty backend draft and restore a local start placeholder when the workflow draft does not exist', async () => {
     mockFetchWorkflowDraft
       .mockReset()
@@ -176,6 +195,7 @@ describe('useWorkflowInit', () => {
             nodes: [],
             edges: [],
           },
+          force: true,
         }),
       }),
     )
@@ -208,6 +228,7 @@ describe('useWorkflowInit', () => {
               nodes: [{ id: 'start', data: { type: BlockEnum.Start } }],
               edges: [],
             },
+            force: true,
           }),
         }),
       ),
@@ -252,6 +273,7 @@ describe('useWorkflowInit', () => {
       }),
     )
     expect(mockSetSyncWorkflowDraftHash).toHaveBeenCalledWith('')
+    expect(result.current.data?.graph.viewport).toBeUndefined()
   })
 
   it('should restore a local start placeholder when an existing workflow draft has an empty graph', async () => {

@@ -45,7 +45,6 @@ class OpenApiErrorCode(StrEnum):
     TOO_MANY_REQUESTS = "too_many_requests"
     INTERNAL_ERROR = "internal_server_error"
     BAD_GATEWAY = "bad_gateway"
-    UPGRADE_REQUIRED = "upgrade_required"
     UNKNOWN = "unknown"
     # domain codes (must match the error_code attribute of the exception
     # classes raised on the openapi surface)
@@ -67,6 +66,7 @@ class OpenApiErrorCode(StrEnum):
     MEMBER_LICENSE_EXCEEDED = "member_license_exceeded"
     HUMAN_INPUT_FORM_NOT_FOUND = "form_not_found"
     RECIPIENT_SURFACE_MISMATCH = "recipient_surface_mismatch"
+    CATALOG_STALE = "catalog_stale"
     TRIGGER_WORKFLOW_SERVICE_MODE_UNAVAILABLE = "trigger_workflow_service_mode_unavailable"
 
 
@@ -178,8 +178,13 @@ class OpenApiErrorFormatter:
 
     def _resolve_code(self, e: Exception, status_code: int) -> str:
         explicit = getattr(type(e), "error_code", None)
-        if isinstance(explicit, (OpenApiErrorCode, str)) and str(explicit) != "unknown":
-            return str(explicit)
+        return self.code_for(status_code, str(explicit) if isinstance(explicit, str) else None)
+
+    @staticmethod
+    def code_for(status_code: int, error_code: str | None) -> str:
+        """The wire ``code`` for an exception class's ``error_code`` (if any) at this status."""
+        if error_code is not None and error_code != "unknown":
+            return error_code
         return str(_CODE_BY_STATUS.get(status_code, OpenApiErrorCode.UNKNOWN))
 
     def _resolve_message(self, merged: dict[str, Any], status_code: int) -> str:
@@ -257,3 +262,16 @@ class RecipientSurfaceMismatch(OpenApiError):  # noqa: N818
     error_code = OpenApiErrorCode.RECIPIENT_SURFACE_MISMATCH
     description = "This form's recipient can't be submitted via the OpenAPI surface."
     hint = "Action it through its channel (web app or console)."
+
+
+class CatalogStale(OpenApiError):  # noqa: N818
+    code = 412
+    error_code = OpenApiErrorCode.CATALOG_STALE
+    description = "The request was built from a catalog that is not this server's current catalog."
+    hint = "GET /openapi/v1/_catalog, rebuild the request from it, and send its sha256 in X-Dify-Catalog."
+
+
+class InvalidFilePart(OpenApiError):  # noqa: N818
+    code = 422
+    error_code = OpenApiErrorCode.INVALID_PARAM
+    description = "A request part could not be used"

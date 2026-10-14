@@ -2,6 +2,7 @@ import type { KnowledgeSpaceList } from '@dify/contracts/knowledge-fs/types.gen'
 import type { InfiniteData } from '@tanstack/react-query'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createHttpError } from '@/service/http-error'
 import { renderWithNuqs } from '@/test/nuqs-testing'
 import { NewKnowledgeList } from '../new-knowledge-list'
 
@@ -18,7 +19,7 @@ type ListKnowledgeSpacesInfiniteOptions = {
 
 const toastInfoMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@langgenius/dify-ui/toast', () => ({
+vi.mock('@/app/notifications', () => ({
   toast: { info: toastInfoMock },
 }))
 
@@ -87,10 +88,14 @@ vi.mock('@/context/permission-state', () => ({
 
 vi.mock('@/context/i18n', () => ({
   useDocLink: () => (path?: string) => `https://docs.example.com${path ?? ''}`,
+}))
+
+vi.mock('#i18n', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('#i18n')>()),
   useLocale: () => 'en-US',
 }))
 
-vi.mock('@/service/client', () => ({
+vi.mock('@/service/console', () => ({
   consoleQuery: {
     knowledgeFs: {
       listKnowledgeSpaces: {
@@ -316,8 +321,21 @@ describe('NewKnowledgeList', () => {
     expect(screen.getByText('dataset.newKnowledge.readOnlyEmpty')).toBeInTheDocument()
   })
 
+  it('keeps retry available when only the error body claims the service is unavailable', async () => {
+    const user = userEvent.setup()
+    queryMock.error = createHttpError(
+      new Response(null, { status: 500 }),
+      createHttpError(new Response(null, { status: 404 })),
+    )
+    renderWithNuqs(<NewKnowledgeList view="new" onViewChange={vi.fn()} />)
+
+    expect(screen.queryByText('dataset.newKnowledge.unavailableTitle')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'common.operation.retry' }))
+    expect(queryMock.refetch).toHaveBeenCalledOnce()
+  })
+
   it.each([404, 503])('shows an unavailable state for a %s response', (status) => {
-    queryMock.error = { status }
+    queryMock.error = createHttpError(new Response(null, { status }))
     renderWithNuqs(<NewKnowledgeList view="new" onViewChange={vi.fn()} />)
 
     expect(screen.getByText('dataset.newKnowledge.unavailableTitle')).toBeInTheDocument()

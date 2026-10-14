@@ -15,8 +15,23 @@ export type AccountResponse = {
   default_workspace_id?: string | null
   subject_email?: string | null
   subject_issuer?: string | null
-  subject_type: string
+  subject_type: SubjectType
   workspaces?: Array<WorkspacePayload>
+}
+
+export type AdvancedChatRunPayload = {
+  attachments?: Array<Blob | File> | null
+  auto_generate_name?: boolean
+  conversation_id?: string | null
+  files?: {
+    [key: string]: Blob | File | Array<Blob | File>
+  } | null
+  inputs: {
+    [key: string]: unknown
+  }
+  query: string
+  workflow_id?: string | null
+  workspace_id?: string | null
 }
 
 export type AppDescribeInfo = {
@@ -64,6 +79,19 @@ export type AppDslImportPayload = {
   yaml_url?: string | null
 }
 
+export type AppDslImportResponse = {
+  app_id?: string | null
+  app_mode?: AppMode | null
+  current_dsl_version?: string
+  error?: string
+  hints?: Array<Hint>
+  id: string
+  imported_dsl_version?: string
+  permission_keys?: Array<string>
+  status: ImportStatus
+  warnings?: Array<DslImportWarning>
+}
+
 export type AppInfo = {
   description?: string | null
   id: string
@@ -82,6 +110,7 @@ export type AppListQuery = {
 export type AppListResponse = {
   data: Array<AppListRow>
   has_more: boolean
+  hints?: Array<Hint>
   limit: number
   page: number
   total: number
@@ -107,22 +136,34 @@ export type AppMode =
   | 'rag-pipeline'
   | 'workflow'
 
-export type AppRunRequest = {
+export type ChatRunPayload = {
+  attachments?: Array<Blob | File> | null
   auto_generate_name?: boolean
   conversation_id?: string | null
-  files?: Array<{
-    [key: string]: unknown
-  }> | null
+  files?: {
+    [key: string]: Blob | File | Array<Blob | File>
+  } | null
   inputs: {
     [key: string]: unknown
   }
-  query?: string | null
-  workflow_id?: string | null
+  query: string
   workspace_id?: string | null
 }
 
 export type CheckDependenciesResult = {
   leaked_dependencies?: Array<PluginDependency>
+}
+
+export type CompletionRunPayload = {
+  attachments?: Array<Blob | File> | null
+  files?: {
+    [key: string]: Blob | File | Array<Blob | File>
+  } | null
+  inputs: {
+    [key: string]: unknown
+  }
+  query?: string
+  workspace_id?: string | null
 }
 
 export type DeploymentEdition = 'CLOUD' | 'COMMUNITY' | 'ENTERPRISE'
@@ -138,6 +179,20 @@ export type DeviceCodeResponse = {
   interval: number
   user_code: string
   verification_uri: string
+}
+
+export type DeviceFlowErrorResponse = {
+  error:
+    | 'access_denied'
+    | 'already_resolved'
+    | 'approval_outcome_unknown'
+    | 'approve_in_progress'
+    | 'authorization_pending'
+    | 'expired_or_unknown'
+    | 'expired_token'
+    | 'slow_down'
+    | 'state_lost'
+    | 'unsupported_client'
 }
 
 export type DeviceLookupQuery = {
@@ -169,7 +224,7 @@ export type DeviceTokenResponse = {
   expires_at: string
   subject_email?: string | null
   subject_issuer?: string | null
-  subject_type: 'account' | 'external_sso'
+  subject_type: SubjectType
   token: string
   token_id: string
   workspaces?: Array<WorkspacePayload>
@@ -218,6 +273,10 @@ export type FileResponse = {
   user_id?: string | null
 }
 
+export type FileUploadPayload = {
+  file: Blob | File
+}
+
 export type FormSubmitResponse = {
   [key: string]: never
 }
@@ -231,6 +290,17 @@ export type Github = {
 
 export type HealthResponse = {
   ok: boolean
+}
+
+export type Hint = {
+  form?: Array<{
+    [key: string]: unknown
+  }> | null
+  input: {
+    [key: string]: unknown
+  }
+  op: string
+  summary: string
 }
 
 export type HumanInputFormDefinitionResponse = {
@@ -247,16 +317,9 @@ export type HumanInputFormDefinitionResponse = {
   }>
 }
 
-export type HumanInputFormSubmitPayload = {
-  action: string
-  inputs: {
-    [key: string]: JsonValue
-  }
-}
-
 export type Import = {
   app_id?: string | null
-  app_mode?: string | null
+  app_mode?: AppMode | null
   current_dsl_version?: string
   error?: string
   id: string
@@ -301,6 +364,7 @@ export type MemberListQuery = {
 export type MemberListResponse = {
   data: Array<MemberResponse>
   has_more: boolean
+  hints?: Array<Hint>
   limit: number
   page: number
   total: number
@@ -331,6 +395,7 @@ export type OpenApiErrorCode =
   | 'app_unavailable'
   | 'bad_gateway'
   | 'bad_request'
+  | 'catalog_stale'
   | 'completion_request_error'
   | 'conflict'
   | 'conversation_completed'
@@ -360,7 +425,16 @@ export type OpenApiErrorCode =
   | 'unknown'
   | 'unsupported_file_type'
   | 'unsupported_media_type'
-  | 'upgrade_required'
+
+export type OpenApiFormSubmitPayload = {
+  action: string
+  files?: {
+    [key: string]: Blob | File | Array<Blob | File>
+  } | null
+  inputs: {
+    [key: string]: JsonValue
+  }
+}
 
 export type Package = {
   plugin_unique_identifier: string
@@ -377,6 +451,7 @@ export type PermittedExternalAppsListQuery = {
 export type PermittedExternalAppsListResponse = {
   data: Array<AppListRow>
   has_more: boolean
+  hints?: Array<Hint>
   limit: number
   page: number
   total: number
@@ -407,6 +482,7 @@ export type SessionListQuery = {
 export type SessionListResponse = {
   data: Array<SessionRow>
   has_more: boolean
+  hints?: Array<Hint>
   limit: number
   page: number
   total: number
@@ -425,6 +501,8 @@ export type SessionRow = {
 export type SimpleResultResponse = {
   result: string
 }
+
+export type SubjectType = 'account' | 'external_sso' | 'resource_access'
 
 export type SupportedAppType = 'advanced-chat' | 'agent-chat' | 'chat' | 'completion' | 'workflow'
 
@@ -453,6 +531,18 @@ export type WorkflowRunData = {
   workflow_id: string
 }
 
+export type WorkflowRunPayload = {
+  attachments?: Array<Blob | File> | null
+  files?: {
+    [key: string]: Blob | File | Array<Blob | File>
+  } | null
+  inputs: {
+    [key: string]: unknown
+  }
+  workflow_id?: string | null
+  workspace_id?: string | null
+}
+
 export type WorkspaceDetailResponse = {
   created_at?: string | null
   current: boolean
@@ -462,8 +552,18 @@ export type WorkspaceDetailResponse = {
   status: string
 }
 
+export type WorkspaceListQuery = {
+  limit?: number
+  page?: number
+}
+
 export type WorkspaceListResponse = {
-  workspaces: Array<WorkspaceSummaryResponse>
+  data: Array<WorkspaceSummaryResponse>
+  has_more: boolean
+  hints?: Array<Hint>
+  limit: number
+  page: number
+  total: number
 }
 
 export type WorkspacePayload = {
@@ -479,6 +579,27 @@ export type WorkspaceSummaryResponse = {
   role: string
   status: string
 }
+
+export type GetCatalogData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/_catalog'
+}
+
+export type GetCatalogErrors = {
+  default: ErrorBody
+}
+
+export type GetCatalogError = GetCatalogErrors[keyof GetCatalogErrors]
+
+export type GetCatalogResponses = {
+  200: {
+    [key: string]: unknown
+  }
+}
+
+export type GetCatalogResponse = GetCatalogResponses[keyof GetCatalogResponses]
 
 export type GetHealthData = {
   body?: never
@@ -655,6 +776,78 @@ export type GetAppsByAppIdResponses = {
 
 export type GetAppsByAppIdResponse = GetAppsByAppIdResponses[keyof GetAppsByAppIdResponses]
 
+export type PostAppsByAppIdAdvancedChatRunData = {
+  body: AdvancedChatRunPayload
+  path: {
+    app_id: string
+  }
+  query?: never
+  url: '/apps/{app_id}/advanced-chat:run'
+}
+
+export type PostAppsByAppIdAdvancedChatRunErrors = {
+  422: ErrorBody
+  default: ErrorBody
+}
+
+export type PostAppsByAppIdAdvancedChatRunError =
+  PostAppsByAppIdAdvancedChatRunErrors[keyof PostAppsByAppIdAdvancedChatRunErrors]
+
+export type PostAppsByAppIdAdvancedChatRunResponses = {
+  200: EventStreamResponse
+}
+
+export type PostAppsByAppIdAdvancedChatRunResponse =
+  PostAppsByAppIdAdvancedChatRunResponses[keyof PostAppsByAppIdAdvancedChatRunResponses]
+
+export type PostAppsByAppIdChatRunData = {
+  body: ChatRunPayload
+  path: {
+    app_id: string
+  }
+  query?: never
+  url: '/apps/{app_id}/chat:run'
+}
+
+export type PostAppsByAppIdChatRunErrors = {
+  422: ErrorBody
+  default: ErrorBody
+}
+
+export type PostAppsByAppIdChatRunError =
+  PostAppsByAppIdChatRunErrors[keyof PostAppsByAppIdChatRunErrors]
+
+export type PostAppsByAppIdChatRunResponses = {
+  200: EventStreamResponse
+}
+
+export type PostAppsByAppIdChatRunResponse =
+  PostAppsByAppIdChatRunResponses[keyof PostAppsByAppIdChatRunResponses]
+
+export type PostAppsByAppIdCompletionRunData = {
+  body: CompletionRunPayload
+  path: {
+    app_id: string
+  }
+  query?: never
+  url: '/apps/{app_id}/completion:run'
+}
+
+export type PostAppsByAppIdCompletionRunErrors = {
+  422: ErrorBody
+  default: ErrorBody
+}
+
+export type PostAppsByAppIdCompletionRunError =
+  PostAppsByAppIdCompletionRunErrors[keyof PostAppsByAppIdCompletionRunErrors]
+
+export type PostAppsByAppIdCompletionRunResponses = {
+  200: EventStreamResponse
+}
+
+export type PostAppsByAppIdCompletionRunResponse =
+  PostAppsByAppIdCompletionRunResponses[keyof PostAppsByAppIdCompletionRunResponses]
+
 export type GetAppsByAppIdDependenciesCheckData = {
   body?: never
   path: {
@@ -704,7 +897,7 @@ export type GetAppsByAppIdDslResponses = {
 export type GetAppsByAppIdDslResponse = GetAppsByAppIdDslResponses[keyof GetAppsByAppIdDslResponses]
 
 export type PostAppsByAppIdFilesData = {
-  body?: never
+  body: FileUploadPayload
   path: {
     app_id: string
   }
@@ -713,10 +906,11 @@ export type PostAppsByAppIdFilesData = {
 }
 
 export type PostAppsByAppIdFilesErrors = {
-  400: unknown
-  401: unknown
-  413: unknown
-  415: unknown
+  400: ErrorBody
+  401: ErrorBody
+  413: ErrorBody
+  415: ErrorBody
+  422: ErrorBody
   default: ErrorBody
 }
 
@@ -739,6 +933,13 @@ export type GetAppsByAppIdHumanInputFormsByFormTokenData = {
   url: '/apps/{app_id}/human-input-forms/{form_token}'
 }
 
+export type GetAppsByAppIdHumanInputFormsByFormTokenErrors = {
+  default: ErrorBody
+}
+
+export type GetAppsByAppIdHumanInputFormsByFormTokenError =
+  GetAppsByAppIdHumanInputFormsByFormTokenErrors[keyof GetAppsByAppIdHumanInputFormsByFormTokenErrors]
+
 export type GetAppsByAppIdHumanInputFormsByFormTokenResponses = {
   200: HumanInputFormDefinitionResponse
 }
@@ -747,7 +948,7 @@ export type GetAppsByAppIdHumanInputFormsByFormTokenResponse =
   GetAppsByAppIdHumanInputFormsByFormTokenResponses[keyof GetAppsByAppIdHumanInputFormsByFormTokenResponses]
 
 export type PostAppsByAppIdHumanInputFormsByFormTokenSubmitData = {
-  body: HumanInputFormSubmitPayload
+  body: OpenApiFormSubmitPayload
   path: {
     app_id: string
     form_token: string
@@ -784,6 +985,14 @@ export type GetAppsByAppIdTasksByTaskIdEventsData = {
   url: '/apps/{app_id}/tasks/{task_id}/events'
 }
 
+export type GetAppsByAppIdTasksByTaskIdEventsErrors = {
+  422: ErrorBody
+  default: ErrorBody
+}
+
+export type GetAppsByAppIdTasksByTaskIdEventsError =
+  GetAppsByAppIdTasksByTaskIdEventsErrors[keyof GetAppsByAppIdTasksByTaskIdEventsErrors]
+
 export type GetAppsByAppIdTasksByTaskIdEventsResponses = {
   200: EventStreamResponse
 }
@@ -815,27 +1024,29 @@ export type PostAppsByAppIdTasksByTaskIdStopResponses = {
 export type PostAppsByAppIdTasksByTaskIdStopResponse =
   PostAppsByAppIdTasksByTaskIdStopResponses[keyof PostAppsByAppIdTasksByTaskIdStopResponses]
 
-export type PostAppsByAppIdRunData = {
-  body: AppRunRequest
+export type PostAppsByAppIdWorkflowRunData = {
+  body: WorkflowRunPayload
   path: {
     app_id: string
   }
   query?: never
-  url: '/apps/{app_id}:run'
+  url: '/apps/{app_id}/workflow:run'
 }
 
-export type PostAppsByAppIdRunErrors = {
+export type PostAppsByAppIdWorkflowRunErrors = {
   422: ErrorBody
+  default: ErrorBody
 }
 
-export type PostAppsByAppIdRunError = PostAppsByAppIdRunErrors[keyof PostAppsByAppIdRunErrors]
+export type PostAppsByAppIdWorkflowRunError =
+  PostAppsByAppIdWorkflowRunErrors[keyof PostAppsByAppIdWorkflowRunErrors]
 
-export type PostAppsByAppIdRunResponses = {
+export type PostAppsByAppIdWorkflowRunResponses = {
   200: EventStreamResponse
 }
 
-export type PostAppsByAppIdRunResponse =
-  PostAppsByAppIdRunResponses[keyof PostAppsByAppIdRunResponses]
+export type PostAppsByAppIdWorkflowRunResponse =
+  PostAppsByAppIdWorkflowRunResponses[keyof PostAppsByAppIdWorkflowRunResponses]
 
 export type PostOauthDeviceApproveData = {
   body: DeviceMutateRequest
@@ -843,6 +1054,16 @@ export type PostOauthDeviceApproveData = {
   query?: never
   url: '/oauth/device/approve'
 }
+
+export type PostOauthDeviceApproveErrors = {
+  404: DeviceFlowErrorResponse | ErrorBody
+  409: DeviceFlowErrorResponse | ErrorBody
+  503: DeviceFlowErrorResponse | ErrorBody
+  default: ErrorBody
+}
+
+export type PostOauthDeviceApproveError =
+  PostOauthDeviceApproveErrors[keyof PostOauthDeviceApproveErrors]
 
 export type PostOauthDeviceApproveResponses = {
   200: DeviceMutateResponse
@@ -858,6 +1079,13 @@ export type PostOauthDeviceCodeData = {
   url: '/oauth/device/code'
 }
 
+export type PostOauthDeviceCodeErrors = {
+  400: DeviceFlowErrorResponse | ErrorBody
+  default: ErrorBody
+}
+
+export type PostOauthDeviceCodeError = PostOauthDeviceCodeErrors[keyof PostOauthDeviceCodeErrors]
+
 export type PostOauthDeviceCodeResponses = {
   200: DeviceCodeResponse
 }
@@ -871,6 +1099,15 @@ export type PostOauthDeviceDenyData = {
   query?: never
   url: '/oauth/device/deny'
 }
+
+export type PostOauthDeviceDenyErrors = {
+  404: DeviceFlowErrorResponse | ErrorBody
+  409: DeviceFlowErrorResponse | ErrorBody
+  503: DeviceFlowErrorResponse | ErrorBody
+  default: ErrorBody
+}
+
+export type PostOauthDeviceDenyError = PostOauthDeviceDenyErrors[keyof PostOauthDeviceDenyErrors]
 
 export type PostOauthDeviceDenyResponses = {
   200: DeviceMutateResponse
@@ -888,6 +1125,12 @@ export type GetOauthDeviceLookupData = {
   url: '/oauth/device/lookup'
 }
 
+export type GetOauthDeviceLookupErrors = {
+  default: ErrorBody
+}
+
+export type GetOauthDeviceLookupError = GetOauthDeviceLookupErrors[keyof GetOauthDeviceLookupErrors]
+
 export type GetOauthDeviceLookupResponses = {
   200: DeviceLookupResponse
 }
@@ -901,6 +1144,13 @@ export type PostOauthDeviceTokenData = {
   query?: never
   url: '/oauth/device/token'
 }
+
+export type PostOauthDeviceTokenErrors = {
+  400: DeviceFlowErrorResponse | ErrorBody
+  default: ErrorBody
+}
+
+export type PostOauthDeviceTokenError = PostOauthDeviceTokenErrors[keyof PostOauthDeviceTokenErrors]
 
 export type PostOauthDeviceTokenResponses = {
   200: DeviceTokenResponse
@@ -965,11 +1215,15 @@ export type GetPermittedExternalAppsByAppIdResponse =
 export type GetWorkspacesData = {
   body?: never
   path?: never
-  query?: never
+  query?: {
+    limit?: number
+    page?: number
+  }
   url: '/workspaces'
 }
 
 export type GetWorkspacesErrors = {
+  422: ErrorBody
   default: ErrorBody
 }
 
@@ -1014,7 +1268,7 @@ export type PostWorkspacesByWorkspaceIdAppsImportsData = {
 }
 
 export type PostWorkspacesByWorkspaceIdAppsImportsErrors = {
-  400: Import
+  400: AppDslImportResponse | ErrorBody
   422: ErrorBody
   default: ErrorBody
 }
@@ -1023,8 +1277,8 @@ export type PostWorkspacesByWorkspaceIdAppsImportsError =
   PostWorkspacesByWorkspaceIdAppsImportsErrors[keyof PostWorkspacesByWorkspaceIdAppsImportsErrors]
 
 export type PostWorkspacesByWorkspaceIdAppsImportsResponses = {
-  200: Import
-  202: Import
+  200: AppDslImportResponse
+  202: AppDslImportResponse
 }
 
 export type PostWorkspacesByWorkspaceIdAppsImportsResponse =
@@ -1041,7 +1295,7 @@ export type PostWorkspacesByWorkspaceIdAppsImportsByImportIdConfirmData = {
 }
 
 export type PostWorkspacesByWorkspaceIdAppsImportsByImportIdConfirmErrors = {
-  400: Import
+  400: Import | ErrorBody
   default: ErrorBody
 }
 

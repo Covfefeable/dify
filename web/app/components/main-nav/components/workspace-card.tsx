@@ -4,15 +4,11 @@ import type { GetWorkspacesCurrentSummaryResponse } from '@dify/contracts/api/co
 import type { ReactNode } from 'react'
 import { Button } from '@langgenius/dify-ui/button'
 import { cn } from '@langgenius/dify-ui/cn'
-import {
-  Dialog,
-  DialogCloseButton,
-  DialogContent,
-  DialogTitle,
-} from '@langgenius/dify-ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogTitle } from '@langgenius/dify-ui/dialog'
+import { IconButton } from '@langgenius/dify-ui/icon-button'
 import { Input } from '@langgenius/dify-ui/input'
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '@langgenius/dify-ui/popover'
-import { toast } from '@langgenius/dify-ui/toast'
+import { Separator } from '@langgenius/dify-ui/separator'
 import {
   noop,
   useMutation,
@@ -26,21 +22,24 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { WorkspaceAvatar } from '@/app/components/base/workspace-avatar'
 import {
+  pricingQueryParamName,
+  pricingQueryParser,
+} from '@/app/components/billing/pricing/query-params'
+import {
   settingsQueryParamName,
   settingsQueryParser,
 } from '@/app/components/header/account-setting/query-params'
 import LicenseBadge from '@/app/components/header/license-badge'
 import { buildIntegrationPath } from '@/app/components/integrations/routes'
-import { useModalContext } from '@/context/modal-context'
+import { toast } from '@/app/notifications'
 import { workspacePermissionKeysAtom } from '@/context/permission-state'
 import { systemFeaturesQueryOptions } from '@/features/system-features/client'
 import Link from '@/next/link'
-import { consoleQuery } from '@/service/client'
 import { createWorkspace } from '@/service/common'
+import { consoleQuery } from '@/service/console'
 import { hasPermission } from '@/utils/permission'
 import { basePath } from '@/utils/var'
 import { formatCredits } from '../utils'
-import Divider from '../../base/divider'
 import { WorkspaceMenuItemContent } from './workspace-menu-content'
 import WorkspacePlanBadge from './workspace-plan-badge'
 import { WorkspaceSwitcher } from './workspace-switcher'
@@ -114,9 +113,9 @@ function WorkspaceCardTrigger({
   onPrefetchWorkspaces: () => void
   onPlanClick: () => void
 }) {
-  const { t } = useTranslation()
-  const creditsUnit = t(($) => $['mainNav.workspace.creditsUnit'], { ns: 'common' })
-  const openMenuLabel = t(($) => $['mainNav.workspace.openMenu'], { ns: 'common' })
+  const { t } = useTranslation(['common', 'navigation'])
+  const creditsUnit = t(($) => $['mainNav.workspace.creditsUnit'], { ns: 'navigation' })
+  const openMenuLabel = t(($) => $['mainNav.workspace.openMenu'], { ns: 'navigation' })
   const isUnlimited = credits === -1
   const formattedCredits = isUnlimited
     ? t(($) => $['license.unlimited'], { ns: 'common' })
@@ -132,7 +131,7 @@ function WorkspaceCardTrigger({
         onMouseEnter={onPrefetchWorkspaces}
         onFocus={onPrefetchWorkspaces}
         className={cn(
-          'flex w-full items-center gap-1.5 py-1.5 pr-3 pl-1.5 text-left transition-colors hover:bg-state-base-hover focus-visible:inset-ring-2 focus-visible:inset-ring-state-accent-solid focus-visible:outline-hidden',
+          'flex w-full items-center gap-1.5 py-1.5 pr-3 pl-1.5 text-left transition-colors hover:bg-state-base-hover focus-visible:ring-inset',
           showCloudBilling ? 'rounded-t-xl' : 'rounded-xl',
           'data-popup-open:bg-linear-to-b data-popup-open:from-background-section-burn data-popup-open:to-background-section',
         )}
@@ -279,7 +278,7 @@ const selectCurrentWorkspaceCardData = (workspace: CurrentWorkspaceCardSource) =
 })
 
 export function WorkspaceCard() {
-  const { t } = useTranslation()
+  const { t } = useTranslation(['billing', 'common', 'navigation', 'accountSettings', 'app'])
   const queryClient = useQueryClient()
   const { data: deploymentEdition } = useSuspenseQuery({
     ...systemFeaturesQueryOptions(),
@@ -303,7 +302,7 @@ export function WorkspaceCard() {
   const workspaces = workspacesQuery.data?.workspaces
   const showCreateWorkspace = Boolean(workspacesQuery.data?.allow_create_workspace)
   const workspacePermissionKeys = useAtomValue(workspacePermissionKeysAtom)
-  const { setShowPricingModal } = useModalContext()
+  const [, setPricing] = useQueryState(pricingQueryParamName, pricingQueryParser)
   const [, setSettingsDestination] = useQueryState(settingsQueryParamName, settingsQueryParser)
   const isCloudEdition = deploymentEdition === 'CLOUD'
   const prefetchWorkspaces = () => {
@@ -338,7 +337,6 @@ export function WorkspaceCard() {
       if (currentWorkspace.id === tenant_id) return
 
       await switchWorkspaceMutation.mutateAsync({ body: { tenant_id } })
-      toast.success(t(($) => $['actionMsg.modifiedSuccessfully'], { ns: 'common' }))
       location.assign(`${location.origin}${basePath}`)
     } catch {
       toast.error(t(($) => $['actionMsg.modifiedUnsuccessfully'], { ns: 'common' }))
@@ -370,7 +368,7 @@ export function WorkspaceCard() {
             planActionLabel={planActionLabel}
             creditsHref={buildIntegrationPath('provider')}
             onPrefetchWorkspaces={prefetchWorkspaces}
-            onPlanClick={setShowPricingModal}
+            onPlanClick={() => setPricing('open')}
           />
           <PopoverContent
             placement="bottom-start"
@@ -383,9 +381,13 @@ export function WorkspaceCard() {
               status={renderWorkspaceStatus()}
               showInviteMembers={showInviteMembers}
               showCreateWorkspace={showCreateWorkspace}
-              settingsLabel={t(($) => $['mainNav.workspace.settings'], { ns: 'common' })}
-              inviteMembersLabel={t(($) => $['mainNav.workspace.inviteMembers'], { ns: 'common' })}
-              createWorkspaceLabel={t(($) => $['userProfile.createWorkspace'], { ns: 'common' })}
+              settingsLabel={t(($) => $['mainNav.workspace.settings'], { ns: 'navigation' })}
+              inviteMembersLabel={t(($) => $['mainNav.workspace.inviteMembers'], {
+                ns: 'navigation',
+              })}
+              createWorkspaceLabel={t(($) => $['userProfile.createWorkspace'], {
+                ns: 'accountSettings',
+              })}
               onOpenSettings={() => {
                 setOpen(false)
                 setSettingsDestination(hasBillingPlan ? 'billing' : 'members')
@@ -412,17 +414,26 @@ export function WorkspaceCard() {
       </Popover>
       <Dialog open={showCreateWorkspaceModal} onOpenChange={setShowCreateWorkspaceModal}>
         <DialogContent className="w-[362px] p-5">
-          <DialogCloseButton />
+          <DialogClose
+            render={
+              <IconButton
+                aria-label={t(($) => $['operation.close'], { ns: 'common' })}
+                className="absolute top-5 right-5"
+              >
+                <span aria-hidden className="i-ri-close-line size-4" />
+              </IconButton>
+            }
+          />
           <DialogTitle className="pr-8 system-xl-semibold text-text-primary">
-            {t(($) => $['userProfile.createWorkspace'], { ns: 'common' })}
+            {t(($) => $['userProfile.createWorkspace'], { ns: 'accountSettings' })}
           </DialogTitle>
           <Input
             value={workspaceName}
             onChange={(event) => setWorkspaceName(event.target.value)}
-            placeholder={t(($) => $['account.workspaceName'], { ns: 'common' })}
+            placeholder={t(($) => $['account.workspaceName'], { ns: 'accountSettings' })}
             className="my-5 px-3 py-2.5"
           />
-          <Divider className="m-0" />
+          <Separator />
           <div className="mt-4 flex items-start justify-end gap-2 self-stretch">
             <Button onClick={() => setShowCreateWorkspaceModal(false)}>
               {t(($) => $['iconPicker.cancel'], { ns: 'app' })}

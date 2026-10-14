@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react'
 import { vi } from 'vite-plus/test'
 import { useWorkspacePermissions } from '@/service/use-workspace'
 import { renderWithConsoleQuery } from '@/test/console/query-data'
-import InviteButton from '../invite-button'
+import { InviteButton } from '../invite-button'
 
 const mockConsoleStateReader = vi.hoisted(() => vi.fn())
 
@@ -55,7 +55,7 @@ describe('InviteButton', () => {
 
     renderInviteButton(true)
 
-    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(screen.getByRole('progressbar')).toBeInTheDocument()
   })
 
   it('should hide invite button when permission is denied', () => {

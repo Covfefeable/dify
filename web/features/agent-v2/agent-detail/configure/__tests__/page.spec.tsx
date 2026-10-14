@@ -4,7 +4,10 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ScopeProvider } from 'jotai-scope'
 import { useState } from 'react'
+import { AgentPermission } from '@/features/agent-v2/acl'
 import { AgentScope } from '@/features/agent-v2/analytics'
+import { consoleQuery } from '@/service/console'
+import { createHttpError } from '@/service/http-error'
 import { renderWithNuqs as render } from '@/test/nuqs-testing'
 import { AgentConfigureComposerScope } from '../components/composer-session'
 import { useAgentConfigureData } from '../hooks'
@@ -23,6 +26,7 @@ const mocks = vi.hoisted(() => ({
   queryState: {
     agent: {
       data: {
+        permission_keys: [] as string[],
         debug_conversation_has_messages: true,
         debug_conversation_id: 'debug-conversation-old' as string | null,
         debug_conversation_message_count: 1,
@@ -193,7 +197,7 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
   }
 })
 
-vi.mock('@langgenius/dify-ui/toast', () => ({
+vi.mock('@/app/notifications', () => ({
   toast: toastMock,
 }))
 
@@ -201,7 +205,7 @@ vi.mock('@/app/components/base/amplitude', () => ({
   trackEvent: trackEventMock,
 }))
 
-vi.mock('@/service/client', () => ({
+vi.mock('@/service/console', () => ({
   consoleQuery: {
     systemFeatures: {
       get: {
@@ -489,6 +493,8 @@ vi.mock('../components/preview/header', () => ({
   AgentPreviewHeader: (props: {
     mode: 'build' | 'preview'
     previewEnabled: boolean
+    buildEnabled?: boolean
+    showChatFeaturesAction?: boolean
     onModeChange: (mode: 'build' | 'preview') => void
     onToggleChatFeatures: () => void
     onOpenWorkingDirectory: () => void
@@ -505,12 +511,18 @@ vi.mock('../components/preview/header', () => ({
       >
         preview mode
       </button>
-      <button type="button" onClick={() => props.onModeChange('build')}>
+      <button
+        type="button"
+        disabled={props.buildEnabled === false}
+        onClick={() => props.onModeChange('build')}
+      >
         build mode
       </button>
-      <button type="button" onClick={props.onToggleChatFeatures}>
-        chat features
-      </button>
+      {props.showChatFeaturesAction !== false && (
+        <button type="button" onClick={props.onToggleChatFeatures}>
+          chat features
+        </button>
+      )}
       {props.showWorkingDirectoryAction && (
         <button type="button" onClick={props.onOpenWorkingDirectory}>
           open working directory
@@ -524,12 +536,38 @@ vi.mock('../components/preview/header', () => ({
 }))
 
 vi.mock('../components/preview/versions-panel', () => ({
-  AgentPreviewVersionsPanel: (props: { onSelectVersion: (versionId: string) => void }) => (
-    <button type="button" onClick={() => props.onSelectVersion('snapshot-2')}>
-      select version
-    </button>
+  AgentPreviewVersionsPanel: (props: {
+    onBeforeRestore?: () => Promise<void>
+    onSelectVersion: (versionId: string | null) => void
+    onVersionRestored?: () => Promise<void>
+  }) => (
+    <>
+      <button type="button" onClick={() => props.onSelectVersion('snapshot-2')}>
+        select version
+      </button>
+      <button
+        type="button"
+        onClick={async () => {
+          await props.onBeforeRestore?.()
+          await props.onVersionRestored?.()
+          props.onSelectVersion(null)
+        }}
+      >
+        restore from version menu
+      </button>
+    </>
   ),
 }))
+
+function createQueryClient() {
+  const client = new QueryClient()
+  client.setQueryData<Partial<typeof mocks.queryState.agent.data>>(
+    consoleQuery.agent.byAgentId.get.queryOptions({ input: { params: { agent_id: 'agent-1' } } })
+      .queryKey,
+    mocks.queryState.agent.data,
+  )
+  return client
+}
 
 describe('AgentConfigurePage', () => {
   beforeEach(() => {
@@ -559,6 +597,7 @@ describe('AgentConfigurePage', () => {
     mocks.discardBuildDraft.mockResolvedValue({ result: 'success' })
     mocks.queryState.agent = {
       data: {
+        permission_keys: Object.values(AgentPermission),
         debug_conversation_has_messages: true,
         debug_conversation_id: 'debug-conversation-old',
         debug_conversation_message_count: 1,
@@ -605,7 +644,7 @@ describe('AgentConfigurePage', () => {
 
   describe('Loading state', () => {
     it('should load the build draft while keeping the page pending with composer data', () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
 
       render(
         <QueryClientProvider client={queryClient}>
@@ -618,7 +657,9 @@ describe('AgentConfigurePage', () => {
       })
       expect(configureSection).toHaveAttribute('aria-busy', 'true')
       expect(configureSection).toHaveClass('bg-background-body')
-      expect(screen.getByRole('status', { name: 'appApi.loading' })).toBeInTheDocument()
+      expect(
+        screen.getByRole('progressbar', { name: 'agentV2.agentDetail.sections.configure' }),
+      ).toBeInTheDocument()
       expect(screen.queryByRole('region', { name: 'orchestrate-panel' })).not.toBeInTheDocument()
       expect(
         vi
@@ -630,7 +671,7 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should initialize the composer from the active build draft after its pending check', () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
@@ -663,7 +704,9 @@ describe('AgentConfigurePage', () => {
         { searchParams: '?mode=build' },
       )
 
-      expect(screen.getByRole('status', { name: 'appApi.loading' })).toBeInTheDocument()
+      expect(
+        screen.getByRole('progressbar', { name: 'agentV2.agentDetail.sections.configure' }),
+      ).toBeInTheDocument()
       expect(screen.queryByRole('region', { name: 'orchestrate-panel' })).not.toBeInTheDocument()
 
       mocks.queryState.buildDraft = {
@@ -696,7 +739,7 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should leave the configure landmark to the orchestrate panel after loading', () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {},
         isFetching: false,
@@ -719,7 +762,7 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should initialize the composer from recovered query data after the initial request fails', () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: undefined as unknown,
         isFetching: false,
@@ -780,7 +823,7 @@ describe('AgentConfigurePage', () => {
       }
 
       render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
         { searchParams: '?mode=preview' },
@@ -809,7 +852,7 @@ describe('AgentConfigurePage', () => {
       }
 
       const { onUrlUpdate } = render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
         { searchParams: '?source=shared-link' },
@@ -853,7 +896,7 @@ describe('AgentConfigurePage', () => {
       }
 
       render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigureComposerScopeHarness />
         </QueryClientProvider>,
       )
@@ -867,7 +910,9 @@ describe('AgentConfigurePage', () => {
         'publish:yes',
       )
       expect(screen.getByRole('region', { name: 'build-chat' })).toHaveTextContent('build:none')
-      expect(screen.queryByRole('status', { name: 'appApi.loading' })).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('progressbar', { name: 'agentV2.agentDetail.sections.configure' }),
+      ).not.toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'send build message' })).toBeDisabled()
 
       refreshBuildConversation.resolve({
@@ -917,7 +962,7 @@ describe('AgentConfigurePage', () => {
       }
 
       const { onUrlUpdate } = render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
       )
@@ -948,6 +993,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.composer = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'draft prompt',
             },
@@ -962,6 +1008,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'build prompt',
             },
@@ -979,7 +1026,7 @@ describe('AgentConfigurePage', () => {
       }
 
       const { onUrlUpdate } = render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
       )
@@ -1063,6 +1110,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.composer = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'draft prompt',
             },
@@ -1077,6 +1125,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'build prompt',
             },
@@ -1094,7 +1143,7 @@ describe('AgentConfigurePage', () => {
       }
 
       const { onUrlUpdate } = render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
       )
@@ -1131,7 +1180,7 @@ describe('AgentConfigurePage', () => {
 
     it('should reset Build on mode switch, then save and force checkout when starting chat', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       const draftSave = createDeferredPromise<{ agent_soul: object }>()
       const forcedBuildDraft = {
         agent_soul: {
@@ -1255,7 +1304,7 @@ describe('AgentConfigurePage', () => {
 
     it('should stay in Build without checkout or send when saving before chat fails', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.saveComposerDraft.mockRejectedValue(new Error('save failed'))
       mocks.queryState.composer = {
         data: {
@@ -1339,7 +1388,7 @@ describe('AgentConfigurePage', () => {
       }
 
       render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigureComposerScopeHarness />
         </QueryClientProvider>,
       )
@@ -1359,7 +1408,9 @@ describe('AgentConfigurePage', () => {
       mocks.checkoutBuildDraft.mockRejectedValueOnce(new Error('checkout failed'))
       mocks.queryState.composer = {
         data: {
-          agent_soul: {},
+          agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
+          },
         },
         isFetching: false,
         isError: false,
@@ -1369,7 +1420,7 @@ describe('AgentConfigurePage', () => {
       }
 
       render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigureComposerScopeHarness />
         </QueryClientProvider>,
       )
@@ -1410,7 +1461,7 @@ describe('AgentConfigurePage', () => {
 
     it('should run preview with the shared chat API without entering build draft mode outside community edition', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       clearBuildConversation()
       mocks.queryState.composer = {
         data: {},
@@ -1460,7 +1511,7 @@ describe('AgentConfigurePage', () => {
 
     it('should refresh only the preview conversation when restarting preview mode', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {},
         isFetching: false,
@@ -1527,7 +1578,7 @@ describe('AgentConfigurePage', () => {
       }
 
       render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
       )
@@ -1542,7 +1593,7 @@ describe('AgentConfigurePage', () => {
 
     it('should not keep a stale clear command after the composer content remounts', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {},
         isFetching: false,
@@ -1625,7 +1676,7 @@ describe('AgentConfigurePage', () => {
       }
 
       const view = render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
       )
@@ -1638,7 +1689,7 @@ describe('AgentConfigurePage', () => {
 
       view.unmount()
       render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
         { searchParams: '?mode=preview' },
@@ -1659,7 +1710,7 @@ describe('AgentConfigurePage', () => {
       }
 
       render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
         { searchParams: '?mode=preview' },
@@ -1684,7 +1735,7 @@ describe('AgentConfigurePage', () => {
       }
 
       render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
         { searchParams: '?mode=preview' },
@@ -1730,7 +1781,7 @@ describe('AgentConfigurePage', () => {
         refetch: vi.fn(),
       }
       render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
         { searchParams: '?mode=preview' },
@@ -1773,7 +1824,7 @@ describe('AgentConfigurePage', () => {
 
     it('should disable restart when the debug conversation has no messages', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.agent = {
         ...mocks.queryState.agent,
         data: {
@@ -1812,7 +1863,9 @@ describe('AgentConfigurePage', () => {
       mocks.checkoutBuildDraft.mockRejectedValueOnce(new Error('checkout failed'))
       mocks.queryState.composer = {
         data: {
-          agent_soul: {},
+          agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
+          },
         },
         isFetching: false,
         isError: false,
@@ -1822,7 +1875,7 @@ describe('AgentConfigurePage', () => {
       }
 
       const { onUrlUpdate } = render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
       )
@@ -1843,7 +1896,7 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should stay in normal draft mode when build draft returns 404 even if a debug conversation exists', () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
@@ -1861,7 +1914,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: undefined as unknown,
         dataUpdatedAt: 0,
-        error: new Response(null, { status: 404 }),
+        error: createHttpError(new Response(null, { status: 404 })),
         isFetching: false,
         isError: true,
         isPending: false,
@@ -1888,7 +1941,7 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should keep build draft query refresh owned by explicit workflow actions', () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
@@ -1925,7 +1978,7 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should enter build draft mode when build draft data exists', () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
@@ -1978,10 +2031,11 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should track the run without checking out again in active build draft mode', async () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'draft prompt',
             },
@@ -1996,6 +2050,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'build prompt',
             },
@@ -2034,10 +2089,11 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should show the working directory action after the first build reply completes', async () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'draft prompt',
             },
@@ -2052,6 +2108,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'build prompt',
             },
@@ -2099,7 +2156,7 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should hide the working directory action when the build chat has no conversation', () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.agent = {
         ...mocks.queryState.agent,
         data: {
@@ -2155,7 +2212,7 @@ describe('AgentConfigurePage', () => {
 
     it('should show chat features from the active build draft source as read-only', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
@@ -2212,10 +2269,11 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should switch to build draft mode without resetting the sending chat when sending from normal draft mode', async () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'draft prompt',
             },
@@ -2230,7 +2288,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: undefined as unknown,
         dataUpdatedAt: 0,
-        error: new Response(null, { status: 404 }),
+        error: createHttpError(new Response(null, { status: 404 })),
         isFetching: false,
         isError: true,
         isPending: false,
@@ -2283,9 +2341,8 @@ describe('AgentConfigurePage', () => {
       expect(screen.getByRole('button', { name: 'discard build draft' })).toBeDisabled()
     })
 
-    it('should block build chat checkout when no model is configured', async () => {
-      const queryClient = new QueryClient()
-      modelHooksState.defaultTextGenerationModel = undefined
+    it('should require an explicit model even when the workspace has a default', async () => {
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
@@ -2303,7 +2360,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: undefined as unknown,
         dataUpdatedAt: 0,
-        error: new Response(null, { status: 404 }),
+        error: createHttpError(new Response(null, { status: 404 })),
         isFetching: false,
         isError: true,
         isPending: false,
@@ -2320,7 +2377,7 @@ describe('AgentConfigurePage', () => {
       fireEvent.click(screen.getByRole('button', { name: 'send build message' }))
 
       await waitFor(() => {
-        expect(toastMock.error).toHaveBeenCalledWith('common.modelProvider.selectModel')
+        expect(toastMock.error).toHaveBeenCalledWith('modelProvider.modelProvider.selectModel')
       })
       expect(mocks.checkoutBuildDraft).not.toHaveBeenCalled()
       expect(screen.getByRole('region', { name: 'build-chat' })).toHaveTextContent('sent:no')
@@ -2331,11 +2388,12 @@ describe('AgentConfigurePage', () => {
 
     it('should keep the build draft bar disabled while a build conversation is responding', async () => {
       vi.useFakeTimers()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       const refetchBuildDraft = vi.fn().mockResolvedValue({})
       mocks.queryState.composer = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'draft prompt',
             },
@@ -2350,6 +2408,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'build prompt',
             },
@@ -2399,10 +2458,11 @@ describe('AgentConfigurePage', () => {
     })
 
     it('should not keep a stale build draft action lock after the composer content remounts', async () => {
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'draft prompt',
             },
@@ -2417,6 +2477,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'build prompt',
             },
@@ -2466,6 +2527,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.composer = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'draft prompt',
             },
@@ -2489,7 +2551,7 @@ describe('AgentConfigurePage', () => {
 
     it('should settle build draft actions when the build completion refresh fails', async () => {
       vi.useFakeTimers()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       const refetchBuildDraft = vi.fn().mockRejectedValue(new Error('refresh failed'))
       mocks.queryState.composer = {
         data: {
@@ -2547,11 +2609,12 @@ describe('AgentConfigurePage', () => {
 
     it('should not let a previous build completion refresh unlock a new build run', async () => {
       vi.useFakeTimers()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       const refetchBuildDraft = vi.fn().mockResolvedValue({})
       mocks.queryState.composer = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'draft prompt',
             },
@@ -2566,6 +2629,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'build prompt',
             },
@@ -2609,12 +2673,13 @@ describe('AgentConfigurePage', () => {
 
     it('should ignore a previous build completion refresh that is already in flight', async () => {
       vi.useFakeTimers()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       const refetchBuildDraft = vi.fn()
       const staleRefresh = createDeferredPromise<unknown>()
       refetchBuildDraft.mockReturnValueOnce(staleRefresh.promise)
       mocks.checkoutBuildDraft.mockResolvedValue({
         agent_soul: {
+          model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
           prompt: {
             system_prompt: 'build prompt',
           },
@@ -2625,6 +2690,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.composer = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'draft prompt',
             },
@@ -2639,6 +2705,7 @@ describe('AgentConfigurePage', () => {
       mocks.queryState.buildDraft = {
         data: {
           agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
             prompt: {
               system_prompt: 'build prompt',
             },
@@ -2679,6 +2746,7 @@ describe('AgentConfigurePage', () => {
         staleRefresh.resolve({
           data: {
             agent_soul: {
+              model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
               prompt: {
                 system_prompt: 'stale refreshed prompt',
               },
@@ -2697,7 +2765,7 @@ describe('AgentConfigurePage', () => {
 
     it('should discard the build draft when restarting build mode with a build draft', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {},
         isFetching: false,
@@ -2708,7 +2776,9 @@ describe('AgentConfigurePage', () => {
       }
       mocks.queryState.buildDraft = {
         data: {
-          agent_soul: {},
+          agent_soul: {
+            model: { model_provider: 'langgenius/openai/openai', model: 'gpt-4o-mini' },
+          },
           draft: {},
           variant: 'agent_app',
         },
@@ -2752,7 +2822,7 @@ describe('AgentConfigurePage', () => {
 
     it('should switch soul source to view version when selecting a version from build draft mode', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {
           agent_soul: {
@@ -2806,9 +2876,67 @@ describe('AgentConfigurePage', () => {
       expect(screen.queryByRole('region', { name: 'build-draft-bar' })).not.toBeInTheDocument()
     })
 
+    it('should save pending draft edits before restoring from the version menu and rebase the composer', async () => {
+      const user = userEvent.setup()
+      const queryClient = createQueryClient()
+      const draftSave = createDeferredPromise<{ agent_soul: object }>()
+      mocks.saveComposerDraft.mockReturnValue(draftSave.promise)
+      const refetchComposer = vi.fn(async () => {
+        mocks.queryState.composer = {
+          ...mocks.queryState.composer,
+          data: {
+            agent_soul: {
+              prompt: { system_prompt: 'restored prompt' },
+            },
+          },
+        }
+        return {}
+      })
+      mocks.queryState.composer = {
+        data: {
+          agent_soul: {
+            prompt: { system_prompt: 'draft prompt' },
+          },
+        },
+        isFetching: false,
+        isError: false,
+        isPending: false,
+        isSuccess: true,
+        refetch: refetchComposer,
+      }
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <AgentConfigurePage agentId="agent-1" />
+        </QueryClientProvider>,
+      )
+
+      await user.click(screen.getByRole('button', { name: 'edit prompt' }))
+      await user.click(screen.getByRole('button', { name: 'open versions' }))
+      await user.click(screen.getByRole('button', { name: 'restore from version menu' }))
+
+      expect(mocks.saveComposerDraft).toHaveBeenCalledTimes(1)
+      expect(refetchComposer).not.toHaveBeenCalled()
+      expect(screen.getByRole('region', { name: 'orchestrate-panel' })).toHaveTextContent(
+        'prompt:edited draft prompt',
+      )
+
+      draftSave.resolve({ agent_soul: {} })
+
+      await waitFor(() => {
+        expect(screen.getByRole('region', { name: 'orchestrate-panel' })).toHaveTextContent(
+          'prompt:restored prompt',
+        )
+      })
+      expect(refetchComposer).toHaveBeenCalledTimes(1)
+      expect(screen.getByRole('region', { name: 'orchestrate-panel' })).toHaveTextContent(
+        'readonly:no',
+      )
+    })
+
     it('should rebase the composer from the restored version', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       const refetchComposer = vi.fn(async () => {
         mocks.queryState.composer = {
           ...mocks.queryState.composer,
@@ -2878,7 +3006,7 @@ describe('AgentConfigurePage', () => {
 
     it('should apply the build draft and rebase the composer store from the refetched normal draft', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries')
       const refetchComposer = vi.fn(async () => {
         mocks.queryState.composer = {
@@ -3016,7 +3144,7 @@ describe('AgentConfigurePage', () => {
       }
 
       render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={createQueryClient()}>
           <AgentConfigurePage agentId="agent-1" />
         </QueryClientProvider>,
       )
@@ -3036,7 +3164,7 @@ describe('AgentConfigurePage', () => {
 
     it('should keep the build draft UI while the applied normal draft is still refreshing', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       const refetchComposerDeferred = createDeferredPromise<unknown>()
       const refetchComposer = vi.fn(async () => {
         const result = await refetchComposerDeferred.promise
@@ -3123,7 +3251,7 @@ describe('AgentConfigurePage', () => {
 
     it('should keep exiting build draft when debug conversation refresh fails after applying build draft', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       const refetchComposer = vi.fn(async () => {
         mocks.queryState.composer = {
           ...mocks.queryState.composer,
@@ -3223,7 +3351,7 @@ describe('AgentConfigurePage', () => {
 
     it('should discard the build draft and start a new build session', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.queryState.composer = {
         data: {},
         isFetching: false,
@@ -3278,7 +3406,7 @@ describe('AgentConfigurePage', () => {
 
     it('should keep exiting build draft when debug conversation refresh fails after discarding build draft', async () => {
       const user = userEvent.setup()
-      const queryClient = new QueryClient()
+      const queryClient = createQueryClient()
       mocks.refreshDebugConversation.mockRejectedValueOnce(new Error('refresh failed'))
       mocks.queryState.composer = {
         data: {},
@@ -3336,5 +3464,34 @@ describe('AgentConfigurePage', () => {
         )
       })
     })
+  })
+  it.each([
+    [AgentPermission.Edit, 'readonly:no', 'publish:no', false],
+    [AgentPermission.TestAndRun, 'readonly:yes', 'publish:no', true],
+    [AgentPermission.ReleaseAndVersion, 'readonly:yes', 'publish:yes', false],
+  ])('keeps edit, run, and publish independent for %s', (permission, readonly, publish, canRun) => {
+    mocks.queryState.agent.data.permission_keys = [AgentPermission.Preview, permission]
+    mocks.queryState.composer = {
+      data: { agent_soul: {} },
+      isFetching: false,
+      isError: false,
+      isPending: false,
+      isSuccess: true,
+      refetch: vi.fn(),
+    }
+    render(
+      <QueryClientProvider client={createQueryClient()}>
+        <AgentConfigurePage agentId="agent-1" />
+      </QueryClientProvider>,
+      { searchParams: '?mode=build' },
+    )
+    const panel = screen.getByRole('region', { name: 'orchestrate-panel' })
+    expect(panel).toHaveTextContent(readonly)
+    expect(panel).toHaveTextContent(publish)
+    expect(screen.getByRole('button', { name: 'build mode' })).toBeDisabled()
+    expect(screen.queryByRole('region', { name: 'build-chat' })).not.toBeInTheDocument()
+    if (canRun) expect(screen.getByRole('region', { name: 'preview-chat' })).toBeInTheDocument()
+    else expect(screen.queryByRole('region', { name: 'preview-chat' })).not.toBeInTheDocument()
+    expect(mocks.saveComposerDraft).not.toHaveBeenCalled()
   })
 })

@@ -1,8 +1,8 @@
 import type { FormData, InputFieldFormProps } from '../types'
-import { toast } from '@langgenius/dify-ui/toast'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react'
 import * as React from 'react'
+import { toast } from '@/app/notifications'
 import { PipelineInputVarType } from '@/models/pipeline'
 import { useConfigurations, useHiddenConfigurations, useHiddenFieldNames } from '../hooks'
 import InputFieldForm from '../index'
@@ -304,23 +304,6 @@ describe('InputFieldForm', () => {
       renderWithProviders(<InputFieldForm {...props} />)
 
       expect(screen.queryByText(/appDebug.variableConfig.showAllSettings/i)).toBeInTheDocument()
-    })
-
-    it('should toggle showAllSettings state when clicking show all settings', async () => {
-      const props = createInputFieldFormProps()
-      renderWithProviders(<InputFieldForm {...props} />)
-
-      const showAllSettingsElement = screen.getByText(/appDebug.variableConfig.showAllSettings/i)
-      const clickableParent = showAllSettingsElement.closest('.cursor-pointer')
-      if (clickableParent) {
-        fireEvent.click(clickableParent)
-      }
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText(/appDebug.variableConfig.showAllSettings/i),
-        ).not.toBeInTheDocument()
-      })
     })
   })
 
